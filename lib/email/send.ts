@@ -1,0 +1,104 @@
+// Email sending utility using Resend
+import { emailTemplates } from "./templates"
+
+const RESEND_API_KEY = process.env.RESEND_API_KEY
+const FROM_EMAIL = process.env.FROM_EMAIL || "noreply@secondtail.org"
+
+export interface EmailOptions {
+  to: string
+  subject: string
+  html: string
+}
+
+export async function sendEmail(options: EmailOptions) {
+  if (!RESEND_API_KEY) {
+    console.error("[v0] RESEND_API_KEY not configured. Emails will not be sent.")
+    return { success: false, error: "Email service not configured" }
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: FROM_EMAIL,
+        to: options.to,
+        subject: options.subject,
+        html: options.html,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error("[v0] Error sending email:", error)
+      return { success: false, error: error.message }
+    }
+
+    const data = await response.json()
+    console.log("[v0] Email sent successfully:", data.id)
+    return { success: true, emailId: data.id }
+  } catch (error) {
+    console.error("[v0] Failed to send email:", error)
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+  }
+}
+
+// Specific email sending functions
+export async function sendWelcomeEmailFoster(email: string, name: string, orgName?: string) {
+  const template = emailTemplates.welcomeFoster(name, orgName)
+  return sendEmail({ to: email, ...template })
+}
+
+export async function sendWelcomeEmailRescue(email: string, orgName: string, adminName: string) {
+  const template = emailTemplates.welcomeRescue(orgName, adminName)
+  return sendEmail({ to: email, ...template })
+}
+
+export async function sendAssignedToRescueEmail(fosterEmail: string, fosterName: string, orgName: string) {
+  const template = emailTemplates.assignedToRescue(fosterName, orgName)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendAssignedDogEmail(fosterEmail: string, fosterName: string, dogName: string, breed: string) {
+  const template = emailTemplates.assignedDog(fosterName, dogName, breed)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendAppointmentEmail(
+  fosterEmail: string,
+  fosterName: string,
+  dogName: string,
+  appointmentTitle: string,
+  appointmentTime: string,
+) {
+  const template = emailTemplates.appointment(fosterName, dogName, appointmentTitle, appointmentTime)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendNewMessageEmail(fosterEmail: string, fosterName: string, senderName: string) {
+  const template = emailTemplates.newMessage(fosterName, senderName)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendMedicalUpdateEmail(
+  fosterEmail: string,
+  fosterName: string,
+  dogName: string,
+  updateType: string,
+) {
+  const template = emailTemplates.medicalUpdate(fosterName, dogName, updateType)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendSupplyRequestEmail(
+  rescueEmail: string,
+  rescueName: string,
+  fosterName: string,
+  supplies: string,
+) {
+  const template = emailTemplates.supplyRequest(rescueName, fosterName, supplies)
+  return sendEmail({ to: rescueEmail, ...template })
+}

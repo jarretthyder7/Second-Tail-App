@@ -121,29 +121,34 @@ export default function OrgFosterMessages() {
 
       setDogs(dogsData || [])
 
-      const { data: teamProfiles } = await supabase
-        .from("profiles")
-        .select("id, name, email, teams, team_leads")
+      // Fetch teams from the teams table with their members
+      const { data: teamsData } = await supabase
+        .from("teams")
+        .select(`
+          id,
+          name,
+          type,
+          team_members(
+            user_id,
+            profile:profiles(id, name, email)
+          )
+        `)
         .eq("organization_id", orgId)
-        .not("teams", "is", null)
+        .order("name", { ascending: true })
 
-      // Extract unique teams from all users
-      const teamSet = new Set<string>()
-      teamProfiles?.forEach((profile) => {
-        if (profile.teams && Array.isArray(profile.teams)) {
-          profile.teams.forEach((team: string) => teamSet.add(team))
-        }
-      })
+      console.log("[v0] Loaded teams from database:", teamsData)
 
-      const teamsData = Array.from(teamSet).map((teamName) => ({
-        name: teamName,
-        members:
-          teamProfiles
-            ?.filter((p) => p.teams?.includes(teamName))
-            .map((p) => ({ id: p.id, name: p.name, email: p.email })) || [],
+      // Transform teams data to include member info
+      const transformedTeams = (teamsData || []).map((team: any) => ({
+        id: team.id,
+        name: team.name,
+        type: team.type,
+        members: (team.team_members || []).map((tm: any) => tm.profile).filter(Boolean),
       }))
 
-      setTeams(teamsData)
+      console.log("[v0] Transformed teams with members:", transformedTeams)
+
+      setTeams(transformedTeams)
       setLoading(false)
     } catch (error) {
       console.error("[v0] Error loading data:", error)
@@ -151,11 +156,12 @@ export default function OrgFosterMessages() {
     }
   }
 
-  const handleTeamSelect = (teamName: string) => {
-    setSelectedTeam(teamName)
-    const team = teams.find((t) => t.name === teamName)
+  const handleTeamSelect = (teamId: string) => {
+    setSelectedTeam(teamId)
+    const team = teams.find((t) => t.id === teamId)
     setSelectedTeamMembers(team?.members || [])
     setSelectedRecipient("") // Reset recipient when team changes
+    console.log("[v0] Team selected:", { teamId, teamName: team?.name, memberCount: team?.members?.length })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -397,7 +403,7 @@ export default function OrgFosterMessages() {
                 >
                   <option value="">Select a team</option>
                   {teams.map((team) => (
-                    <option key={team.name} value={team.name}>
+                    <option key={team.id} value={team.id}>
                       {team.name}
                     </option>
                   ))}

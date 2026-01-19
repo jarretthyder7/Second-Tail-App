@@ -23,6 +23,9 @@ export async function createClient() {
   })
 }
 
+// Alias for consistency with API routes
+export const createServerClient = createClient
+
 export function createServiceRoleClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY

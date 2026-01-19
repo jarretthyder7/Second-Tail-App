@@ -69,17 +69,21 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
         return
       }
 
+      console.log("[v0] Creating conversation with team:", selectedTeam)
+
       const { data: conversation, error: convError } = await supabase
         .from("conversations")
         .insert({
           foster_id: user.id,
           organization_id: orgId,
           subject: subject,
-          team: selectedTeam,
+          team: selectedTeam, // Store team ID
           created_at: new Date().toISOString(),
         })
         .select()
         .single()
+
+      console.log("[v0] Conversation created:", conversation)
 
       if (convError || !conversation) {
         setError("Failed to create conversation")

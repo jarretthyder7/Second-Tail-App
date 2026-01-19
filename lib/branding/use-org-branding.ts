@@ -24,7 +24,7 @@ export function useOrgBranding(orgId: string | null) {
       const supabase = createClient()
       const { data, error } = await supabase
         .from("organizations")
-        .select("id, name, logo_url, primary_color, accent_color, background_color")
+        .select("id, name, branding")
         .eq("id", id)
         .single()
 
@@ -36,11 +36,12 @@ export function useOrgBranding(orgId: string | null) {
       }
 
       if (data) {
+        const brandingData = data.branding as any || {}
         const orgBranding: OrgBranding = {
-          logo_url: data.logo_url,
-          primary_color: data.primary_color,
-          accent_color: data.accent_color,
-          background_color: data.background_color,
+          logo_url: brandingData.logo_url || null,
+          primary_color: brandingData.primary_color || null,
+          accent_color: brandingData.accent_color || null,
+          background_color: brandingData.background_color || null,
         }
 
         // Cache and apply

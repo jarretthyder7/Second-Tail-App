@@ -238,23 +238,6 @@ export default function FosterDashboardPage() {
             </div>
           </button>
 
-          {/* Appointments */}
-          <Link
-            href={`/org/${orgId}/foster/appointments`}
-            className="bg-card rounded-xl p-4 hover:shadow-md transition group"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/10 transition">
-                  <Calendar className="w-5 h-5 text-primary" />
-                </div>
-                <h3 className="font-semibold text-sm text-foreground">Appointments</h3>
-                <p className="text-xs text-muted-foreground mt-1">View schedule</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
-            </div>
-          </Link>
-
           {/* Request Appointment Button */}
           <button
             onClick={() => setShowAppointmentRequest(true)}

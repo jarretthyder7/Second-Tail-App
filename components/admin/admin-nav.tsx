@@ -22,14 +22,14 @@ export function AdminNav() {
           Dashboard
         </Link>
         <Link
-          href="/admin/dogs"
+          href="/admin/animals"
           className={`py-3 px-2 md:px-3 border-b-2 transition-colors text-sm md:text-base ${
-            isActive("/admin/dogs")
+            isActive("/admin/animals")
               ? "border-primary-bark text-primary-bark font-semibold"
               : "border-transparent text-text-muted hover:text-text-main"
           }`}
         >
-          Dogs
+          Animals
         </Link>
         <Link
           href="/admin/messages"

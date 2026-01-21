@@ -167,7 +167,7 @@ export default function OrgAdminLayout({
       adminOnly: false,
       section: "main",
     },
-    { href: `/org/${orgId}/admin/dogs`, label: "Animals", icon: Dog, adminOnly: false, section: "main" },
+    { href: `/org/${orgId}/admin/animals`, label: "Animals", icon: Dog, adminOnly: false, section: "main" },
     { href: `/org/${orgId}/admin/fosters`, label: "Fosters", icon: Users, adminOnly: false, section: "main" },
     {
       href: `/org/${orgId}/admin/messages`,

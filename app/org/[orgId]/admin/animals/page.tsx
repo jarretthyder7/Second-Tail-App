@@ -63,6 +63,7 @@ function OrgDogsContent() {
   useEffect(() => {
     async function loadDogs() {
       const data = await getDogs(orgId)
+      console.log("[v0] Loaded animals with species data:", data?.map(d => ({ name: d.name, species: d.species })))
       setDogs(data || [])
       setFilteredDogs(data || [])
     }
@@ -85,7 +86,7 @@ function OrgDogsContent() {
     }
 
     if (speciesFilter !== "all") {
-      filtered = filtered.filter((dog) => (dog.species || "dog").toLowerCase() === speciesFilter.toLowerCase())
+      filtered = filtered.filter((dog) => dog.species?.toLowerCase() === speciesFilter.toLowerCase())
     }
 
     setFilteredDogs(filtered)
@@ -428,7 +429,7 @@ function OrgDogsContent() {
                   className="border-t border-[#F7E2BD]/50 hover:bg-[#FBF8F4]/50 cursor-pointer transition"
                 >
                   <td className="py-3 px-4">
-                    <Link href={`/org/${orgId}/admin/dogs/${dog.id}`} className="flex items-center gap-3">
+                    <Link href={`/org/${orgId}/admin/animals/${dog.id}`} className="flex items-center gap-3">
                       <img
                         src={dog.image_url || "/placeholder.svg?height=40&width=40&query=dog"}
                         alt={dog.name}
@@ -439,19 +440,19 @@ function OrgDogsContent() {
                   </td>
                   <td className="py-3 px-4">
                     <Link
-                      href={`/org/${orgId}/admin/dogs/${dog.id}`}
+                      href={`/org/${orgId}/admin/animals/${dog.id}`}
                       className="text-sm text-[#2E2E2E]/70 block capitalize"
                     >
-                      {dog.species || "dog"}
+                      {dog.species || "Unknown"}
                     </Link>
                   </td>
                   <td className="py-3 px-4">
-                    <Link href={`/org/${orgId}/admin/dogs/${dog.id}`} className="text-sm text-[#2E2E2E]/70 block">
+                    <Link href={`/org/${orgId}/admin/animals/${dog.id}`} className="text-sm text-[#2E2E2E]/70 block">
                       {dog.breed}
                     </Link>
                   </td>
                   <td className="py-3 px-4">
-                    <Link href={`/org/${orgId}/admin/dogs/${dog.id}`} className="block">
+                    <Link href={`/org/${orgId}/admin/animals/${dog.id}`} className="block">
                       <span
                         className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${
                           dog.stage === "in_foster"
@@ -468,12 +469,12 @@ function OrgDogsContent() {
                     </Link>
                   </td>
                   <td className="py-3 px-4">
-                    <Link href={`/org/${orgId}/admin/dogs/${dog.id}`} className="text-sm text-[#2E2E2E]/70 block">
+                    <Link href={`/org/${orgId}/admin/animals/${dog.id}`} className="text-sm text-[#2E2E2E]/70 block">
                       {dog.foster_id ? "Assigned" : "-"}
                     </Link>
                   </td>
                   <td className="py-3 px-4">
-                    <Link href={`/org/${orgId}/admin/dogs/${dog.id}`} className="text-sm text-[#2E2E2E]/70 block">
+                    <Link href={`/org/${orgId}/admin/animals/${dog.id}`} className="text-sm text-[#2E2E2E]/70 block">
                       {new Date(dog.updated_at).toLocaleDateString()}
                     </Link>
                   </td>

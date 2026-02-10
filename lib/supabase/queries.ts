@@ -764,7 +764,19 @@ export async function getReferralByCode(code: string) {
   return { code }
 }
 
+// Backward compatibility aliases
 export { fetchDogsForOrg as getDogs }
 export { fetchHelpRequests as getHelpRequests }
 export { fetchOrganizationById as getOrganization }
 export { getDogById as fetchDogById }
+
+// Species-agnostic aliases (dogs table stores all animals)
+export { fetchDogsForOrg as fetchAnimalsForOrg }
+export { fetchDogsForOrg as getAnimals }
+export { getDogById as getAnimalById }
+export { createDog as createAnimal }
+export { updateDog as updateAnimal }
+export { fetchLogsForDog as fetchLogsForAnimal }
+export { fetchCarePlanForDog as fetchCarePlanForAnimal }
+export { updateCarePlan as updateAnimalCarePlan }
+export { fetchConversationsForDog as fetchConversationsForAnimal }

@@ -240,7 +240,7 @@ function FosterProfileContent() {
                 <div className="pt-4 border-t border-neutral-cream">
                   <h3 className="text-lg font-semibold text-primary-bark mb-3">Currently Fostering</h3>
                   <Link
-                    href={`/org/${orgId}/admin/dogs/${assignedDog.id}`}
+                    href={`/org/${orgId}/admin/animals/${assignedDog.id}`}
                     className="flex items-center gap-4 p-4 rounded-xl bg-neutral-cream hover:bg-primary-orange/5 border border-transparent hover:border-primary-orange transition-colors"
                   >
                     <img

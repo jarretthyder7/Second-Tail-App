@@ -644,7 +644,7 @@ function OrgAdminDashboardContent() {
                         return (
                           <Link
                             key={animal.id}
-                            href={`/org/${orgId}/admin/dogs/${animal.id}`}
+                            href={`/org/${orgId}/admin/animals/${animal.id}`}
                             className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 transition-colors"
                           >
                             <div className="flex items-center gap-2">
@@ -664,7 +664,7 @@ function OrgAdminDashboardContent() {
                   )}
                   
                   <Link
-                    href={`/org/${orgId}/admin/dogs`}
+                    href={`/org/${orgId}/admin/animals`}
                     className="block text-center text-xs font-medium text-primary-orange hover:text-primary-orange/80 transition-colors"
                   >
                     View Animals →

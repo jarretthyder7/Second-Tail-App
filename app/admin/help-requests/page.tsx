@@ -275,7 +275,7 @@ export default function HelpRequestsPage() {
                               </td>
                               <td className="px-4 py-3">
                                 <Link
-                                  href={`/admin/dogs/${dog?.id}`}
+                                  href={`/admin/animals/${dog?.id}`}
                                   className="font-semibold text-[#D76B1A] hover:text-[#D76B1A]/80"
                                 >
                                   {dog?.name || "Unknown"}

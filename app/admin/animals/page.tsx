@@ -96,7 +96,7 @@ export default function AdminDogsPage() {
                       {filteredDogs.map(dog => (
                         <tr key={dog.id} className="border-b border-[#F7E2BD]/40 hover:bg-[#FBF8F4] transition-colors">
                           <td className="px-4 py-3">
-                            <Link href={`/admin/dogs/${dog.id}`} className="font-semibold text-[#5A4A42] hover:text-[#D76B1A] flex items-center gap-2">
+                            <Link href={`/admin/animals/${dog.id}`} className="font-semibold text-[#5A4A42] hover:text-[#D76B1A] flex items-center gap-2">
                               <div className="w-8 h-8 rounded-full bg-[#F7E2BD] overflow-hidden flex-shrink-0">
                                 <img src={dog.photo || "/placeholder.svg"} alt={dog.name} className="w-full h-full object-cover" />
                               </div>

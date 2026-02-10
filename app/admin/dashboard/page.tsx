@@ -54,7 +54,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="space-y-3">
                   {alerts.map(alert => (
-                    <Link key={alert.id} href={`/admin/dogs/${alert.dogId}`}>
+                    <Link key={alert.id} href={`/admin/animals/${alert.dogId}`}>
                       <div className={`bg-white rounded-2xl shadow-sm p-4 border-l-4 hover:shadow-md transition-shadow cursor-pointer ${
                         alert.priority === 'high' ? 'border-[#D97A68]' : 
                         alert.priority === 'medium' ? 'border-[#D76B1A]' : 

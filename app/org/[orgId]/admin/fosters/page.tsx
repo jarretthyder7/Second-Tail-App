@@ -240,7 +240,7 @@ export default function AdminFostersPage() {
                         <p className="text-sm text-text-muted">{foster.email}</p>
                         {assignedDog ? (
                           <Link
-                            href={`/org/${orgId}/admin/dogs/${assignedDog.id}`}
+                            href={`/org/${orgId}/admin/animals/${assignedDog.id}`}
                             className="inline-flex items-center gap-1 mt-1 text-sm text-primary-orange hover:text-primary-orange/80 transition"
                           >
                             <Dog className="w-4 h-4" />
@@ -249,7 +249,7 @@ export default function AdminFostersPage() {
                         ) : (
                           <p className="text-sm text-amber-600 flex items-center gap-1 mt-1">
                             <AlertCircle className="w-4 h-4" />
-                            Waiting for dog assignment
+                            Waiting for animal assignment
                           </p>
                         )}
                       </div>

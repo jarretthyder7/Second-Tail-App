@@ -83,14 +83,19 @@ export default function FosterLoginPage() {
         localStorage.removeItem("rememberMeEmail")
       }
 
+      // Refresh session so the client has the latest token before querying
+      await supabase.auth.getSession()
+
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role, organization_id")
         .eq("id", data.user.id)
         .single()
 
+      console.log("[v0] profile query result:", { profile, profileError, userId: data.user.id })
+
       if (profileError || !profile) {
-        setError("Unable to load user profile. Please try again.")
+        setError(`Unable to load user profile: ${profileError?.message ?? "no profile row found"} (code: ${profileError?.code})`)
         setIsLoading(false)
         return
       }

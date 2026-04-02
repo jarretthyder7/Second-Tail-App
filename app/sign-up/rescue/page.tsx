@@ -401,11 +401,11 @@ export default function RescueSignUpPage() {
 
                 <p className="text-xs text-center text-text-tertiary">
                   By signing up, you agree to our{" "}
-                  <Link href="/terms" className="underline hover:no-underline text-text-secondary">
+                  <Link href="/terms" className="underline hover:text-text-secondary transition-colors">
                     Terms of Service
                   </Link>{" "}
                   and{" "}
-                  <Link href="/privacy" className="underline hover:no-underline text-text-secondary">
+                  <Link href="/privacy" className="underline hover:text-text-secondary transition-colors">
                     Privacy Policy
                   </Link>
                 </p>

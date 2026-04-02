@@ -58,12 +58,17 @@ export default function FosterLoginPage() {
     try {
       const supabase = createClient()
 
+      console.log("[v0] Attempting to sign in with email:", email)
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
+      console.log("[v0] Sign in response:", { data, error: signInError })
+
       if (signInError) {
+        console.error("[v0] Sign in error:", signInError)
         setError(signInError.message)
         setIsLoading(false)
         return
@@ -74,6 +79,8 @@ export default function FosterLoginPage() {
         setIsLoading(false)
         return
       }
+
+      console.log("[v0] User signed in:", data.user.id)
 
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true")
@@ -87,16 +94,12 @@ export default function FosterLoginPage() {
         .from("profiles")
         .select("role, organization_id")
         .eq("id", data.user.id)
-        .maybeSingle()
+        .single()
 
-      if (profileError) {
+      console.log("[v0] Profile query result:", { profile, profileError })
+
+      if (profileError || !profile) {
         setError("Unable to load user profile. Please try again.")
-        setIsLoading(false)
-        return
-      }
-
-      if (!profile) {
-        setError("No account found for this email. Please sign up or contact your rescue organization.")
         setIsLoading(false)
         return
       }
@@ -106,6 +109,8 @@ export default function FosterLoginPage() {
         setIsLoading(false)
         return
       }
+
+      console.log("[v0] Redirecting to dashboard...")
 
       if (profile.organization_id) {
         router.push(`/org/${profile.organization_id}/foster/dashboard`)
@@ -245,13 +250,6 @@ export default function FosterLoginPage() {
           {error && (
             <div className="p-3 md:p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs md:text-sm">
               {error}
-              {error.toLowerCase().includes("no account") && (
-                <div className="mt-2">
-                  <Link href="/signup" className="font-semibold underline hover:text-red-900 transition">
-                    Go to sign up
-                  </Link>
-                </div>
-              )}
             </div>
           )}
 

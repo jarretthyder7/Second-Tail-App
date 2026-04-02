@@ -1,4 +1,3 @@
-// @ts-check
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
@@ -7,11 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  experimental: {
-    turbo: {
-      root: import.meta.dirname,
-    },
-  },
+ 
 }
 
 export default nextConfig

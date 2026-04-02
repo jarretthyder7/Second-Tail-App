@@ -114,11 +114,25 @@ export default function RescueSignUpPage() {
   }
 
   const handleGoogleSignUp = async () => {
+    if (!orgName.trim()) {
+      setError("Please enter your organization name before continuing with Google.")
+      return
+    }
+
     setIsLoading(true)
     setError("")
 
     try {
       const supabase = createClient()
+
+      const intent = btoa(
+        JSON.stringify({
+          role: "rescue",
+          org_role: "org_admin",
+          orgName: orgName.trim(),
+          adminName: adminName.trim(),
+        })
+      )
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -127,6 +141,7 @@ export default function RescueSignUpPage() {
           queryParams: {
             access_type: "offline",
             prompt: "consent",
+            state: intent,
           },
         },
       })

@@ -2,36 +2,22 @@ import { NextResponse } from "next/server"
 import { createServiceRoleClient } from "@/lib/supabase/server"
 
 export async function GET() {
+  // WARNING: Never expose DB probes or service-role queries on the public internet.
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 })
+  }
+
   try {
     const supabase = createServiceRoleClient()
 
-    // Test 1: Simple count query
-    const { data: countData, error: countError } = await supabase
+    const { error: countError } = await supabase
       .from("dogs")
       .select("*", { count: "exact", head: true })
 
-    // Test 2: Fetch specific dog
-    const { data: dogData, error: dogError } = await supabase
-      .from("dogs")
-      .select("*")
-      .eq("id", "6e7a7fcc-d134-4ea5-8e2b-63571d37fb00")
-      .maybeSingle()
-
     return NextResponse.json({
       timestamp: new Date().toISOString(),
-      tests: {
-        count: {
-          success: !countError,
-          error: countError?.message,
-          count: countData,
-        },
-        specificDog: {
-          success: !dogError,
-          error: dogError?.message,
-          found: !!dogData,
-          dogName: dogData?.name,
-        },
-      },
+      ok: !countError,
+      error: countError?.message ?? null,
     })
   } catch (error) {
     return NextResponse.json(

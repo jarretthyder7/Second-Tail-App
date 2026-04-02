@@ -109,6 +109,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
 
   const [suppliesChecklist, setSuppliesChecklist] = useState<string[]>([])
   const [suppliesNotes, setSuppliesNotes] = useState("")
+  const [suppliesPriority, setSuppliesPriority] = useState("normal")
 
   const [emergencyDanger, setEmergencyDanger] = useState<boolean | null>(null)
   const [emergencySymptoms, setEmergencySymptoms] = useState("")
@@ -184,11 +185,11 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
         foster_id: user.id,
         organization_id: orgId,
         type: "supplies",
-        title: "Supplies Requested",
+        title: `Supply Request: ${suppliesChecklist.join(", ")}`,
         description,
         category: "supplies",
         status: "open",
-        priority: "normal",
+        priority: suppliesPriority,
       })
 
       setSubmitting(false)
@@ -468,41 +469,74 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
                 </div>
               )}
 
-              {/* Request Supplies View - Use allowed supplies from settings */}
+              {/* Request Supplies View */}
               {currentView === "supplies" && (
-                <div className="space-y-4">
-                  <button onClick={handleBackClick} className="text-sm text-[#5A4A42] hover:underline mb-4">
-                    
+                <div className="space-y-5">
+                  <button onClick={handleBackClick} className="text-sm text-[#5A4A42] hover:underline">
+                    ← Back
                   </button>
 
-                  <div className="my-2.5">
+                  {/* Supply checklist */}
+                  <div>
                     <label className="block text-sm font-medium text-[#5A4A42] mb-3">
-                      What supplies do you need? *
+                      What do you need? <span className="text-red-500">*</span>
                     </label>
                     <div className="space-y-2">
                       {allowedSupplies.map((supply: string) => (
                         <label
                           key={supply}
-                          className="flex items-center gap-3 p-3 rounded-xl border border-[#F7E2BD] hover:bg-[#F7E2BD]/20 cursor-pointer"
+                          className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                            suppliesChecklist.includes(supply)
+                              ? "border-[#D76B1A] bg-[#D76B1A]/5"
+                              : "border-[#F7E2BD] hover:border-[#D76B1A]/40 hover:bg-[#F7E2BD]/20"
+                          }`}
                         >
                           <input
                             type="checkbox"
                             checked={suppliesChecklist.includes(supply)}
                             onChange={() => toggleSupply(supply)}
-                            className="w-4 h-4 text-[#D76B1A] rounded focus:ring-[#D76B1A]"
+                            className="w-4 h-4 rounded accent-[#D76B1A]"
                           />
-                          <span className="text-sm text-[#5A4A42]">{supply}</span>
+                          <span className="text-sm font-medium text-[#5A4A42]">{supply}</span>
                         </label>
                       ))}
                     </div>
                   </div>
 
+                  {/* Urgency grid */}
+                  <div>
+                    <label className="block text-sm font-medium text-[#5A4A42] mb-3">Urgency</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: "low", label: "Low", desc: "Whenever convenient" },
+                        { value: "normal", label: "Normal", desc: "Within a few days" },
+                        { value: "high", label: "High", desc: "Needed soon" },
+                        { value: "urgent", label: "Urgent", desc: "Need ASAP" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setSuppliesPriority(opt.value)}
+                          className={`p-3 rounded-xl border-2 text-left transition-colors ${
+                            suppliesPriority === opt.value
+                              ? "border-[#D76B1A] bg-[#D76B1A]/5"
+                              : "border-[#F7E2BD] hover:border-[#D76B1A]/40"
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-[#5A4A42]">{opt.label}</p>
+                          <p className="text-xs text-[#2E2E2E]/60">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Notes */}
                   <div>
                     <label className="block text-sm font-medium text-[#5A4A42] mb-2">Additional Notes</label>
                     <textarea
                       value={suppliesNotes}
                       onChange={(e) => setSuppliesNotes(e.target.value)}
-                      placeholder="Any specific details or preferences..."
+                      placeholder="Any specific details, brands, quantities, or context..."
                       className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] resize-none min-h-[80px]"
                     />
                   </div>
@@ -512,7 +546,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
                     disabled={submitting || suppliesChecklist.length === 0}
                     className="w-full inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
                   >
-                    {submitting ? "Submitting..." : "Submit Request"}
+                    {submitting ? "Submitting..." : "Submit Supply Request"}
                   </button>
                 </div>
               )}

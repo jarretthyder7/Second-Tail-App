@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Package, Loader2 } from "lucide-react"
+import { ArrowLeft, Package, Loader2, Clock, CheckCircle2, ChevronDown, ChevronUp, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,15 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
+
+type PastRequest = {
+  id: string
+  title: string
+  description: string | null
+  status: string
+  urgency: string
+  created_at: string
+}
 
 export default function RequestSuppliesPage() {
   const params = useParams()
@@ -22,6 +31,8 @@ export default function RequestSuppliesPage() {
   const [loading, setLoading] = useState(false)
   const [dogId, setDogId] = useState<string>("")
   const [fetchingDogs, setFetchingDogs] = useState(true)
+  const [pastRequests, setPastRequests] = useState<PastRequest[]>([])
+  const [showPastResolved, setShowPastResolved] = useState(false)
   const [formData, setFormData] = useState({
     itemName: "",
     quantity: "",
@@ -54,6 +65,16 @@ export default function RequestSuppliesPage() {
         if (dogs?.id) {
           setDogId(dogs.id)
         }
+
+        // Fetch past supply requests for this foster
+        const { data: past } = await supabase
+          .from("help_requests")
+          .select("id, title, description, status, urgency, created_at")
+          .eq("foster_id", user.id)
+          .eq("category", "supplies")
+          .order("created_at", { ascending: false })
+
+        setPastRequests(past || [])
       } catch (error) {
         console.error("[v0] Failed to fetch dog assignment:", error)
       } finally {
@@ -135,6 +156,122 @@ export default function RequestSuppliesPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </Link>
+
+        {/* Open requests — shown prominently */}
+        {(() => {
+          const openRequests = pastRequests.filter((r) => r.status !== "resolved")
+          const resolvedRequests = pastRequests.filter((r) => r.status === "resolved")
+
+          return (
+            <>
+              {openRequests.length > 0 && (
+                <Card className="mb-6 border-amber-200 bg-amber-50/40">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600" />
+                      Open Requests
+                      <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold">
+                        {openRequests.length}
+                      </span>
+                    </CardTitle>
+                    <CardDescription>The rescue team will fulfill these soon.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0 space-y-3">
+                    {openRequests.map((req) => (
+                      <div
+                        key={req.id}
+                        className="rounded-lg border border-amber-100 bg-white p-3 flex flex-col gap-1.5"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-sm font-semibold text-primary-bark">{req.title}</p>
+                          <span
+                            className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                              req.status === "in_progress"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {req.status === "in_progress" ? (
+                              <><Loader2 className="w-3 h-3" /> In Progress</>
+                            ) : (
+                              <><Clock className="w-3 h-3" /> Open</>
+                            )}
+                          </span>
+                        </div>
+                        {req.description && (
+                          <p className="text-xs text-text-muted line-clamp-2">{req.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-xs text-text-muted">
+                            Submitted {new Date(req.created_at).toLocaleDateString()}
+                          </span>
+                          {req.urgency && req.urgency !== "normal" && (
+                            <span
+                              className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                                req.urgency === "urgent"
+                                  ? "bg-red-100 text-red-700"
+                                  : req.urgency === "high"
+                                  ? "bg-orange-100 text-orange-700"
+                                  : "bg-gray-100 text-gray-600"
+                              }`}
+                            >
+                              {req.urgency.charAt(0).toUpperCase() + req.urgency.slice(1)} urgency
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {resolvedRequests.length > 0 && (
+                <Card className="mb-6">
+                  <CardHeader className="pb-3">
+                    <button
+                      type="button"
+                      className="flex items-center justify-between w-full text-left"
+                      onClick={() => setShowPastResolved((v) => !v)}
+                    >
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                        Fulfilled Requests
+                        <span className="text-xs font-normal text-text-muted">({resolvedRequests.length})</span>
+                      </CardTitle>
+                      {showPastResolved ? (
+                        <ChevronUp className="w-4 h-4 text-text-muted" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-text-muted" />
+                      )}
+                    </button>
+                  </CardHeader>
+                  {showPastResolved && (
+                    <CardContent className="pt-0">
+                      <div className="space-y-2">
+                        {resolvedRequests.map((req) => (
+                          <div
+                            key={req.id}
+                            className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0"
+                          >
+                            <div>
+                              <p className="text-sm font-medium text-primary-bark">{req.title}</p>
+                              <p className="text-xs text-text-muted">
+                                {new Date(req.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle2 className="w-3 h-3" /> Fulfilled
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              )}
+            </>
+          )
+        })()}
 
         <Card>
           <CardHeader>

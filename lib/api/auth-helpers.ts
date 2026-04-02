@@ -7,6 +7,7 @@ export type ProfileForAccess = {
   id: string
   role: string
   organization_id: string | null
+  org_role?: string | null
 }
 
 export type DogForAccess = {
@@ -28,4 +29,14 @@ export function canAccessDog(profile: ProfileForAccess, dog: DogForAccess): bool
 /** Logged-in rescue user who belongs to the given organization (from query/body). */
 export function isRescueInOrg(profile: ProfileForAccess, orgId: string): boolean {
   return profile.role === "rescue" && profile.organization_id === orgId
+}
+
+/** Foster or rescue user whose home org matches (for org-scoped reads like help settings). */
+export function isOrgMember(profile: ProfileForAccess, orgId: string): boolean {
+  return profile.organization_id === orgId
+}
+
+/** Rescue org admin for settings-only routes. */
+export function isRescueOrgAdmin(profile: ProfileForAccess, orgId: string): boolean {
+  return profile.role === "rescue" && profile.organization_id === orgId && profile.org_role === "org_admin"
 }

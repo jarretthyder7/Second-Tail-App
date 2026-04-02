@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { isRescueInOrg } from "@/lib/api/auth-helpers"
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,6 +12,23 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile || !isRescueInOrg(profile, orgId)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     const { data: requests, error } = await supabase
       .from("help_requests")
@@ -26,8 +44,6 @@ export async function GET(request: NextRequest) {
       console.error("[v0] Error fetching help requests:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    console.log("[v0] API Found help requests:", requests?.length || 0)
 
     return NextResponse.json({ requests: requests || [] })
   } catch (error) {

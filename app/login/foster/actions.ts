@@ -1,10 +1,7 @@
-"use server"
-
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 
 export async function fosterLogin(email: string, password: string) {
-  const supabase = await createClient()
+  const supabase = createClient()
 
   const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,
@@ -35,9 +32,9 @@ export async function fosterLogin(email: string, password: string) {
     return { error: "This account is not a foster account. Please use Rescue Team Login." }
   }
 
-  const dashboardUrl = profile.organization_id
+  const redirectTo = profile.organization_id
     ? `/org/${profile.organization_id}/foster/dashboard`
     : "/foster/dashboard"
 
-  redirect(dashboardUrl)
+  return { redirectTo }
 }

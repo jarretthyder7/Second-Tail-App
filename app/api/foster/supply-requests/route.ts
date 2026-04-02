@@ -26,26 +26,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { data: request_data, error } = await supabase
-      .from("help_requests")
-      .insert({
-        foster_id: user.id,
-        organization_id: orgId,
-        dog_id: dogId || null,
-        title: `Supply Request: ${itemName}`,
-        description: `Item: ${itemName}\nQuantity: ${quantity}\n\n${notes || ""}`.trim(),
-        category: "supplies",
-        status: "open",
-        priority: urgency === "urgent" ? "urgent" : urgency === "high" ? "high" : urgency === "low" ? "low" : "normal",
-      })
-      .select()
-      .single()
+    const priority = urgency === "urgent" ? "urgent" : urgency === "high" ? "high" : urgency === "low" ? "low" : "normal"
+    const description = `Item: ${itemName}\nQuantity: ${quantity}\n\n${notes || ""}`.trim()
+
+    // Use rpc to bypass PostgREST schema cache
+    const { data: newId, error } = await supabase.rpc("insert_supply_request", {
+      p_foster_id: user.id,
+      p_organization_id: orgId,
+      p_dog_id: dogId || null,
+      p_title: `Supply Request: ${itemName}`,
+      p_description: description,
+      p_category: "supplies",
+      p_status: "open",
+      p_priority: priority,
+    })
 
     if (error) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 500 })
     }
 
-    return NextResponse.json({ request: request_data })
+    return NextResponse.json({ request: { id: newId } })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServiceRoleClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { isRescueInOrg } from "@/lib/api/auth-helpers"
 
 export async function GET(request: NextRequest, { params }: { params: { fosterId: string } }) {
   try {
@@ -7,22 +8,32 @@ export async function GET(request: NextRequest, { params }: { params: { fosterId
     const orgId = searchParams.get("orgId")
     const fosterId = params.fosterId
 
-    console.log("[v0] ==========================================================")
-    console.log("[v0] API Request: GET /api/admin/foster/" + fosterId)
-    console.log("[v0] Organization ID:", orgId)
-    console.log("[v0] Timestamp:", new Date().toISOString())
-    console.log("[v0] ==========================================================")
-
     if (!orgId) {
       return NextResponse.json({ error: "Organization ID required" }, { status: 400 })
     }
 
     if (!fosterId || fosterId === "undefined" || fosterId === "null") {
-      console.error("[v0] ❌ Invalid foster ID:", fosterId)
       return NextResponse.json({ error: "Invalid foster ID", fosterId }, { status: 400 })
     }
 
-    const supabase = createServiceRoleClient()
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id, org_role")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile || !isRescueInOrg(profile, orgId)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     const { data: foster, error } = await supabase
       .from("profiles")
@@ -30,10 +41,6 @@ export async function GET(request: NextRequest, { params }: { params: { fosterId
       .eq("id", fosterId)
       .eq("organization_id", orgId)
       .maybeSingle()
-
-    console.log("[v0] Query completed:")
-    console.log("[v0]   - Has Error:", !!error)
-    console.log("[v0]   - Has Data:", !!foster)
 
     if (error) {
       console.error("[v0] Database error fetching foster:", error)
@@ -48,7 +55,6 @@ export async function GET(request: NextRequest, { params }: { params: { fosterId
     }
 
     if (!foster) {
-      console.log("[v0] ⚠️ Foster not found for ID:", fosterId, "in org:", orgId)
       return NextResponse.json(
         {
           error: "Foster not found",
@@ -58,8 +64,6 @@ export async function GET(request: NextRequest, { params }: { params: { fosterId
         { status: 404 },
       )
     }
-
-    console.log("[v0] ✓ Foster found:", foster.email)
 
     if (foster.organization_id) {
       const { data: organization } = await supabase
@@ -78,24 +82,15 @@ export async function GET(request: NextRequest, { params }: { params: { fosterId
       .select("id, name, breed, image_url, status")
       .eq("foster_id", fosterId)
 
-    console.log("[v0] ✓ Found", dogs?.length || 0, "assigned dogs")
     foster.dogs = dogs || []
 
-    console.log("[v0] ==========================================================")
-    console.log("[v0] ✓ Successfully returning foster data")
-    console.log("[v0] ==========================================================")
     return NextResponse.json(foster)
   } catch (error) {
-    console.error("[v0] ==========================================================")
-    console.error("[v0] ❌ Unexpected error in foster API:")
-    console.error("[v0]", error)
-    console.error("[v0] Stack:", error instanceof Error ? error.stack : "No stack trace")
-    console.error("[v0] ==========================================================")
+    console.error("[v0] Unexpected error in foster API:", error)
     return NextResponse.json(
       {
         error: "Server error",
         message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 },
     )
@@ -119,7 +114,24 @@ export async function PATCH(request: NextRequest, { params }: { params: { foster
     const body = await request.json()
     const { name, phone, address } = body
 
-    const supabase = createServiceRoleClient()
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile || !isRescueInOrg(profile, orgId)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
 
     const { data: updatedFoster, error } = await supabase
       .from("profiles")

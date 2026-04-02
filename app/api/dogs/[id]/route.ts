@@ -1,7 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServiceRoleClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { canAccessDog } from "@/lib/api/auth-helpers"
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+const PATCHABLE_DOG_FIELDS = [
+  "name",
+  "breed",
+  "age",
+  "gender",
+  "weight",
+  "status",
+  "medical_notes",
+  "behavior_notes",
+  "foster_id",
+  "image_url",
+  "intake_date",
+] as const
+
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const dogId = params.id
 
@@ -9,44 +24,38 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Invalid dog ID", dogId }, { status: 400 })
     }
 
-    let supabase
-    try {
-      supabase = createServiceRoleClient()
-    } catch (clientError) {
-      console.error("[v0] Failed to create service role client:", clientError)
-      return NextResponse.json(
-        {
-          error: "Database configuration error",
-          message: clientError instanceof Error ? clientError.message : "Could not create database client",
-        },
-        { status: 500 },
-      )
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const { data: dog, error: dogError } = await supabase.from("dogs").select("*").eq("id", dogId).maybeSingle()
 
     if (dogError) {
-      console.error("[v0] Database error fetching dog:", {
-        message: dogError.message,
-        code: dogError.code,
-        details: dogError.details,
-        hint: dogError.hint,
-        dogId,
-      })
-      return NextResponse.json(
-        {
-          error: "Database error",
-          message: dogError.message,
-          code: dogError.code,
-          dogId,
-        },
-        { status: 500 },
-      )
+      console.error("[v0] Database error fetching dog:", dogError.message, dogId)
+      return NextResponse.json({ error: "Database error", message: dogError.message }, { status: 500 })
     }
 
     if (!dog) {
-      console.error("[v0] Dog not found in database:", dogId)
       return NextResponse.json({ error: "Dog not found", dogId }, { status: 404 })
+    }
+
+    if (!canAccessDog(profile, dog)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
     if (dog.foster_id) {
@@ -80,7 +89,6 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       {
         error: "Server error",
         message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 },
     )
@@ -92,13 +100,50 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const dogId = params.id
     const body = await request.json()
 
-    console.log("[v0] PATCH /api/dogs/" + dogId, "with data:", Object.keys(body))
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-    const supabase = createServiceRoleClient()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: dog, error: dogError } = await supabase.from("dogs").select("*").eq("id", dogId).maybeSingle()
+
+    if (dogError) {
+      console.error("[v0] Error loading dog for PATCH:", dogError.message)
+      return NextResponse.json({ error: "Database error", message: dogError.message }, { status: 500 })
+    }
+
+    if (!dog) {
+      return NextResponse.json({ error: "Dog not found" }, { status: 404 })
+    }
+
+    if (!canAccessDog(profile, dog)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+    for (const key of PATCHABLE_DOG_FIELDS) {
+      if (Object.prototype.hasOwnProperty.call(body, key)) {
+        updates[key] = body[key]
+      }
+    }
 
     const { data: updatedDog, error } = await supabase
       .from("dogs")
-      .update(body)
+      .update(updates)
       .eq("id", dogId)
       .select("*")
       .maybeSingle()
@@ -112,7 +157,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return NextResponse.json({ error: "Dog not found" }, { status: 404 })
     }
 
-    // Fetch related data
     if (updatedDog.foster_id) {
       const { data: foster } = await supabase
         .from("profiles")
@@ -144,7 +188,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       {
         error: "Server error",
         message: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 },
     )

@@ -6,6 +6,17 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/"
 
+  // Parse rescue signup intent from OAuth state parameter (base64-encoded JSON)
+  const stateParam = searchParams.get("state")
+  let signupIntent: { role?: string; org_role?: string; orgName?: string; adminName?: string } | null = null
+  if (stateParam) {
+    try {
+      signupIntent = JSON.parse(atob(stateParam))
+    } catch {
+      // Not a valid intent — ignore (could be a regular login state)
+    }
+  }
+
   if (code) {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
@@ -19,45 +30,79 @@ export async function GET(request: Request) {
 
       // If no profile exists (Google OAuth signup), create one
       if (!profile) {
-        console.log("[v0] No profile found, creating new profile for:", data.user.email)
+        const isRescueAdminSignup = signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin"
 
-        // Check if user has pending invitations
-        const { data: invitation } = await supabase
-          .from("invitations")
-          .select("*, organization:organizations!organization_id(id, name)")
-          .eq("email", data.user.email!)
-          .eq("status", "pending")
-          .maybeSingle()
+        if (isRescueAdminSignup && signupIntent?.orgName) {
+          // Create the organization first
+          const { data: newOrg, error: orgError } = await supabase
+            .from("organizations")
+            .insert({
+              name: signupIntent.orgName,
+            })
+            .select()
+            .single()
 
-        // Create profile with organization if invited
-        const { data: newProfile, error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name || data.user.email?.split("@")[0],
-            role: "foster",
-            organization_id: invitation ? invitation.organization_id : null,
-          })
-          .select()
-          .single()
+          if (orgError) {
+            console.error("[v0] Error creating organization:", orgError)
+          }
 
-        if (profileError) {
-          console.error("[v0] Error creating profile:", profileError)
+          // Create rescue admin profile linked to the new org
+          const { data: newProfile, error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+              name: signupIntent.adminName || data.user.user_metadata?.name || data.user.email?.split("@")[0],
+              role: "rescue",
+              org_role: "org_admin",
+              organization_id: newOrg?.id ?? null,
+            })
+            .select()
+            .single()
+
+          if (profileError) {
+            console.error("[v0] Error creating rescue admin profile:", profileError)
+          } else {
+            profile = newProfile
+          }
         } else {
-          profile = newProfile
+          // Standard foster OAuth signup path
+          // Check if user has pending invitations
+          const { data: invitation } = await supabase
+            .from("invitations")
+            .select("*, organization:organizations!organization_id(id, name)")
+            .eq("email", data.user.email!)
+            .eq("status", "pending")
+            .maybeSingle()
 
-          // Accept invitation if exists
-          if (invitation) {
-            await supabase
-              .from("invitations")
-              .update({
-                status: "accepted",
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", invitation.id)
+          // Create profile with organization if invited
+          const { data: newProfile, error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.user_metadata?.name || data.user.email?.split("@")[0],
+              role: "foster",
+              organization_id: invitation ? invitation.organization_id : null,
+            })
+            .select()
+            .single()
 
-            console.log("[v0] Auto-accepted invitation from:", invitation.organization?.name)
+          if (profileError) {
+            console.error("[v0] Error creating profile:", profileError)
+          } else {
+            profile = newProfile
+
+            // Accept invitation if exists
+            if (invitation) {
+              await supabase
+                .from("invitations")
+                .update({
+                  status: "accepted",
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("id", invitation.id)
+            }
           }
         }
       }
@@ -105,3 +150,4 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(`${origin}/auth/auth-code-error`)
 }
+

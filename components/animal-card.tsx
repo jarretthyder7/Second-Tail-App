@@ -1,14 +1,12 @@
 import Link from "next/link"
-import { type Dog, getOrganizationById } from "@/lib/mock-data"
 
 interface DogCardProps {
-  dog: Dog
+  dog: any
   href: string
   showLastUpdate?: boolean
 }
 
 export function DogCard({ dog, href, showLastUpdate = true }: DogCardProps) {
-  const org = getOrganizationById(dog.orgId)
 
   const stageClass =
     dog.stage === "in_foster"
@@ -31,7 +29,6 @@ export function DogCard({ dog, href, showLastUpdate = true }: DogCardProps) {
           <div>
             <h3 className="text-base sm:text-lg font-bold text-[#5A4A42]">{dog.name}</h3>
             <p className="text-xs sm:text-sm text-[#2E2E2E]/70">{dog.breed}</p>
-            {org && <p className="text-xs text-[#2E2E2E]/60 mt-1">{org.name}</p>}
           </div>
 
           <div className="flex items-center gap-2">

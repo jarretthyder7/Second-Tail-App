@@ -1,11 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { Dog, DailyLog, submitLog } from '@/lib/mock-data'
+import { createClient } from '@/lib/supabase/client'
 
 interface DailyLogTabProps {
-  dog: Dog
-  logs: DailyLog[]
+  dog: any
+  logs: any[]
 }
 
 export function DailyLogTab({ dog, logs }: DailyLogTabProps) {
@@ -20,14 +20,23 @@ export function DailyLogTab({ dog, logs }: DailyLogTabProps) {
     if (!notes.trim()) return
     
     setSubmitting(true)
-    
-    await submitLog(dog.id, {
-      dogId: dog.id,
-      date: new Date().toISOString().split('T')[0],
-      category,
-      notes,
-      mood,
-    })
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        await supabase.from('daily_logs').insert({
+          dog_id: dog.id,
+          foster_id: user.id,
+          date: new Date().toISOString().split('T')[0],
+          mood,
+          behavior_notes: category === 'Behavior' ? notes : null,
+          medical_notes: category === 'Medication' ? notes : null,
+        })
+      }
+    } catch (err) {
+      console.error('[v0] Error submitting log:', err)
+    }
     
     setSubmitting(false)
     setShowSuccess(true)

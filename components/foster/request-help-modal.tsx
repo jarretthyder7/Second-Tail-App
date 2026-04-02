@@ -5,7 +5,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useParams } from "next/navigation"
-import { type Dog, getOrganizationById } from "@/lib/mock-data" // Import getOrganizationById
 
 const Phone = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -84,7 +83,7 @@ const AlertTriangle = (props: React.SVGProps<SVGSVGElement>) => (
 )
 
 interface RequestHelpModalProps {
-  dog: Dog
+  dog: any
   onClose: () => void
   initialView?: MainOption // Add initialView prop
 }
@@ -297,7 +296,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
             {settings && settings.organization_name && (
               <p className="text-xs text-[#2E2E2E]/60">via {settings.organization_name}</p>
             )}
-            {!settings && <p className="text-xs text-[#2E2E2E]/60">via {getOrganizationById(dog.orgId)?.name}</p>}
+            {!settings && dog.organization_name && <p className="text-xs text-[#2E2E2E]/60">via {dog.organization_name}</p>}
           </div>
           <button onClick={onClose} className="text-[#2E2E2E]/60 hover:text-[#2E2E2E] transition">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

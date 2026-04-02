@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob"
 import { type NextRequest, NextResponse } from "next/server"
-import { createServiceRoleClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
+import { canAccessDog } from "@/lib/api/auth-helpers"
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,12 +17,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No dog ID provided" }, { status: 400 })
     }
 
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: dog, error: dogError } = await supabase.from("dogs").select("*").eq("id", dogId).maybeSingle()
+
+    if (dogError) {
+      console.error("[API] Error loading dog for upload:", dogError.message)
+      return NextResponse.json({ error: "Failed to verify access" }, { status: 500 })
+    }
+
+    if (!dog) {
+      return NextResponse.json({ error: "Dog not found" }, { status: 404 })
+    }
+
+    if (!canAccessDog(profile, dog)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     const filename = `dogs/${dogId}/${Date.now()}-${file.name}`
     const blob = await put(filename, file, {
       access: "public",
     })
 
-    const supabase = await createServiceRoleClient()
     const { data: updatedDog, error } = await supabase
       .from("dogs")
       .update({ image_url: blob.url })

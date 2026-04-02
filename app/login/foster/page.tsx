@@ -58,17 +58,12 @@ export default function FosterLoginPage() {
     try {
       const supabase = createClient()
 
-      console.log("[v0] Attempting to sign in with email:", email)
-
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      console.log("[v0] Sign in response:", { data, error: signInError })
-
       if (signInError) {
-        console.error("[v0] Sign in error:", signInError)
         setError(signInError.message)
         setIsLoading(false)
         return
@@ -79,8 +74,6 @@ export default function FosterLoginPage() {
         setIsLoading(false)
         return
       }
-
-      console.log("[v0] User signed in:", data.user.id)
 
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true")
@@ -96,8 +89,6 @@ export default function FosterLoginPage() {
         .eq("id", data.user.id)
         .single()
 
-      console.log("[v0] Profile query result:", { profile, profileError })
-
       if (profileError || !profile) {
         setError("Unable to load user profile. Please try again.")
         setIsLoading(false)
@@ -110,15 +101,12 @@ export default function FosterLoginPage() {
         return
       }
 
-      console.log("[v0] Redirecting to dashboard...")
-
       if (profile.organization_id) {
         router.push(`/org/${profile.organization_id}/foster/dashboard`)
       } else {
         router.push("/foster/dashboard")
       }
     } catch (err) {
-      console.error("[v0] Login exception:", err)
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)
     }

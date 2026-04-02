@@ -1,5 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr"
 
+// Singleton pattern: one instance per browser context to avoid duplicate sessions
 let supabaseClient: ReturnType<typeof createBrowserClient> | null = null
 
 export function createClient() {
@@ -7,31 +8,11 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Missing Supabase environment variables")
+    throw new Error("Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.")
   }
 
   if (!supabaseClient) {
-    supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
-        flowType: "pkce",
-      },
-    })
-
-    // This prevents "Failed to fetch" errors from breaking the app while sessions refresh
-    if (typeof window !== "undefined") {
-      supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
-          // Silently handle token refresh events
-          if (event === "TOKEN_REFRESHED" && !session) {
-            console.debug("[v0] Session refresh handled silently")
-          }
-        }
-      })
-    }
+    supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
   }
 
   return supabaseClient

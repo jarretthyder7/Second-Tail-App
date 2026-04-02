@@ -9,6 +9,7 @@ import {
   sendNewMessageEmail,
   sendMedicalUpdateEmail,
   sendSupplyRequestEmail,
+  sendFosterInvitationEmail,
 } from "@/lib/email/send"
 
 export async function POST(request: NextRequest) {
@@ -45,6 +46,9 @@ export async function POST(request: NextRequest) {
         break
       case "medical-update":
         result = await sendMedicalUpdateEmail(data.fosterEmail, data.fosterName, data.dogName, data.updateType)
+        break
+      case "foster-invitation":
+        result = await sendFosterInvitationEmail(data.email, data.orgName, data.inviteCode, data.signUpUrl)
         break
       case "supply-request":
         result = await sendSupplyRequestEmail(data.rescueEmail, data.rescueName, data.fosterName, data.supplies)

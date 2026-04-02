@@ -463,6 +463,15 @@ export async function fetchInvitationsForEmail(email: string) {
   return data
 }
 
+function generateInvitationCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+  let code = ""
+  for (let i = 0; i < 12; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return code
+}
+
 export async function createInvitation(orgId: string, email: string, invitedBy: string) {
   const supabase = await createClient()
 
@@ -480,12 +489,14 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
     } else if (existing.status === "accepted") {
       throw new Error("This foster has already accepted an invitation to your organization")
     } else if (existing.status === "declined") {
-      // Update the declined invitation to pending instead of creating new
+      // Update the declined invitation to pending with a fresh code
+      const code = generateInvitationCode()
       const { data, error } = await supabase
         .from("invitations")
         .update({
           status: "pending",
           invited_by: invitedBy,
+          code,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id)
@@ -501,6 +512,8 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
     }
   }
 
+  const code = generateInvitationCode()
+
   const { data, error } = await supabase
     .from("invitations")
     .insert({
@@ -508,6 +521,7 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
       email: email,
       invited_by: invitedBy,
       status: "pending",
+      code,
     })
     .select()
     .single()

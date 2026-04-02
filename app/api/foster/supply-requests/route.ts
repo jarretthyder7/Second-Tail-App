@@ -1,12 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
+// v2 - uses rpc to bypass PostgREST schema cache
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
+
+    console.log("[v0] route v2 user:", user?.id)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -15,7 +18,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { orgId, dogId, itemName, quantity, urgency, notes } = body
 
-    // Verify foster belongs to this org
+    console.log("[v0] route v2 body:", { orgId, dogId, itemName, quantity, urgency })
+
     const { data: profile } = await supabase
       .from("profiles")
       .select("organization_id")
@@ -27,9 +31,10 @@ export async function POST(request: NextRequest) {
     }
 
     const priority = urgency === "urgent" ? "urgent" : urgency === "high" ? "high" : urgency === "low" ? "low" : "normal"
-    const description = `Item: ${itemName}\nQuantity: ${quantity}\n\n${notes || ""}`.trim()
+    const description = `Item: ${itemName}\nQuantity: ${quantity || 1}${notes ? "\n\n" + notes : ""}`.trim()
 
-    // Use rpc to bypass PostgREST schema cache
+    console.log("[v0] route v2 calling rpc insert_supply_request")
+
     const { data: newId, error } = await supabase.rpc("insert_supply_request", {
       p_foster_id: user.id,
       p_organization_id: orgId,
@@ -41,12 +46,15 @@ export async function POST(request: NextRequest) {
       p_priority: priority,
     })
 
+    console.log("[v0] route v2 rpc result:", newId, "error:", error?.message, error?.code)
+
     if (error) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 500 })
     }
 
-    return NextResponse.json({ request: { id: newId } })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true, id: newId })
+  } catch (err: any) {
+    console.log("[v0] route v2 exception:", err.message)
+    return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

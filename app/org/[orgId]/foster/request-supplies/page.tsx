@@ -116,9 +116,16 @@ export default function FosterRequestSuppliesPage() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || "Failed to submit")
 
-      if (json.request) {
-        setRequests((prev) => [json.request, ...prev])
+      // Optimistically add the new request to the list
+      const newRequest: SupplyRequest = {
+        id: json.id || crypto.randomUUID(),
+        title: `Supply Request: ${selectedSupplies.join(", ")}`,
+        description: `Item: ${selectedSupplies.join(", ")}\nQuantity: ${selectedSupplies.length}${notes ? "\n\n" + notes : ""}`,
+        status: "open",
+        priority,
+        created_at: new Date().toISOString(),
       }
+      setRequests((prev) => [newRequest, ...prev])
 
       setSelectedSupplies([])
       setPriority("normal")

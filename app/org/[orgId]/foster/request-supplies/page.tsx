@@ -47,7 +47,7 @@ export default function FosterRequestSuppliesPage() {
 
   // Form state
   const [selectedSupplies, setSelectedSupplies] = useState<string[]>([])
-  const [priority, setPriority] = useState("normal")
+  const [priority, setPriority] = useState("medium")
   const [notes, setNotes] = useState("")
 
   useEffect(() => {
@@ -128,7 +128,7 @@ export default function FosterRequestSuppliesPage() {
       setRequests((prev) => [newRequest, ...prev])
 
       setSelectedSupplies([])
-      setPriority("normal")
+      setPriority("medium")
       setNotes("")
       setShowForm(false)
       toast({ title: "Supply request submitted!", description: "The rescue team will be in touch soon." })
@@ -292,7 +292,7 @@ export default function FosterRequestSuppliesPage() {
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { value: "low", label: "Low", desc: "Whenever convenient" },
-                    { value: "normal", label: "Normal", desc: "Within a few days" },
+                    { value: "medium", label: "Normal", desc: "Within a few days" },
                     { value: "high", label: "High", desc: "Needed soon" },
                     { value: "urgent", label: "Urgent", desc: "Need ASAP" },
                   ].map((opt) => (

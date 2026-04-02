@@ -109,7 +109,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
 
   const [suppliesChecklist, setSuppliesChecklist] = useState<string[]>([])
   const [suppliesNotes, setSuppliesNotes] = useState("")
-  const [suppliesPriority, setSuppliesPriority] = useState("normal")
+  const [suppliesPriority, setSuppliesPriority] = useState("medium")
 
   const [emergencyDanger, setEmergencyDanger] = useState<boolean | null>(null)
   const [emergencySymptoms, setEmergencySymptoms] = useState("")
@@ -153,7 +153,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
         description: appointmentReason,
         category: "appointment",
         status: "open",
-        priority: "normal",
+        priority: "medium",
       })
 
       setSubmitting(false)
@@ -503,7 +503,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { value: "low", label: "Low", desc: "Whenever convenient" },
-                        { value: "normal", label: "Normal", desc: "Within a few days" },
+                        { value: "medium", label: "Normal", desc: "Within a few days" },
                         { value: "high", label: "High", desc: "Needed soon" },
                         { value: "urgent", label: "Urgent", desc: "Need ASAP" },
                       ].map((opt) => (

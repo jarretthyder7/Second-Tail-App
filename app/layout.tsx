@@ -3,12 +3,11 @@ import { Lora } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const lora = Lora({ subsets: ['latin'], weight: ['400', '600', '700'] })
+const lora = Lora({ subsets: ['latin'], variable: '--font-lora', weight: ['400', '600', '700'] })
 
 export const metadata: Metadata = {
   title: 'Second Tail Foster Portal',
   description: 'Supporting fosters and rescues in one place',
-  generator: 'v0.app',
 }
 
 export default function RootLayout({
@@ -18,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${lora.className} antialiased`}>
+      <body className={`${lora.variable} font-sans antialiased`}>
         {children}
         <Analytics />
       </body>

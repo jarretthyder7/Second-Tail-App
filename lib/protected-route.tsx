@@ -25,10 +25,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         error: userError,
       } = await supabase.auth.getUser()
 
-      console.log("[v0] ProtectedRoute check:", { allowedRoles })
-
       if (userError || !user) {
-        console.log("[v0] No user found, redirecting to login")
         router.push("/login")
         return
       }
@@ -40,15 +37,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         .single()
 
       if (profileError || !profile) {
-        console.log("[v0] Profile error:", profileError)
         router.push("/login")
         return
       }
 
-      console.log("[v0] User profile:", { email: user.email, role: profile.role, allowedRoles })
-
       if (allowedRoles && !allowedRoles.includes(profile.role as "foster" | "rescue")) {
-        console.log("[v0] Role not allowed, redirecting")
         if (profile.role === "foster") {
           if (profile.organization_id) {
             router.push(`/org/${profile.organization_id}/foster/dashboard`)

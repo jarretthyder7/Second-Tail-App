@@ -400,7 +400,14 @@ export default function RescueSignUpPage() {
                 </button>
 
                 <p className="text-xs text-center text-text-tertiary">
-                  By signing up, you agree to our Terms of Service and Privacy Policy
+                  By signing up, you agree to our{" "}
+                  <Link href="/terms" className="underline hover:no-underline text-text-secondary">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" className="underline hover:no-underline text-text-secondary">
+                    Privacy Policy
+                  </Link>
                 </p>
               </form>
             </div>

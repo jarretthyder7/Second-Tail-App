@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
 
@@ -47,6 +48,7 @@ export default function FosterLoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -66,8 +68,9 @@ export default function FosterLoginPage() {
     if (result?.error) {
       setError(result.error)
       setIsLoading(false)
+    } else if (result?.redirectTo) {
+      router.push(result.redirectTo)
     }
-    // If no error, server action called redirect() and navigation happens automatically
   }
 
   return (

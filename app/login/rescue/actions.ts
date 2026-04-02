@@ -1,10 +1,7 @@
-"use server"
-
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 
 export async function rescueLogin(email: string, password: string) {
-  const supabase = await createClient()
+  const supabase = createClient()
 
   const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,
@@ -39,5 +36,5 @@ export async function rescueLogin(email: string, password: string) {
     return { error: "No organization assigned to this account." }
   }
 
-  redirect(`/org/${profile.organization_id}/admin/dashboard`)
+  return { redirectTo: `/org/${profile.organization_id}/admin/dashboard` }
 }

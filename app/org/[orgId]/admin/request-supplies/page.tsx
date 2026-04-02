@@ -9,6 +9,7 @@ import { Package, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react
 type SupplyRequest = {
   id: string
   title: string
+  description: string | null
   priority: string
   status: string
   created_at: string
@@ -33,26 +34,12 @@ export default function AdminSupplyRequestsPage() {
     setLoading(true)
     const supabase = createClient()
 
-    // Get all foster profile IDs in this org
-    const { data: fosterProfiles } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("organization_id", orgId)
-      .eq("role", "foster")
-
-    const fosterIds = (fosterProfiles || []).map((p) => p.id)
-
-    if (fosterIds.length === 0) {
-      setRequests([])
-      setLoading(false)
-      return
-    }
-
     let query = supabase
       .from("help_requests")
       .select(`
         id,
         title,
+        description,
         priority,
         status,
         created_at,
@@ -60,7 +47,7 @@ export default function AdminSupplyRequestsPage() {
         dogs(name)
       `)
       .eq("category", "supplies")
-      .in("foster_id", fosterIds)
+      .eq("organization_id", orgId)
       .order("created_at", { ascending: false })
 
     if (filterStatus !== "all") {
@@ -241,11 +228,14 @@ export default function AdminSupplyRequestsPage() {
             <Card key={req.id} className="p-6">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
                     <h3 className="font-semibold text-primary-bark text-lg">{req.title}</h3>
                     {getStatusBadge(req.status)}
                     {getUrgencyBadge(req.priority)}
                   </div>
+                  {req.description && (
+                    <p className="text-sm text-text-muted mb-2 line-clamp-2">{req.description}</p>
+                  )}
                   <div className="flex items-center gap-3 text-sm text-text-muted flex-wrap">
                     <span>{req.profiles?.name || "Unknown Foster"}</span>
                     {req.dogs?.name && (

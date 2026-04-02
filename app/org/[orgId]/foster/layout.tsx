@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Users,
+  Package,
 } from "lucide-react"
 import { useOrgBranding } from "@/lib/branding/use-org-branding"
 
@@ -109,6 +110,12 @@ export default function OrgFosterLayout({
       href: `/org/${orgId}/foster/reimbursements`,
       path: "/reimbursements",
       icon: DollarSign,
+    },
+    {
+      name: "My Requests",
+      href: `/org/${orgId}/foster/request-supplies`,
+      path: "/request-supplies",
+      icon: Package,
     },
   ]
 

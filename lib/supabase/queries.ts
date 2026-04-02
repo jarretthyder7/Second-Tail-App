@@ -280,6 +280,17 @@ export async function createConversation(dogId: string, orgId: string) {
 export async function fetchHelpRequests(orgId: string) {
   const supabase = await createClient()
 
+  // First get all dog IDs for this org
+  const { data: dogs } = await supabase
+    .from("dogs")
+    .select("id")
+    .eq("organization_id", orgId)
+
+  if (!dogs || dogs.length === 0) return []
+
+  const dogIds = dogs.map((d) => d.id)
+
+  // Then fetch help requests for those dogs
   const { data, error } = await supabase
     .from("help_requests")
     .select(`
@@ -287,7 +298,7 @@ export async function fetchHelpRequests(orgId: string) {
       dog:dogs(id, name, breed, image_url),
       foster:profiles!help_requests_foster_id_fkey(id, name, email)
     `)
-    .eq("dog.organization_id", orgId)
+    .in("dog_id", dogIds)
     .order("created_at", { ascending: false })
 
   if (error) {

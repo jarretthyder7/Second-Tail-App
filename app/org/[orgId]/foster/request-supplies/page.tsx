@@ -10,10 +10,9 @@ import {
   Loader2,
   Clock,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   AlertCircle,
   Plus,
+  X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -43,7 +42,8 @@ export default function FosterRequestSuppliesPage() {
   const [requests, setRequests] = useState<SupplyRequest[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [showResolved, setShowResolved] = useState(false)
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [showForm, setShowForm] = useState(false)
 
   // Form state
   const [selectedSupplies, setSelectedSupplies] = useState<string[]>([])
@@ -123,6 +123,7 @@ export default function FosterRequestSuppliesPage() {
       setSelectedSupplies([])
       setPriority("normal")
       setNotes("")
+      setShowForm(false)
       toast({ title: "Supply request submitted!", description: "The rescue team will be in touch soon." })
     } catch (err: any) {
       toast({ title: "Submission failed", description: err.message, variant: "destructive" })
@@ -131,18 +132,75 @@ export default function FosterRequestSuppliesPage() {
     }
   }
 
-  const openRequests = requests.filter((r) => r.status !== "resolved")
-  const resolvedRequests = requests.filter((r) => r.status === "resolved")
-
-  const priorityBadgeClass: Record<string, string> = {
-    low: "bg-green-100 text-green-700",
-    normal: "bg-neutral-100 text-neutral-600",
-    high: "bg-orange-100 text-orange-700",
-    urgent: "bg-red-100 text-red-700",
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "open":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+            <Clock className="w-3 h-3" />
+            Open
+          </span>
+        )
+      case "in_progress":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Loader2 className="w-3 h-3" />
+            Being Sourced
+          </span>
+        )
+      case "resolved":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle2 className="w-3 h-3" />
+            Fulfilled
+          </span>
+        )
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+            {status}
+          </span>
+        )
+    }
   }
 
+  const getUrgencyBadge = (priority: string) => {
+    switch (priority) {
+      case "urgent":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+            <AlertCircle className="w-3 h-3" />
+            Urgent
+          </span>
+        )
+      case "high":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+            High
+          </span>
+        )
+      case "low":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+            Low
+          </span>
+        )
+      default:
+        return null
+    }
+  }
+
+  const filteredRequests =
+    filterStatus === "all"
+      ? requests
+      : requests.filter((r) => r.status === filterStatus)
+
+  const openCount = requests.filter((r) => r.status === "open").length
+  const inProgressCount = requests.filter((r) => r.status === "in_progress").length
+  const resolvedCount = requests.filter((r) => r.status === "resolved").length
+
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -152,222 +210,244 @@ export default function FosterRequestSuppliesPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </Link>
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary-orange/10 rounded-lg">
-            <Package className="w-6 h-6 text-primary-orange" />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary-orange/10 rounded-lg">
+              <Package className="w-6 h-6 text-primary-orange" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-primary-bark">My Supply Requests</h1>
+              <p className="text-sm text-text-muted">Track your requests and submit new ones</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-primary-bark">Request Supplies</h1>
-            <p className="text-sm text-text-muted">Submit a request to your rescue organization</p>
-          </div>
+          <Button
+            onClick={() => setShowForm((v) => !v)}
+            className="bg-primary-orange hover:bg-primary-orange/90 text-white rounded-xl shrink-0"
+          >
+            {showForm ? (
+              <span className="flex items-center gap-2"><X className="w-4 h-4" /> Cancel</span>
+            ) : (
+              <span className="flex items-center gap-2"><Plus className="w-4 h-4" /> New Request</span>
+            )}
+          </Button>
         </div>
       </div>
 
-      {/* Open requests — shown prominently above the form */}
-      {!loadingData && openRequests.length > 0 && (
-        <Card className="mb-6 border-amber-200 bg-amber-50/40">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-600" />
-              Open Requests
-              <span className="ml-auto inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-xs font-bold">
-                {openRequests.length}
-              </span>
+      {/* New request form — slides in when "New Request" is clicked */}
+      {showForm && (
+        <Card className="mb-8 border-primary-orange/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Plus className="w-4 h-4 text-primary-orange" />
+              New Supply Request
             </CardTitle>
-            <CardDescription>The rescue team will fulfil these soon.</CardDescription>
+            <CardDescription>Select what you need and we&apos;ll arrange delivery.</CardDescription>
           </CardHeader>
-          <CardContent className="pt-0 space-y-3">
-            {openRequests.map((req) => (
-              <div
-                key={req.id}
-                className="rounded-lg border border-amber-100 bg-white p-3 flex flex-col gap-1.5"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm font-semibold text-primary-bark">{req.title}</p>
-                  <span
-                    className={`shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                      req.status === "in_progress"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-amber-100 text-amber-800"
-                    }`}
-                  >
-                    {req.status === "in_progress" ? (
-                      <><Loader2 className="w-3 h-3" />Being Sourced</>
-                    ) : (
-                      <><Clock className="w-3 h-3" />Open</>
-                    )}
-                  </span>
-                </div>
-                {req.description && (
-                  <p className="text-xs text-text-muted line-clamp-2">{req.description}</p>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Supply checklist */}
+              <div>
+                <Label className="text-sm font-medium text-primary-bark mb-3 block">
+                  What do you need? <span className="text-red-500">*</span>
+                </Label>
+                {loadingData ? (
+                  <div className="flex items-center gap-2 text-text-muted text-sm py-4">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading options...
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {allowedSupplies.map((supply) => (
+                      <label
+                        key={supply}
+                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
+                          selectedSupplies.includes(supply)
+                            ? "border-primary-orange bg-primary-orange/5"
+                            : "border-neutral-200 hover:border-primary-orange/40 hover:bg-neutral-50"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSupplies.includes(supply)}
+                          onChange={() => toggleSupply(supply)}
+                          className="w-4 h-4 rounded accent-primary-orange"
+                        />
+                        <span className="text-sm font-medium text-primary-bark">{supply}</span>
+                      </label>
+                    ))}
+                  </div>
                 )}
-                <div className="flex items-center gap-3 mt-0.5">
-                  <span className="text-xs text-text-muted">
-                    {new Date(req.created_at).toLocaleDateString()}
-                  </span>
-                  {req.priority && req.priority !== "normal" && (
-                    <span
-                      className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                        priorityBadgeClass[req.priority] ?? "bg-neutral-100 text-neutral-600"
+              </div>
+
+              {/* Urgency grid */}
+              <div>
+                <Label className="text-sm font-medium text-primary-bark mb-3 block">Urgency</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: "low", label: "Low", desc: "Whenever convenient" },
+                    { value: "normal", label: "Normal", desc: "Within a few days" },
+                    { value: "high", label: "High", desc: "Needed soon" },
+                    { value: "urgent", label: "Urgent", desc: "Need ASAP" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setPriority(opt.value)}
+                      className={`p-3 rounded-xl border-2 text-left transition-colors ${
+                        priority === opt.value
+                          ? "border-primary-orange bg-primary-orange/5"
+                          : "border-neutral-200 hover:border-primary-orange/40"
                       }`}
                     >
-                      {req.priority.charAt(0).toUpperCase() + req.priority.slice(1)} urgency
-                    </span>
-                  )}
+                      <p className="text-sm font-semibold text-primary-bark">{opt.label}</p>
+                      <p className="text-xs text-text-muted">{opt.desc}</p>
+                    </button>
+                  ))}
                 </div>
               </div>
-            ))}
+
+              {/* Notes */}
+              <div>
+                <Label htmlFor="notes" className="text-sm font-medium text-primary-bark mb-2 block">
+                  Additional Notes
+                </Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Any specific details, brands, quantities, or context the rescue team should know..."
+                  className="resize-none min-h-[100px] rounded-xl border-neutral-200 focus:border-primary-orange"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={submitting || selectedSupplies.length === 0}
+                className="w-full bg-primary-orange hover:bg-primary-orange/90 text-white font-semibold py-3 rounded-xl"
+              >
+                {submitting ? (
+                  <span className="flex items-center gap-2 justify-center">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting...
+                  </span>
+                ) : (
+                  "Submit Supply Request"
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
       )}
 
-      {/* New request form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Plus className="w-4 h-4 text-primary-orange" />
-            New Supply Request
-          </CardTitle>
-          <CardDescription>Select what you need and we&apos;ll arrange delivery.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Supply checklist */}
-            <div>
-              <Label className="text-sm font-medium text-primary-bark mb-3 block">
-                What do you need? <span className="text-red-500">*</span>
-              </Label>
-              {loadingData ? (
-                <div className="flex items-center gap-2 text-text-muted text-sm py-4">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading options...
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {allowedSupplies.map((supply) => (
-                    <label
-                      key={supply}
-                      className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
-                        selectedSupplies.includes(supply)
-                          ? "border-primary-orange bg-primary-orange/5"
-                          : "border-neutral-200 hover:border-primary-orange/40 hover:bg-neutral-50"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedSupplies.includes(supply)}
-                        onChange={() => toggleSupply(supply)}
-                        className="w-4 h-4 rounded accent-primary-orange"
-                      />
-                      <span className="text-sm font-medium text-primary-bark">{supply}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Priority */}
-            <div>
-              <Label className="text-sm font-medium text-primary-bark mb-3 block">Urgency</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { value: "low", label: "Low", desc: "Whenever convenient" },
-                  { value: "normal", label: "Normal", desc: "Within a few days" },
-                  { value: "high", label: "High", desc: "Needed soon" },
-                  { value: "urgent", label: "Urgent", desc: "Need ASAP" },
-                ].map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setPriority(opt.value)}
-                    className={`p-3 rounded-xl border-2 text-left transition-colors ${
-                      priority === opt.value
-                        ? "border-primary-orange bg-primary-orange/5"
-                        : "border-neutral-200 hover:border-primary-orange/40"
-                    }`}
-                  >
-                    <p className="text-sm font-semibold text-primary-bark">{opt.label}</p>
-                    <p className="text-xs text-text-muted">{opt.desc}</p>
-                  </button>
-                ))}
+      {/* Stats row */}
+      {!loadingData && (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg">
+                <Clock className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-primary-bark">{openCount}</p>
+                <p className="text-xs text-text-muted">Open</p>
               </div>
             </div>
-
-            {/* Notes */}
-            <div>
-              <Label htmlFor="notes" className="text-sm font-medium text-primary-bark mb-2 block">
-                Additional Notes
-              </Label>
-              <Textarea
-                id="notes"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Any specific details, brands, quantities, or context the rescue team should know..."
-                className="resize-none min-h-[100px] rounded-xl border-neutral-200 focus:border-primary-orange"
-              />
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Loader2 className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-primary-bark">{inProgressCount}</p>
+                <p className="text-xs text-text-muted">Being Sourced</p>
+              </div>
             </div>
+          </Card>
+          <Card className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-primary-bark">{resolvedCount}</p>
+                <p className="text-xs text-text-muted">Fulfilled</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
+      {/* Filter tabs */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {["all", "open", "in_progress", "resolved"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilterStatus(s)}
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
+              filterStatus === s
+                ? "bg-primary-orange text-white"
+                : "bg-white text-text-main hover:bg-neutral-100 border border-neutral-200"
+            }`}
+          >
+            {s === "all"
+              ? "All"
+              : s === "in_progress"
+              ? "Being Sourced"
+              : s === "resolved"
+              ? "Fulfilled"
+              : "Open"}
+          </button>
+        ))}
+      </div>
+
+      {/* Request list */}
+      {loadingData ? (
+        <div className="text-center py-12 text-text-muted">
+          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+          Loading your requests...
+        </div>
+      ) : filteredRequests.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Package className="w-16 h-16 mx-auto text-text-muted mb-4" />
+          <h3 className="text-xl font-semibold text-primary-bark mb-2">No requests yet</h3>
+          <p className="text-text-muted mb-6">
+            {filterStatus === "all"
+              ? "You haven't submitted any supply requests."
+              : "No requests with this status."}
+          </p>
+          {filterStatus === "all" && (
             <Button
-              type="submit"
-              disabled={submitting || selectedSupplies.length === 0}
-              className="w-full bg-primary-orange hover:bg-primary-orange/90 text-white font-semibold py-3 rounded-xl"
+              onClick={() => setShowForm(true)}
+              className="bg-primary-orange hover:bg-primary-orange/90 text-white rounded-xl"
             >
-              {submitting ? (
-                <span className="flex items-center gap-2 justify-center">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Submitting...
-                </span>
-              ) : (
-                "Submit Supply Request"
-              )}
+              <Plus className="w-4 h-4 mr-2" />
+              Submit Your First Request
             </Button>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Fulfilled requests — collapsible */}
-      {!loadingData && resolvedRequests.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader className="pb-3">
-            <button
-              type="button"
-              className="flex items-center justify-between w-full text-left"
-              onClick={() => setShowResolved((v) => !v)}
-            >
-              <CardTitle className="text-base flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-                Fulfilled Requests
-                <span className="text-xs font-normal text-text-muted">({resolvedRequests.length})</span>
-              </CardTitle>
-              {showResolved ? (
-                <ChevronUp className="w-4 h-4 text-text-muted" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-text-muted" />
-              )}
-            </button>
-          </CardHeader>
-          {showResolved && (
-            <CardContent className="pt-0">
-              <div className="space-y-2">
-                {resolvedRequests.map((req) => (
-                  <div
-                    key={req.id}
-                    className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0"
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-primary-bark">{req.title}</p>
-                      <p className="text-xs text-text-muted">{new Date(req.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Fulfilled
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
           )}
         </Card>
+      ) : (
+        <div className="space-y-4">
+          {filteredRequests.map((req) => (
+            <Card key={req.id} className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <h3 className="font-semibold text-primary-bark text-base">{req.title}</h3>
+                    {getStatusBadge(req.status)}
+                    {getUrgencyBadge(req.priority)}
+                  </div>
+                  {req.description && (
+                    <p className="text-sm text-text-muted mb-2 line-clamp-2">{req.description}</p>
+                  )}
+                  <p className="text-xs text-text-muted">
+                    Submitted {new Date(req.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   )

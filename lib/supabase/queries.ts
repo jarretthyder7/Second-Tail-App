@@ -655,7 +655,12 @@ export async function cancelFosterConnection(profileId: string) {
 export async function activateAcceptedInvitation(invitationId: string, email: string, orgId: string) {
   const supabase = await createClient()
 
-  const { data: existingProfile } = await supabase.from("profiles").select("id").eq("email", email).single()
+  // If a real profile already exists for this email, update it
+  const { data: existingProfile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .single()
 
   if (existingProfile) {
     const { data, error } = await supabase
@@ -669,32 +674,15 @@ export async function activateAcceptedInvitation(invitationId: string, email: st
       .select()
       .single()
 
-    if (error) {
-      console.error("[v0] Error updating existing profile:", error)
-      throw error
-    }
-
-    return data
-  } else {
-    // We'll create a placeholder that will be completed when they sign up
-    const { data, error } = await supabase
-      .from("profiles")
-      .insert({
-        email: email,
-        name: email.split("@")[0], // Use email prefix as temporary name
-        role: "foster",
-        organization_id: orgId,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error("[v0] Error creating profile for accepted invitation:", error)
-      throw error
-    }
-
+    if (error) throw error
     return data
   }
+
+  // If no profile exists yet, do nothing — the invitation record already
+  // exists in the invitations table with status "pending". When the foster
+  // signs up using their invitation code, the sign-up flow will correctly
+  // create their profile with the right ID and link them to the org.
+  return null
 }
 
 export async function updateFosterProfile(profileId: string, updates: any) {

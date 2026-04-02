@@ -3,9 +3,8 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
+import { fosterLogin } from "./actions"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -48,73 +47,27 @@ export default function FosterLoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
-    try {
-      const supabase = createClient()
+    if (rememberMe) {
+      localStorage.setItem("rememberMe", "true")
+      localStorage.setItem("rememberMeEmail", email)
+    } else {
+      localStorage.removeItem("rememberMe")
+      localStorage.removeItem("rememberMeEmail")
+    }
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+    const result = await fosterLogin(email, password)
 
-      if (signInError) {
-        setError(signInError.message)
-        setIsLoading(false)
-        return
-      }
-
-      if (!data.user) {
-        setError("Unable to log in. Please try again.")
-        setIsLoading(false)
-        return
-      }
-
-      if (rememberMe) {
-        localStorage.setItem("rememberMe", "true")
-        localStorage.setItem("rememberMeEmail", email)
-      } else {
-        localStorage.removeItem("rememberMe")
-        localStorage.removeItem("rememberMeEmail")
-      }
-
-      // Refresh session so the client has the latest token before querying
-      await supabase.auth.getSession()
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role, organization_id")
-        .eq("id", data.user.id)
-        .single()
-
-      console.log("[v0] profile query result:", { profile, profileError, userId: data.user.id })
-
-      if (profileError || !profile) {
-        setError(`Unable to load user profile: ${profileError?.message ?? "no profile row found"} (code: ${profileError?.code})`)
-        setIsLoading(false)
-        return
-      }
-
-      if (profile.role !== "foster") {
-        setError("This account is not a foster account. Please use Rescue Team Login.")
-        setIsLoading(false)
-        return
-      }
-
-      if (profile.organization_id) {
-        router.push(`/org/${profile.organization_id}/foster/dashboard`)
-      } else {
-        router.push("/foster/dashboard")
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+    if (result?.error) {
+      setError(result.error)
       setIsLoading(false)
     }
+    // If no error, server action called redirect() and navigation happens automatically
   }
 
   return (

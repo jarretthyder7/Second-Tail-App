@@ -160,6 +160,34 @@ export default function AdminFostersPage() {
 
       const invitation = await createInvitation(orgId, inviteEmail, user.id)
 
+      // Send the invitation email with the unique code and sign-up link
+      if (invitation?.code) {
+        const signUpUrl = `${window.location.origin}/sign-up/foster?code=${invitation.code}`
+        try {
+          // Fetch org name for the email
+          const supabaseForOrg = createClient()
+          const { data: org } = await supabaseForOrg
+            .from("organizations")
+            .select("name")
+            .eq("id", orgId)
+            .single()
+
+          await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "foster-invitation",
+              email: inviteEmail,
+              orgName: org?.name || "your rescue organization",
+              inviteCode: invitation.code,
+              signUpUrl,
+            }),
+          })
+        } catch (emailError) {
+          console.warn("[v0] Invitation email failed to send:", emailError)
+        }
+      }
+
       await mutateFosters()
 
       setShowInviteModal(false)
@@ -308,6 +336,11 @@ export default function AdminFostersPage() {
                       <p className="text-sm text-text-muted">
                         Invited {new Date(invitation.created_at).toLocaleDateString()}
                       </p>
+                      {invitation.code && (
+                        <p className="text-xs font-mono text-amber-700 mt-1 tracking-widest">
+                          Code: {invitation.code}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <Button

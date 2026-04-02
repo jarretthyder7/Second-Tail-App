@@ -93,6 +93,16 @@ export async function sendMedicalUpdateEmail(
   return sendEmail({ to: fosterEmail, ...template })
 }
 
+export async function sendFosterInvitationEmail(
+  email: string,
+  orgName: string,
+  inviteCode: string,
+  signUpUrl: string,
+) {
+  const template = emailTemplates.fosterInvitation(orgName, inviteCode, signUpUrl)
+  return sendEmail({ to: email, ...template })
+}
+
 export async function sendSupplyRequestEmail(
   rescueEmail: string,
   rescueName: string,

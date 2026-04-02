@@ -1,155 +1,298 @@
 "use client"
 
-import type React from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Card } from "@/components/ui/card"
+import { Package, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { ProtectedRoute } from "@/lib/protected-route"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Package } from "lucide-react"
-import Link from "next/link"
-
-export default function RequestSuppliesPage() {
-  return (
-    <ProtectedRoute allowedRoles={["rescue"]}>
-      <RequestSuppliesContent />
-    </ProtectedRoute>
-  )
+type SupplyRequest = {
+  id: string
+  title: string
+  priority: string
+  status: string
+  created_at: string
+  profiles: { name: string } | null
+  dogs: { name: string } | null
 }
 
-function RequestSuppliesContent() {
+export default function AdminSupplyRequestsPage() {
   const params = useParams()
-  const router = useRouter()
   const orgId = params.orgId as string
 
-  const [formData, setFormData] = useState({
-    suppliesNeeded: "",
-    quantity: "",
-    urgency: "normal",
-    notes: "",
-    requestedFor: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [requests, setRequests] = useState<SupplyRequest[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+  useEffect(() => {
+    loadRequests()
+  }, [orgId, filterStatus])
 
-    // TODO: Replace with actual API call
-    console.log("[v0] Submitting supplies request:", formData)
+  const loadRequests = async () => {
+    setLoading(true)
+    const supabase = createClient()
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    // First get all dog IDs for this org
+    const { data: dogs } = await supabase
+      .from("dogs")
+      .select("id")
+      .eq("organization_id", orgId)
 
-    setIsSubmitting(false)
-    router.push(`/org/${orgId}/admin/dashboard`)
+    const dogIds = (dogs || []).map((d) => d.id)
+
+    if (dogIds.length === 0) {
+      setRequests([])
+      setLoading(false)
+      return
+    }
+
+    let query = supabase
+      .from("help_requests")
+      .select(`
+        id,
+        title,
+        priority,
+        status,
+        created_at,
+        profiles!help_requests_foster_id_fkey(name),
+        dogs(name)
+      `)
+      .eq("category", "supplies")
+      .in("dog_id", dogIds)
+      .order("created_at", { ascending: false })
+
+    if (filterStatus !== "all") {
+      query = query.eq("status", filterStatus)
+    }
+
+    const { data } = await query
+    setRequests((data as SupplyRequest[]) || [])
+    setLoading(false)
   }
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+  const updateStatus = async (id: string, newStatus: string) => {
+    setUpdatingId(id)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from("help_requests")
+      .update({ status: newStatus })
+      .eq("id", id)
+
+    if (!error) {
+      setRequests((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+      )
+    }
+    setUpdatingId(null)
   }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "open":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+            <Clock className="w-3 h-3" />
+            Open
+          </span>
+        )
+      case "in_progress":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+            <Loader2 className="w-3 h-3" />
+            Being Sourced
+          </span>
+        )
+      case "resolved":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <CheckCircle2 className="w-3 h-3" />
+            Fulfilled
+          </span>
+        )
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600">
+            {status}
+          </span>
+        )
+    }
+  }
+
+  const getUrgencyBadge = (priority: string) => {
+    switch (priority) {
+      case "urgent":
+      case "emergency":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">
+            <AlertCircle className="w-3 h-3" />
+            Urgent
+          </span>
+        )
+      case "high":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-700">
+            High
+          </span>
+        )
+      case "normal":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-neutral-100 text-neutral-600">
+            Normal
+          </span>
+        )
+      case "low":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+            Low
+          </span>
+        )
+      default:
+        return null
+    }
+  }
+
+  const openCount = requests.filter((r) => r.status === "open").length
 
   return (
-    <div className="min-h-screen bg-neutral-clay p-4 md:p-6 lg:p-8">
-      <div className="max-w-3xl mx-auto">
-        <Link
-          href={`/org/${orgId}/admin/dashboard`}
-          className="inline-flex items-center gap-2 text-sm text-primary-bark hover:text-primary-orange transition mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-primary-orange/10 rounded-lg">
+            <Package className="w-6 h-6 text-primary-orange" />
+          </div>
+          <h1 className="text-3xl font-bold text-primary-bark">Supply Requests</h1>
+        </div>
+        <p className="text-text-muted">Manage supply requests submitted by fosters</p>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-primary-orange/10 flex items-center justify-center">
-              <Package className="w-6 h-6 text-primary-orange" />
+      {/* Open count stat */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-amber-100 rounded-lg">
+              <Clock className="w-6 h-6 text-amber-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-primary-bark">Request Supplies</h1>
-              <p className="text-sm text-text-muted">Submit a request for supplies needed</p>
+              <p className="text-2xl font-bold text-primary-bark">{openCount}</p>
+              <p className="text-sm text-text-muted">Open Requests</p>
             </div>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="suppliesNeeded">Supplies Needed *</Label>
-              <Input
-                id="suppliesNeeded"
-                value={formData.suppliesNeeded}
-                onChange={(e) => handleChange("suppliesNeeded", e.target.value)}
-                placeholder="e.g., Dog food, leashes, blankets"
-                required
-              />
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-blue-100 rounded-lg">
+              <Loader2 className="w-6 h-6 text-blue-600" />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Quantity / Details *</Label>
-              <Input
-                id="quantity"
-                value={formData.quantity}
-                onChange={(e) => handleChange("quantity", e.target.value)}
-                placeholder="e.g., 3 bags, 10 units"
-                required
-              />
+            <div>
+              <p className="text-2xl font-bold text-primary-bark">
+                {requests.filter((r) => r.status === "in_progress").length}
+              </p>
+              <p className="text-sm text-text-muted">Being Sourced</p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="urgency">Urgency Level *</Label>
-              <select
-                id="urgency"
-                value={formData.urgency}
-                onChange={(e) => handleChange("urgency", e.target.value)}
-                className="w-full rounded-lg border border-[color:var(--color-border-soft)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/30"
-                required
-              >
-                <option value="low">Low - Can wait a week+</option>
-                <option value="normal">Normal - Needed within a few days</option>
-                <option value="high">High - Needed ASAP</option>
-                <option value="emergency">Emergency - Urgent</option>
-              </select>
+          </div>
+        </Card>
+        <Card className="p-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-green-100 rounded-lg">
+              <CheckCircle2 className="w-6 h-6 text-green-600" />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="requestedFor">Requested For</Label>
-              <Input
-                id="requestedFor"
-                value={formData.requestedFor}
-                onChange={(e) => handleChange("requestedFor", e.target.value)}
-                placeholder="Specific dog or general shelter use"
-              />
+            <div>
+              <p className="text-2xl font-bold text-primary-bark">
+                {requests.filter((r) => r.status === "resolved").length}
+              </p>
+              <p className="text-sm text-text-muted">Fulfilled</p>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes}
-                onChange={(e) => handleChange("notes", e.target.value)}
-                placeholder="Any additional details or special requirements..."
-                rows={4}
-                className="resize-none"
-              />
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1">
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-primary-orange hover:bg-primary-orange/90"
-              >
-                {isSubmitting ? "Submitting..." : "Submit Request"}
-              </Button>
-            </div>
-          </form>
-        </div>
+          </div>
+        </Card>
       </div>
+
+      {/* Filters */}
+      <div className="flex gap-2 mb-6 flex-wrap">
+        {["all", "open", "in_progress", "resolved"].map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilterStatus(s)}
+            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
+              filterStatus === s
+                ? "bg-primary-orange text-white"
+                : "bg-white text-text-main hover:bg-neutral-cream"
+            }`}
+          >
+            {s === "all" ? "All" : s === "in_progress" ? "Being Sourced" : s === "resolved" ? "Fulfilled" : "Open"}
+          </button>
+        ))}
+      </div>
+
+      {/* List */}
+      {loading ? (
+        <div className="text-center py-12 text-text-muted">Loading...</div>
+      ) : requests.length === 0 ? (
+        <Card className="p-12 text-center">
+          <Package className="w-16 h-16 mx-auto text-text-muted mb-4" />
+          <h3 className="text-xl font-semibold text-primary-bark mb-2">No supply requests found</h3>
+          <p className="text-text-muted">There are no supply requests matching your filter</p>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {requests.map((req) => (
+            <Card key={req.id} className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <h3 className="font-semibold text-primary-bark text-lg">{req.title}</h3>
+                    {getStatusBadge(req.status)}
+                    {getUrgencyBadge(req.priority)}
+                  </div>
+                  <div className="flex items-center gap-3 text-sm text-text-muted flex-wrap">
+                    <span>{req.profiles?.name || "Unknown Foster"}</span>
+                    {req.dogs?.name && (
+                      <>
+                        <span>•</span>
+                        <span>{req.dogs.name}</span>
+                      </>
+                    )}
+                    <span>•</span>
+                    <span>{new Date(req.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="flex gap-2 flex-shrink-0">
+                  {req.status === "open" && (
+                    <button
+                      onClick={() => updateStatus(req.id, "in_progress")}
+                      disabled={updatingId === req.id}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+                    >
+                      {updatingId === req.id ? "..." : "Acknowledge"}
+                    </button>
+                  )}
+                  {(req.status === "open" || req.status === "in_progress") && (
+                    <button
+                      onClick={() => updateStatus(req.id, "resolved")}
+                      disabled={updatingId === req.id}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                      {updatingId === req.id ? "..." : "Mark Fulfilled"}
+                    </button>
+                  )}
+                  {req.status === "resolved" && (
+                    <button
+                      onClick={() => updateStatus(req.id, "open")}
+                      disabled={updatingId === req.id}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-neutral-200 text-text-muted hover:bg-neutral-cream transition disabled:opacity-50"
+                    >
+                      Reopen
+                    </button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

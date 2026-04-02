@@ -28,6 +28,7 @@ import {
   Menu,
   X,
   DollarSign,
+  Package,
   CalendarIcon,
   Mail,
 } from "lucide-react"
@@ -188,6 +189,13 @@ export default function OrgAdminLayout({
       href: `/org/${orgId}/admin/reimbursements`,
       label: "Reimbursements",
       icon: DollarSign,
+      adminOnly: false,
+      section: "foster",
+    },
+    {
+      href: `/org/${orgId}/admin/request-supplies`,
+      label: "Supply Requests",
+      icon: Package,
       adminOnly: false,
       section: "foster",
     },

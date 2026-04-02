@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Package, Loader2 } from "lucide-react"
+import { ArrowLeft, Package, Loader2, Clock, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,13 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
+
+type PastRequest = {
+  id: string
+  title: string
+  status: string
+  created_at: string
+}
 
 export default function RequestSuppliesPage() {
   const params = useParams()
@@ -22,6 +29,7 @@ export default function RequestSuppliesPage() {
   const [loading, setLoading] = useState(false)
   const [dogId, setDogId] = useState<string>("")
   const [fetchingDogs, setFetchingDogs] = useState(true)
+  const [pastRequests, setPastRequests] = useState<PastRequest[]>([])
   const [formData, setFormData] = useState({
     itemName: "",
     quantity: "",
@@ -54,6 +62,16 @@ export default function RequestSuppliesPage() {
         if (dogs?.id) {
           setDogId(dogs.id)
         }
+
+        // Fetch past supply requests for this foster
+        const { data: past } = await supabase
+          .from("help_requests")
+          .select("id, title, status, created_at")
+          .eq("foster_id", user.id)
+          .eq("category", "supplies")
+          .order("created_at", { ascending: false })
+
+        setPastRequests(past || [])
       } catch (error) {
         console.error("[v0] Failed to fetch dog assignment:", error)
       } finally {
@@ -135,6 +153,44 @@ export default function RequestSuppliesPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </Link>
+
+        {/* Past requests history — only shown if any exist */}
+        {pastRequests.length > 0 && (
+          <Card className="mb-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Your Past Requests</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2">
+                {pastRequests.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between py-2 border-b border-neutral-100 last:border-0">
+                    <div>
+                      <p className="text-sm font-medium text-primary-bark">{req.title}</p>
+                      <p className="text-xs text-text-muted">{new Date(req.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                        req.status === "resolved"
+                          ? "bg-green-100 text-green-800"
+                          : req.status === "in_progress"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {req.status === "resolved" ? (
+                        <><CheckCircle2 className="w-3 h-3" /> Fulfilled</>
+                      ) : req.status === "in_progress" ? (
+                        <><Loader2 className="w-3 h-3" /> In Progress</>
+                      ) : (
+                        <><Clock className="w-3 h-3" /> Open</>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

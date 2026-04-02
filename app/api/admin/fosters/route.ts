@@ -62,8 +62,6 @@ export async function GET(request: Request) {
       })
     }
 
-    console.log("[v0] API Found fosters:", fosters?.length || 0)
-
     const { data: pendingInvitations, error: pendingError } = await serviceSupabase
       .from("invitations")
       .select("*")
@@ -96,37 +94,6 @@ export async function GET(request: Request) {
 
     if (pendingError || acceptedError || cancelledError || dogsError) {
       console.error("[v0] Error fetching data:", { pendingError, acceptedError, cancelledError, dogsError })
-    }
-
-    console.log("[v0] Accepted invitations:", acceptedInvitations?.length || 0)
-
-    // Accept invitation if exists
-    const invitation = pendingInvitations?.find((inv) => inv.status === "pending")
-    if (invitation) {
-      await supabase
-        .from("invitations")
-        .update({
-          status: "accepted",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", invitation.id)
-
-      try {
-        await fetch(new URL("/api/email/send", process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:3000").href, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "assigned-rescue",
-            fosterEmail: invitation.foster_email,
-            fosterName: invitation.foster_name,
-            orgName: invitation.organization_name,
-          }),
-        })
-      } catch (emailError) {
-        console.warn("[v0] Failed to send rescue assignment email:", emailError)
-      }
-
-      console.log("[v0] Auto-accepted invitation from:", invitation.organization_name)
     }
 
     return NextResponse.json({

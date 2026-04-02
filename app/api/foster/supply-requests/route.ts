@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
       .from("help_requests")
       .insert({
         foster_id: user.id,
+        organization_id: orgId,
         dog_id: dogId || null,
         title: `Supply Request: ${itemName}`,
         description: `Item: ${itemName}\nQuantity: ${quantity}\n\n${notes || ""}`.trim(),
         type: "supplies",
         category: "supplies",
         status: "open",
-        urgency: urgency,
-        priority: urgency === "urgent" || urgency === "high" ? "high" : urgency === "normal" ? "normal" : "low",
+        priority: urgency === "urgent" ? "urgent" : urgency === "high" ? "high" : urgency === "low" ? "low" : "normal",
       })
       .select()
       .single()

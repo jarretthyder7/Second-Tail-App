@@ -145,7 +145,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       if (!user) return
 
       await supabase.from("help_requests").insert({
-        dog_id: dog.id,
+        dog_id: dog?.id || null,
         foster_id: user.id,
         organization_id: orgId,
         type: "appointment",
@@ -180,7 +180,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       const description = `Supplies requested: ${suppliesChecklist.join(", ")}${suppliesNotes ? ". Notes: " + suppliesNotes : ""}`
 
       await supabase.from("help_requests").insert({
-        dog_id: dog.id,
+        dog_id: dog?.id || null,
         foster_id: user.id,
         organization_id: orgId,
         type: "supplies",
@@ -215,7 +215,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       const description = `EMERGENCY: ${emergencySymptoms}. Started: ${emergencyWhen}`
 
       await supabase.from("help_requests").insert({
-        dog_id: dog.id,
+        dog_id: dog?.id || null,
         foster_id: user.id,
         organization_id: orgId,
         type: "emergency",

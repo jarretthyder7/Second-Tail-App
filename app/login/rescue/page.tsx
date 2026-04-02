@@ -92,15 +92,13 @@ export default function RescueLoginPage() {
         .maybeSingle()
 
       if (profileError) {
-        console.error("[v0] Profile fetch error:", profileError)
         setError("Unable to load user profile. Please try again.")
         setIsLoading(false)
         return
       }
 
       if (!profile) {
-        console.error("[v0] No profile found for user:", data.user.id)
-        setError("No profile found. Please contact your organization administrator.")
+        setError("No account found for this email. Please sign up or contact your rescue organization.")
         setIsLoading(false)
         return
       }
@@ -249,6 +247,13 @@ export default function RescueLoginPage() {
           {error && (
             <div className="p-3 md:p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs md:text-sm">
               {error}
+              {error.toLowerCase().includes("no account") && (
+                <div className="mt-2">
+                  <Link href="/signup" className="font-semibold underline hover:text-red-900 transition">
+                    Go to sign up
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 

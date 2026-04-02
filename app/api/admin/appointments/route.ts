@@ -1,5 +1,16 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { isRescueInOrg } from "@/lib/api/auth-helpers"
+
+function getRequestOrigin(request: Request): string {
+  const url = new URL(request.url)
+  const forwarded = request.headers.get("x-forwarded-host")
+  const proto = request.headers.get("x-forwarded-proto") || "https"
+  if (forwarded) {
+    return `${proto}://${forwarded}`
+  }
+  return url.origin
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -10,6 +21,23 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role, organization_id")
+    .eq("id", user.id)
+    .single()
+
+  if (profileError || !profile || !isRescueInOrg(profile, orgId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
 
   const { data: appointments, error } = await supabase
     .from("appointments")
@@ -46,6 +74,21 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
+  const orgId = body.organization_id as string | undefined
+
+  if (!orgId) {
+    return NextResponse.json({ error: "Organization ID required" }, { status: 400 })
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role, organization_id")
+    .eq("id", user.id)
+    .single()
+
+  if (profileError || !profile || !isRescueInOrg(profile, orgId)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
 
   const { data: appointment, error } = await supabase
     .from("appointments")
@@ -73,8 +116,9 @@ export async function POST(request: Request) {
 
       if (foster && dog) {
         const appointmentTime = new Date(appointment.start_time).toLocaleString()
+        const origin = getRequestOrigin(request)
 
-        await fetch(new URL("/api/email/send", process.env.NEXT_PUBLIC_SUPABASE_URL || "http://localhost:3000").href, {
+        await fetch(new URL("/api/email/send", origin).href, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -97,11 +141,43 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   const body = await request.json()
   const { id, ...updates } = body
 
   if (!id) {
     return NextResponse.json({ error: "Appointment ID required" }, { status: 400 })
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role, organization_id")
+    .eq("id", user.id)
+    .single()
+
+  if (profileError || !profile || profile.role !== "rescue" || !profile.organization_id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { data: existing, error: loadError } = await supabase
+    .from("appointments")
+    .select("id, organization_id")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (loadError || !existing) {
+    return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
+  }
+
+  if (existing.organization_id !== profile.organization_id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
   const { data: appointment, error } = await supabase

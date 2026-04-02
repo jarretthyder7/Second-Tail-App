@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { Dog } from "@/lib/mock-data"
+
 import { createClient } from "@/lib/supabase/client"
 
 const FileTextIcon = () => (
@@ -47,7 +47,7 @@ interface JourneyEvent {
 }
 
 interface JourneyTabProps {
-  dog: Dog
+  dog: any
 }
 
 export function JourneyTab({ dog }: JourneyTabProps) {

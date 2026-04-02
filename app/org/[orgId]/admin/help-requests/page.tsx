@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { ProtectedRoute } from '@/lib/protected-route'
-import { fetchHelpRequests, fetchDogsForOrg, HelpRequest, Dog } from '@/lib/mock-data'
+import { fetchHelpRequests, fetchDogsForOrg } from '@/lib/supabase/queries'
 import { ChevronDown, ChevronUp, MessageSquare, FileText, Plus, UserCheck } from 'lucide-react'
 import { CreateTeamSupportModal } from '@/components/admin/create-team-support-modal'
 
@@ -18,8 +18,8 @@ export default function OrgHelpRequestsPage() {
 function OrgHelpRequestsContent() {
   const params = useParams()
   const orgId = params.orgId as string
-  const [requests, setRequests] = useState<HelpRequest[]>([])
-  const [dogs, setDogs] = useState<Dog[]>([])
+  const [requests, setRequests] = useState<any[]>([])
+  const [dogs, setDogs] = useState<any[]>([])
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [priorityFilter, setPriorityFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
@@ -59,7 +59,7 @@ function OrgHelpRequestsContent() {
           Create Support Request
         </button>
       </div>
-      
+
       <CreateTeamSupportModal
         orgId={orgId}
         isOpen={showCreateModal}
@@ -98,9 +98,9 @@ function OrgHelpRequestsContent() {
       {/* Requests List */}
       <div className="space-y-4">
         {filteredRequests.map(request => {
-          const dog = dogs.find(d => d.id === request.dogId)
+          const dog = request.dog ?? dogs.find((d: any) => d.id === request.dog_id)
           const isExpanded = expandedId === request.id
-          
+
           return (
             <div key={request.id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4">
@@ -131,7 +131,7 @@ function OrgHelpRequestsContent() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-[#2E2E2E]/70 mb-2">Type: {request.type}</p>
+                    <p className="text-sm text-[#2E2E2E]/70 mb-2">Type: {request.category ?? request.type}</p>
                     <p className="text-sm text-[#2E2E2E]">{request.description}</p>
                   </div>
                   <button

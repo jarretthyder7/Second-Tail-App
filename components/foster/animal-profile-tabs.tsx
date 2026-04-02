@@ -2,14 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
-import type { Dog, DailyLog, Message } from "@/lib/mock-data"
 import { DailyLogTab } from "./daily-log-tab"
 import { JourneyTab } from "./journey-tab"
 
 interface DogProfileTabsProps {
-  dog: Dog
-  logs: DailyLog[]
-  messages: Message[]
+  dog: any
+  logs: any[]
+  messages: any[]
 }
 
 export function DogProfileTabs({ dog, logs, messages }: DogProfileTabsProps) {

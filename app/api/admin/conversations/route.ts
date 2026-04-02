@@ -12,6 +12,24 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient()
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, org_role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (!profile || profile.role !== "rescue" || profile.organization_id !== orgId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
     // Get conversations for this organization with their latest message
     const { data: conversations, error } = await supabase
       .from("conversations")

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 import { renderNewsletterTemplate } from '@/lib/email/newsletter-template'
 
@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createClient()
     
     // Verify authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -21,11 +21,26 @@ export async function POST(request: NextRequest) {
       sections, 
       subject, 
       scheduleFor,
-      recipientType = 'all_fosters' // 'all_fosters' | 'active_fosters' | 'custom'
+      recipientType = 'all_fosters'
     } = body
 
     if (!orgId || !sections || !subject) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    // Verify the user is an org_admin of the target organization
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('role, org_role, organization_id')
+      .eq('id', user.id)
+      .single()
+
+    if (
+      !userProfile ||
+      userProfile.organization_id !== orgId ||
+      userProfile.org_role !== 'org_admin'
+    ) {
+      return NextResponse.json({ error: 'Forbidden: Not an admin of this organization' }, { status: 403 })
     }
 
     // Get organization details for branding
@@ -68,16 +83,17 @@ export async function POST(request: NextRequest) {
 
     // Get foster recipients based on recipientType
     let fostersQuery = supabase
-      .from('fosters')
+      .from('profiles')
       .select('id, email, name')
-      .eq('org_id', orgId)
+      .eq('role', 'foster')
+      .eq('organization_id', orgId)
 
     if (recipientType === 'active_fosters') {
       // Only fosters who currently have animals
       const { data: activeFosters } = await supabase
         .from('dogs')
         .select('foster_id')
-        .eq('org_id', orgId)
+        .eq('organization_id', orgId)
         .not('foster_id', 'is', null)
 
       const activeFosterIds = activeFosters?.map(d => d.foster_id) || []

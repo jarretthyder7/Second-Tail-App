@@ -114,7 +114,6 @@ export default function FosterRequestSuppliesPage() {
         }),
       })
       const json = await res.json()
-      console.log("[v0] supply request response:", res.status, json)
       if (!res.ok) throw new Error(json.error || "Failed to submit")
 
       if (json.request) {

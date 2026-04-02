@@ -149,7 +149,6 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
         dog_id: dog?.id || null,
         foster_id: user.id,
         organization_id: orgId,
-        type: "appointment",
         title: "Appointment Requested",
         description: appointmentReason,
         category: "appointment",
@@ -161,7 +160,6 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       setSuccess(true)
       setTimeout(() => onClose(), 1500)
     } catch (error) {
-      console.error("[v0] Failed to submit appointment:", error)
       setSubmitting(false)
     }
   }
@@ -184,7 +182,6 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
         dog_id: dog?.id || null,
         foster_id: user.id,
         organization_id: orgId,
-        type: "supplies",
         title: `Supply Request: ${suppliesChecklist.join(", ")}`,
         description,
         category: "supplies",
@@ -196,7 +193,6 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       setSuccess(true)
       setTimeout(() => onClose(), 1500)
     } catch (error) {
-      console.error("[v0] Failed to submit supplies request:", error)
       setSubmitting(false)
     }
   }
@@ -219,7 +215,6 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
         dog_id: dog?.id || null,
         foster_id: user.id,
         organization_id: orgId,
-        type: "emergency",
         title: "Emergency Reported",
         description,
         category: "emergency",
@@ -231,7 +226,6 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       setSuccess(true)
       setTimeout(() => onClose(), 1500)
     } catch (error) {
-      console.error("[v0] Failed to submit emergency:", error)
       setSubmitting(false)
     }
   }

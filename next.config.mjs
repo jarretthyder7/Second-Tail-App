@@ -8,7 +8,7 @@ const nextConfig = {
   },
   experimental: {
     turbo: {
-      root: __dirname,
+      root: import.meta.dirname,
     },
   },
 }

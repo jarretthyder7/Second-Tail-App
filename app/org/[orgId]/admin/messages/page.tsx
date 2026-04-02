@@ -330,7 +330,15 @@ export default function OrgMessagesPage() {
         .eq("id", selectedConversationForStaff)
         .single()
 
-      const currentTeam = conv?.team ? JSON.parse(conv.team) : []
+      let currentTeam: string[] = []
+      if (conv?.team) {
+        try {
+          const parsed = JSON.parse(conv.team)
+          currentTeam = Array.isArray(parsed) ? parsed : []
+        } catch {
+          currentTeam = []
+        }
+      }
       const newTeam = [...new Set([...currentTeam, ...selectedStaffMembers])]
 
       await supabase
@@ -474,7 +482,16 @@ export default function OrgMessagesPage() {
               {conversations.map((conv) => {
                 const fosterName = conv.foster?.name || conv.foster?.email || "Unknown Foster"
                 const dogName = conv.dog?.name
-                const teamMembers = conv.team ? JSON.parse(conv.team) : []
+                let teamMembers: string[] = []
+                if (conv.team) {
+                  try {
+                    const parsed = JSON.parse(conv.team)
+                    teamMembers = Array.isArray(parsed) ? parsed : []
+                  } catch {
+                    // team is a plain string (team name), not a JSON array — treat as no staff members
+                    teamMembers = []
+                  }
+                }
                 const teamDisplay =
                   teamMembers.length > 0 ? (
                     <span className="bg-[#F7E2BD] text-[#5A4A42] text-xs px-2.5 py-1 rounded-full font-medium">

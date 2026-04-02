@@ -14,7 +14,7 @@ export default function FosterDashboardPage() {
   const orgId = params.orgId as string
   const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<any>(null)
-  const [dogs, setDogs] = useState<any[]>([])
+  const [dog, setDog] = useState<any>(null)
   const [appointments, setAppointments] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showMessageModal, setShowMessageModal] = useState(false)
@@ -45,13 +45,14 @@ export default function FosterDashboardPage() {
           .select("*")
           .eq("foster_id", authUser.id)
           .eq("status", "fostered")
+          .limit(1)
 
         console.log("[v0] Dogs query - Auth ID:", authUser.id)
         console.log("[v0] Dogs query result:", dogsData)
         console.log("[v0] Dogs query error:", dogsError)
 
         if (dogsData && dogsData.length > 0) {
-          setDogs(dogsData)
+          setDog(dogsData[0])
           console.log("[v0] Dog loaded successfully:", dogsData[0].name)
 
           const { data: appointmentsData } = await supabase
@@ -94,7 +95,7 @@ export default function FosterDashboardPage() {
     )
   }
 
-  if (!dogs || dogs.length === 0) {
+  if (!dog) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -115,44 +116,12 @@ export default function FosterDashboardPage() {
     )
   }
 
-  const dog = dogs[0]
-
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
-
-        {/* Multi-animal grid — only shown when foster has more than one animal */}
-        {dogs.length > 1 && (
-          <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6">
-            <h2 className="font-bold text-foreground mb-4">Your Animals</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {dogs.map((animal) => (
-                <Link
-                  key={animal.id}
-                  href={`/org/${orgId}/foster/dog/${animal.id}`}
-                  className="group flex flex-col rounded-xl overflow-hidden border border-border hover:shadow-md transition"
-                >
-                  <div className="aspect-square bg-muted overflow-hidden">
-                    <img
-                      src={animal.image_url || "/placeholder.svg?height=200&width=200"}
-                      alt={animal.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-2 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-sm text-foreground">{animal.name}</p>
-                      <p className="text-xs text-muted-foreground">{animal.breed || "Unknown breed"}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-          {/* Hero Card - Animal Introduction */}
+        {/* Hero Card - Animal Introduction */}
         <div className="relative">
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
             <div className="relative aspect-square sm:aspect-video overflow-hidden bg-muted">
               <img
                 src={dog.image_url || "/placeholder.svg?height=400&width=400&query=animal"}

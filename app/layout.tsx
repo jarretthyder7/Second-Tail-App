@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { Lora } from 'next/font/google'
+import { Lora, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const lora = Lora({ subsets: ['latin'], weight: ['400', '600', '700'] })
+const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: 'Second Tail Foster Portal',

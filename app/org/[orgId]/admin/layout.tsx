@@ -179,13 +179,6 @@ export default function OrgAdminLayout({
       description: "Message foster parents about their animals",
     },
     {
-      href: `/org/${orgId}/admin/help-requests`,
-      label: "Support Requests",
-      icon: HelpCircle,
-      adminOnly: false,
-      section: "foster",
-    },
-    {
       href: `/org/${orgId}/admin/reimbursements`,
       label: "Reimbursements",
       icon: DollarSign,

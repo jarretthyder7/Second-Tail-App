@@ -33,15 +33,16 @@ export default function AdminSupplyRequestsPage() {
     setLoading(true)
     const supabase = createClient()
 
-    // First get all dog IDs for this org
-    const { data: dogs } = await supabase
-      .from("dogs")
+    // Get all foster profile IDs in this org
+    const { data: fosterProfiles } = await supabase
+      .from("profiles")
       .select("id")
       .eq("organization_id", orgId)
+      .eq("role", "foster")
 
-    const dogIds = (dogs || []).map((d) => d.id)
+    const fosterIds = (fosterProfiles || []).map((p) => p.id)
 
-    if (dogIds.length === 0) {
+    if (fosterIds.length === 0) {
       setRequests([])
       setLoading(false)
       return
@@ -59,7 +60,7 @@ export default function AdminSupplyRequestsPage() {
         dogs(name)
       `)
       .eq("category", "supplies")
-      .in("dog_id", dogIds)
+      .in("foster_id", fosterIds)
       .order("created_at", { ascending: false })
 
     if (filterStatus !== "all") {

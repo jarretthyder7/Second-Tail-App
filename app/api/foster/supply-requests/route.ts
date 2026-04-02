@@ -27,23 +27,21 @@ export async function POST(request: NextRequest) {
       .from("help_requests")
       .insert({
         foster_id: user.id,
-        dog_id: dogId,
+        dog_id: dogId || null,
         title: `Supply Request: ${itemName}`,
-        description: `Item: ${itemName}\nQuantity: ${quantity}\nUrgency: ${urgency}\nNotes: ${notes || "None"}`,
+        description: `Item: ${itemName}\nQuantity: ${quantity}\n\n${notes || ""}`.trim(),
         type: "supplies",
         category: "supplies",
         status: "open",
-        priority: urgency === "urgent" ? "high" : urgency === "high" ? "normal" : "low",
+        urgency: urgency,
+        priority: urgency === "urgent" || urgency === "high" ? "high" : urgency === "normal" ? "normal" : "low",
       })
       .select()
       .single()
 
     if (error) {
-      console.error("[v0] Error creating supply request:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    console.log("[v0] Supply request created:", request_data?.id)
 
     return NextResponse.json({ request: request_data })
   } catch (error: any) {

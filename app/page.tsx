@@ -63,8 +63,7 @@ export default function Home() {
               </Link>
               <a
                 href="#foster-waitlist"
-                className="text-sm font-semibold transition-colors"
-                style={{ color: "#D76B1A" }}
+                className="hidden"
               >
                 Foster Sign-Up
               </a>
@@ -106,8 +105,7 @@ export default function Home() {
               </Link>
               <a
                 href="#foster-waitlist"
-                className="block px-4 py-2 text-sm font-semibold rounded-lg transition-colors"
-                style={{ color: "#D76B1A" }}
+                className="hidden"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Foster Sign-Up
@@ -165,16 +163,6 @@ export default function Home() {
               Register Rescue Org
               <ArrowRight className="w-5 h-5 ml-2" />
             </Link>
-            <Link
-              href="/for-rescue-organizations"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-2 text-gray-700 rounded-lg font-medium hover:text-gray-900 transition-colors text-sm sm:text-sm mt-3 sm:mt-2 gap-1.5 group"
-            >
-              Learn More
-              <ArrowRight
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                style={{ color: "#50402B" }}
-              />
-            </Link>
           </div>
 
           {/* Foster Card - Now on the right */}
@@ -200,16 +188,6 @@ export default function Home() {
             >
               Login to Dashboard
               <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-            <Link
-              href="/for-fosters"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-2 text-gray-700 rounded-lg font-medium hover:text-gray-900 transition-colors text-sm sm:text-sm mt-3 sm:mt-2 gap-1.5 group"
-            >
-              Learn More
-              <ArrowRight
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                style={{ color: "#D76B1A" }}
-              />
             </Link>
           </div>
         </div>
@@ -298,7 +276,7 @@ export default function Home() {
                 1
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Set up your organization</h3>
-              <p className="text-gray-600 text-sm sm:text-lg mb-5 sm:mb-6 leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Register your rescue, add team members, and customize your foster management system.
               </p>
             </div>
@@ -310,7 +288,7 @@ export default function Home() {
                 2
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Invite and manage fosters</h3>
-              <p className="text-gray-600 text-sm sm:text-lg mb-5 sm:mb-6 leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Onboard foster parents, assign animals, and build a network of trusted caregivers.
               </p>
             </div>
@@ -322,7 +300,7 @@ export default function Home() {
                 3
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Coordinate care at scale</h3>
-              <p className="text-gray-600 text-sm sm:text-lg mb-5 sm:mb-6 leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Track health records, schedule appointments, communicate efficiently, and focus on saving more lives.
               </p>
             </div>
@@ -368,24 +346,6 @@ export default function Home() {
               </Link>
             </>
           )}
-        </div>
-      </section>
-
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
-        <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">Trusted by foster parents and rescue teams</p>
-        <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto">
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">500+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Active Fosters</div>
-          </div>
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">2,000+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Animals Saved</div>
-          </div>
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">50+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Rescue Partners</div>
-          </div>
         </div>
       </section>
 

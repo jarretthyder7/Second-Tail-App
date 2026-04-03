@@ -147,6 +147,21 @@ function OrgDogsContent() {
         setPhotoPreview(null)
         setPhotoFile(null)
         alert("Animal added successfully!")
+
+        // Mark the "Add Your First Animal" setup step as complete
+        try {
+          await fetch("/api/admin/setup-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orgId,
+              stepId: "first_dog",
+              isCompleted: true,
+            }),
+          })
+        } catch (setupError) {
+          console.error("Error updating setup status:", setupError)
+        }
       }
     } catch (error) {
       console.error("Error creating animal:", error)

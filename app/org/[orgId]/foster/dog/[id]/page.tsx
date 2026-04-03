@@ -703,8 +703,8 @@ function MedicalTab({ dog, carePlan }: { dog: any; carePlan: any }) {
             {carePlan.medications.map((med: any, index: number) => (
               <div key={index} className="p-3 bg-background rounded-lg">
                 <p className="font-medium text-foreground">{med.name}</p>
-                {med.dosage && <p className="text-sm text-muted-foreground">Dosage: {med.dosage}</p>}
-                {med.frequency && <p className="text-sm text-muted-foreground">Frequency: {med.frequency}</p>}
+                {med.schedule && <p className="text-sm text-muted-foreground">Schedule: {med.schedule}</p>}
+                {med.instructions && <p className="text-sm text-muted-foreground">Instructions: {med.instructions}</p>}
                 {med.notes && <p className="text-sm text-muted-foreground mt-1">{med.notes}</p>}
               </div>
             ))}

@@ -371,24 +371,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
-        <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">Trusted by foster parents and rescue teams</p>
-        <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto">
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">500+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Active Fosters</div>
-          </div>
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">2,000+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Animals Saved</div>
-          </div>
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">50+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Rescue Partners</div>
-          </div>
-        </div>
-      </section>
-
       {/* Foster Waitlist Section */}
       <section id="foster-waitlist" className="border-t border-gray-200 bg-orange-50/40">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">

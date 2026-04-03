@@ -68,6 +68,7 @@ export default function OrgAdminLayout({
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [setupStatus, setSetupStatus] = useState<string[]>([])
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const userName = profile?.name
 
   const isOrgAdmin = profile?.org_role === "org_admin"
@@ -94,10 +95,42 @@ export default function OrgAdminLayout({
 
       setProfile(profileData)
       setLoading(false)
+
+      // Fetch unread message count for rescue admin
+      // Count messages in org conversations sent by fosters (not rescue staff) that are unread
+      const { data: conversations } = await supabase.from("conversations").select("id").eq("organization_id", orgId)
+
+      if (conversations && conversations.length > 0) {
+        const conversationIds = conversations.map((c) => c.id)
+
+        // Get rescue staff IDs to exclude their messages
+        const { data: rescueStaff } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("organization_id", orgId)
+          .eq("role", "rescue")
+
+        const rescueStaffIds = rescueStaff?.map((s) => s.id) || []
+
+        // Count unread messages not sent by rescue staff
+        let query = supabase
+          .from("messages")
+          .select("*", { count: "exact", head: true })
+          .in("conversation_id", conversationIds)
+          .is("read_at", null)
+
+        // Exclude messages from rescue staff
+        if (rescueStaffIds.length > 0) {
+          query = query.not("sender_id", "in", `(${rescueStaffIds.join(",")})`)
+        }
+
+        const { count } = await query
+        setUnreadMessageCount(count || 0)
+      }
     }
 
     loadUserProfile()
-  }, [router])
+  }, [router, orgId])
 
   useEffect(() => {
     async function loadOrg() {
@@ -177,6 +210,7 @@ export default function OrgAdminLayout({
       adminOnly: false,
       section: "foster",
       description: "Message foster parents about their animals",
+      badge: unreadMessageCount > 0 ? (unreadMessageCount > 99 ? "99+" : unreadMessageCount.toString()) : undefined,
     },
     {
       href: `/org/${orgId}/admin/reimbursements`,
@@ -368,6 +402,15 @@ export default function OrgAdminLayout({
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
+                    {item.badge && (
+                      <span
+                        className={`ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1 ${
+                          isActive ? "bg-white text-[#D76B1A]" : "bg-red-500 text-white"
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
                     {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
                   </Link>
                 )

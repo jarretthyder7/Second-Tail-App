@@ -36,12 +36,13 @@ export default function OrgFosterLayout({
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [profile, setProfile] = useState<any>(null)
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const { branding } = useOrgBranding(orgId)
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndUnreadCount = async () => {
       const supabase = createClient()
       const {
         data: { user },
@@ -50,11 +51,43 @@ export default function OrgFosterLayout({
       if (user) {
         const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
         setProfile(profileData)
+
+        // Fetch foster's dogs to find their conversations
+        const { data: dogs } = await supabase
+          .from("dogs")
+          .select("id")
+          .eq("foster_id", user.id)
+          .eq("organization_id", orgId)
+
+        if (dogs && dogs.length > 0) {
+          const dogIds = dogs.map((d) => d.id)
+
+          // Get conversations for foster's dogs
+          const { data: conversations } = await supabase
+            .from("conversations")
+            .select("id")
+            .eq("organization_id", orgId)
+            .in("dog_id", dogIds)
+
+          if (conversations && conversations.length > 0) {
+            const conversationIds = conversations.map((c) => c.id)
+
+            // Count unread messages (not sent by foster and not read by foster)
+            const { count } = await supabase
+              .from("messages")
+              .select("*", { count: "exact", head: true })
+              .in("conversation_id", conversationIds)
+              .neq("sender_id", user.id)
+              .or(`read_by.is.null,read_by.neq.${user.id}`)
+
+            setUnreadMessageCount(count || 0)
+          }
+        }
       }
     }
 
-    fetchProfile()
-  }, [])
+    fetchProfileAndUnreadCount()
+  }, [orgId])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -225,12 +258,13 @@ export default function OrgFosterLayout({
             <div className="max-w-7xl mx-auto px-4 flex gap-1">
               {tabs.map((tab) => {
                 const Icon = tab.icon
+                const showBadge = tab.path === "/messages" && unreadMessageCount > 0
                 return (
                   <Link
                     key={tab.path}
                     href={tab.href}
                     onClick={() => setShowMobileMenu(false)}
-                    className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 ${
+                    className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 relative ${
                       isActive(tab.path)
                         ? "border-primary-orange text-primary-orange font-semibold"
                         : "border-transparent text-text-muted hover:text-text-main"
@@ -238,6 +272,11 @@ export default function OrgFosterLayout({
                   >
                     <Icon className="w-4 h-4" />
                     <span className="hidden lg:inline">{tab.name}</span>
+                    {showBadge && (
+                      <span className="absolute -top-0.5 -right-0.5 lg:relative lg:top-auto lg:right-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1">
+                        {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -249,6 +288,7 @@ export default function OrgFosterLayout({
               <div className="px-4 py-2 space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon
+                  const showBadge = tab.path === "/messages" && unreadMessageCount > 0
                   return (
                     <Link
                       key={tab.path}
@@ -262,6 +302,11 @@ export default function OrgFosterLayout({
                     >
                       <Icon className="w-5 h-5" />
                       <span>{tab.name}</span>
+                      {showBadge && (
+                        <span className="ml-auto min-w-[20px] h-[20px] flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold px-1">
+                          {unreadMessageCount > 99 ? "99+" : unreadMessageCount}
+                        </span>
+                      )}
                     </Link>
                   )
                 })}

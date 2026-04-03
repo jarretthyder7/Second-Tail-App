@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
       const { data: newsletter, error: insertError } = await supabase
         .from('newsletters')
         .insert({
-          org_id: orgId,
+          organization_id: orgId,
           subject,
           sections,
           status: 'scheduled',
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     const { data: newsletter, error: insertError } = await supabase
       .from('newsletters')
       .insert({
-        org_id: orgId,
+        organization_id: orgId,
         subject,
         sections,
         status: 'sending',
@@ -178,8 +178,8 @@ export async function POST(request: NextRequest) {
       .from('newsletters')
       .update({
         status: failureCount > 0 ? 'partial' : 'sent',
-        success_count: successCount,
-        failure_count: failureCount,
+        recipient_count: successCount,
+        sent_at: new Date().toISOString(),
       })
       .eq('id', newsletter.id)
 

@@ -133,6 +133,7 @@ function OrgSettingsContent() {
           isCompleted: true,
         }),
       })
+      window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "org_profile" } }))
     } catch (error) {
       console.error("[v0] Error marking setup step complete:", error)
     }

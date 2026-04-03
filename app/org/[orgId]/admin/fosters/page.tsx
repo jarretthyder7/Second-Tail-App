@@ -190,6 +190,18 @@ export default function AdminFostersPage() {
 
       await mutateFosters()
 
+      // Mark invite_foster setup step as complete
+      try {
+        await fetch("/api/admin/setup-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orgId, stepId: "invite_foster", isCompleted: true }),
+        })
+        window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "invite_foster" } }))
+      } catch (err) {
+        console.error("[v0] Error marking invite_foster setup step:", err)
+      }
+
       setShowInviteModal(false)
       setInviteEmail("")
     } catch (error: any) {

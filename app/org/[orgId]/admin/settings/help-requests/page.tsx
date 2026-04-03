@@ -54,6 +54,7 @@ export default function HelpRequestSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orgId, stepId: "help_settings", isCompleted: true }),
       })
+      window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "help_settings" } }))
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)

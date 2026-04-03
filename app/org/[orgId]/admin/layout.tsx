@@ -192,6 +192,11 @@ export default function OrgAdminLayout({
     if (orgId) {
       loadSetupStatus()
     }
+
+    // Re-fetch when any page marks a step complete
+    const handleStepCompleted = () => loadSetupStatus()
+    window.addEventListener("setup-step-completed", handleStepCompleted)
+    return () => window.removeEventListener("setup-step-completed", handleStepCompleted)
   }, [orgId])
 
   const handleLogout = async () => {

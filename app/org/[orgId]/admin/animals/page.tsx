@@ -159,6 +159,7 @@ function OrgDogsContent() {
               isCompleted: true,
             }),
           })
+          window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "first_dog" } }))
         } catch (setupError) {
           console.error("Error updating setup status:", setupError)
         }

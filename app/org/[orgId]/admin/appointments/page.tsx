@@ -163,6 +163,7 @@ export default function AppointmentsPage() {
               isCompleted: true,
             }),
           })
+          window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "first_appointment" } }))
         } catch (error) {
           console.error("[v0] Error marking setup step complete:", error)
         }

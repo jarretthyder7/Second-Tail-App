@@ -36,6 +36,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Check if this is a temporary ID for a new animal being created
+    const isTempId = dogId.startsWith("temp-")
+
+    if (isTempId) {
+      // For new animals, just upload the image without database verification
+      const filename = `dogs/new/${Date.now()}-${file.name}`
+      const blob = await put(filename, file, {
+        access: "public",
+      })
+
+      return NextResponse.json({
+        url: blob.url,
+        filename: file.name,
+        size: file.size,
+        type: file.type,
+      })
+    }
+
+    // For existing animals, verify access and update the database
     const { data: dog, error: dogError } = await supabase.from("dogs").select("*").eq("id", dogId).maybeSingle()
 
     if (dogError) {

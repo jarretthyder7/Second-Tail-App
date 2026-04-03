@@ -71,13 +71,22 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
 
       console.log("[v0] Creating conversation with team:", selectedTeam)
 
+      // Get foster's first assigned dog to link the conversation
+      const { data: fosterDog } = await supabase
+        .from("dogs")
+        .select("id")
+        .eq("foster_id", user.id)
+        .eq("organization_id", orgId)
+        .limit(1)
+        .single()
+
       const { data: conversation, error: convError } = await supabase
         .from("conversations")
         .insert({
-          foster_id: user.id,
           organization_id: orgId,
+          dog_id: fosterDog?.id || null,
           subject: subject,
-          team: selectedTeam, // Store team ID
+          team: selectedTeam,
           created_at: new Date().toISOString(),
         })
         .select()

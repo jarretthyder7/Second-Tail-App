@@ -103,16 +103,7 @@ export default function OrgFosterMessages() {
       const { data: org } = await supabase.from("organizations").select("*").eq("id", orgId).single()
       setOrganization(org)
 
-      // Get conversations for this foster in this org
-      const { data: convs } = await supabase
-        .from("conversations")
-        .select("*, dog:dogs(*)")
-        .eq("organization_id", orgId)
-        .order("updated_at", { ascending: false })
-
-      setConversations(convs || [])
-
-      // Get dogs assigned to this foster in this org
+      // Get dogs assigned to this foster in this org FIRST
       const { data: dogsData } = await supabase
         .from("dogs")
         .select("*")
@@ -120,6 +111,23 @@ export default function OrgFosterMessages() {
         .eq("organization_id", orgId)
 
       setDogs(dogsData || [])
+
+      // Get foster's dog IDs to filter conversations
+      const fosterDogIds = (dogsData || []).map((d: any) => d.id)
+
+      // Get conversations for this foster - only where dog_id is one of their dogs
+      let convs: any[] = []
+      if (fosterDogIds.length > 0) {
+        const { data: convsData } = await supabase
+          .from("conversations")
+          .select("*, dog:dogs(*)")
+          .eq("organization_id", orgId)
+          .in("dog_id", fosterDogIds)
+          .order("updated_at", { ascending: false })
+        convs = convsData || []
+      }
+
+      setConversations(convs)
 
       // Fetch teams from the teams table with their members
       const { data: teamsData } = await supabase

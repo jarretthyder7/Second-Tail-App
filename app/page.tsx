@@ -2,48 +2,51 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Heart, Users, ArrowRight, Menu, X } from "lucide-react"
+import { Menu, X, ArrowRight, Heart, Users, Calendar, MessageSquare, Package, ClipboardList, CheckCircle2 } from "lucide-react"
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<"foster" | "rescue">("rescue")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<"rescue" | "foster">("rescue")
+  const [submitted, setSubmitted] = useState(false)
+  const [agreeToTerms, setAgreeToTerms] = useState(false)
+
+  const handleWaitlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!agreeToTerms) return
+    setSubmitted(true)
+    setTimeout(() => setSubmitted(false), 4000)
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="border-b border-neutral-200 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-white border-b border-[#F7E2BD]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-[#5A4A42]">
               Second Tail
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center gap-6 lg:gap-8">
-              <Link
-                href="/for-rescue-organizations"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#features" className="text-sm text-[#5A4A42] hover:opacity-70 transition-opacity">
+                Features
+              </a>
+              <a href="#for-both" className="text-sm text-[#5A4A42] hover:opacity-70 transition-opacity">
+                Solutions
+              </a>
+              <a
+                href="#waitlist"
+                className="px-5 py-2.5 rounded-lg bg-[#D76B1A] text-white text-sm font-semibold hover:bg-[#D76B1A]/90 transition-colors"
               >
-                For Rescue Organizations
-              </Link>
-              <Link
-                href="/for-fosters"
-                className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-              >
-                For Fosters
-              </Link>
-              <Link
-                href="/login"
-                className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Login
-              </Link>
+                Get Early Access
+              </a>
             </div>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-lg hover:bg-[#F7E2BD] transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -52,302 +55,298 @@ export default function Home() {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden pt-4 pb-2 space-y-3 border-t border-gray-100 mt-4">
-              <Link
-                href="/for-rescue-organizations"
-                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+            <div className="md:hidden pt-4 pb-2 space-y-3 border-t border-[#F7E2BD] mt-4">
+              <a
+                href="#features"
+                className="block px-4 py-2 text-sm text-[#5A4A42] hover:bg-[#F7E2BD]/20 rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                For Rescue Organizations
-              </Link>
-              <Link
-                href="/for-fosters"
-                className="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                Features
+              </a>
+              <a
+                href="#for-both"
+                className="block px-4 py-2 text-sm text-[#5A4A42] hover:bg-[#F7E2BD]/20 rounded-lg transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                For Fosters
-              </Link>
-              <Link
-                href="/login"
-                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: "#D76B1A" }}
+                Solutions
+              </a>
+              <a
+                href="#waitlist"
+                className="block text-center text-sm font-semibold text-white px-5 py-2.5 rounded-lg bg-[#D76B1A] hover:bg-[#D76B1A]/90 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Login
-              </Link>
+                Get Early Access
+              </a>
             </div>
           )}
         </div>
       </nav>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-11 lg:pt-16">
-        <div className="text-center max-w-3xl mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
-          <p className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-gray-500 mb-3">
-            Rescue Operations & Foster Coordination
-          </p>
-
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.15] tracking-tight max-w-2xl mx-auto px-2">
-            Fostering and rescue, <span className="block sm:inline">made easier for everyone involved.</span>
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 lg:py-40">
+        <div className="text-center space-y-8 sm:space-y-10 max-w-3xl mx-auto">
+          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-[#2E2E2E] leading-[1.1] text-balance">
+            Fostering and rescue, made easier for everyone involved.
           </h1>
 
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed font-normal max-w-2xl mx-auto px-2">
-            Second Tail helps rescue organizations coordinate foster care with simple tools to communicate, track animal
-            care, and support fosters.
+          <p className="text-lg sm:text-xl lg:text-2xl text-[#5A4A42] leading-relaxed">
+            Second Tail gives rescue organizations and foster parents one place to manage dogs, appointments, care plans, and communication.
           </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center pt-4 sm:pt-6">
+            <a
+              href="#waitlist"
+              className="px-8 py-4 sm:py-3.5 rounded-lg bg-[#5A4A42] text-white font-semibold hover:bg-[#5A4A42]/90 transition-colors text-center"
+            >
+              Join as a Rescue Org
+            </a>
+            <a
+              href="#waitlist"
+              className="px-8 py-4 sm:py-3.5 rounded-lg border-2 border-[#D76B1A] text-[#D76B1A] font-semibold hover:bg-[#D76B1A]/5 transition-colors text-center"
+            >
+              Join as a Foster Parent
+            </a>
+          </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {/* Rescue Card - Now on the left */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 border-amber-200">
-            <div
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
-              style={{ backgroundColor: "rgba(90, 74, 66, 0.15)" }}
-            >
-              <Users className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Rescue Organizations</h3>
-            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed">
-              Streamline foster coordination. Simple tools to manage relationships, track care, and scale without
-              burnout.
-            </p>
-            <Link
-              href="/sign-up/rescue"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base sm:text-base"
-              style={{ backgroundColor: "#5a4a42" }}
-            >
-              Register Rescue Org
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-            <Link
-              href="/for-rescue-organizations"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-2 text-gray-700 rounded-lg font-medium hover:text-gray-900 transition-colors text-sm sm:text-sm mt-3 sm:mt-2 gap-1.5 group"
-            >
-              Learn More
-              <ArrowRight
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                style={{ color: "#50402B" }}
-              />
-            </Link>
-          </div>
-
-          {/* Foster Card - Now on the right */}
-          <div
-            className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2"
-            style={{ borderColor: "rgba(215, 107, 26, 0.2)" }}
-          >
-            <div
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
-              style={{ backgroundColor: "rgba(215, 107, 26, 0.15)" }}
-            >
-              <Heart className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Foster Parents</h3>
-            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed">
-              A simple dashboard to collaborate with your rescue organization. Track care, communicate easily, and get
-              the support you need.
-            </p>
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base sm:text-base"
-              style={{ backgroundColor: "#D76B1A" }}
-            >
-              Login to Dashboard
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-            <Link
-              href="/for-fosters"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-2 text-gray-700 rounded-lg font-medium hover:text-gray-900 transition-colors text-sm sm:text-sm mt-3 sm:mt-2 gap-1.5 group"
-            >
-              Learn More
-              <ArrowRight
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                style={{ color: "#D76B1A" }}
-              />
-            </Link>
-          </div>
+      {/* Features Section */}
+      <section id="features" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-[#F7E2BD]">
+        <div className="text-center mb-16 sm:mb-20">
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#2E2E2E]">Everything your rescue needs, in one place</h2>
         </div>
 
-        <p className="text-center text-sm sm:text-base text-gray-500 pt-6 sm:pt-8">
-          Already a member?{" "}
-          <Link href="/login" className="text-gray-900 font-medium hover:underline">
-            Log in
-          </Link>
-        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+          {[
+            {
+              icon: Users,
+              title: "Dog Management",
+              desc: "Track every dog's profile, care plan, and foster history",
+            },
+            {
+              icon: Heart,
+              title: "Foster Coordination",
+              desc: "Invite fosters, assign dogs, and manage your whole network",
+            },
+            {
+              icon: Calendar,
+              title: "Appointments",
+              desc: "Schedule vet visits, home checks, and meet & greets",
+            },
+            {
+              icon: MessageSquare,
+              title: "Messaging",
+              desc: "Real-time communication between staff and foster parents",
+            },
+            {
+              icon: Package,
+              title: "Supply Requests",
+              desc: "Fosters request what they need, admins fulfill it",
+            },
+            {
+              icon: ClipboardList,
+              title: "Care Plans",
+              desc: "Medications, feeding schedules, and vet info always accessible",
+            },
+          ].map((feature, idx) => (
+            <div key={idx} className="space-y-4 p-6 sm:p-8 rounded-2xl border border-[#F7E2BD] hover:border-[#D76B1A]/30 hover:bg-[#F7E2BD]/20 transition-all">
+              <feature.icon className="w-8 h-8 text-[#D76B1A]" />
+              <h3 className="text-xl sm:text-2xl font-semibold text-[#2E2E2E]">{feature.title}</h3>
+              <p className="text-base sm:text-lg text-[#5A4A42]">{feature.desc}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
-          How Second Tail Works
-        </h2>
+      {/* For Both Audiences Section */}
+      <section id="for-both" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12">
+          {/* Rescue Orgs Card */}
+          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl border-2 border-[#F7E2BD] bg-[#FBF8F4]">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#5A4A42] text-white flex items-center justify-center mb-6 sm:mb-8">
+              <Users className="w-6 h-6" />
+            </div>
+            <h3 className="text-3xl sm:text-4xl font-bold text-[#2E2E2E] mb-6">For Rescue Organizations</h3>
+            <ul className="space-y-4 sm:space-y-5 mb-8 sm:mb-10">
+              <li className="flex gap-3 items-start">
+                <CheckCircle2 className="w-5 h-5 text-[#5A4A42] flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg text-[#5A4A42]">Scale foster networks without burnout</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <CheckCircle2 className="w-5 h-5 text-[#5A4A42] flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg text-[#5A4A42]">Centralize all animal data and care coordination</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <CheckCircle2 className="w-5 h-5 text-[#5A4A42] flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg text-[#5A4A42]">Save hundreds of hours on admin every month</span>
+              </li>
+            </ul>
+            <a
+              href="#waitlist"
+              className="inline-block w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-[#5A4A42] text-white font-semibold rounded-lg hover:bg-[#5A4A42]/90 transition-colors text-center"
+            >
+              Request Early Access
+            </a>
+          </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
+          {/* Foster Parents Card */}
+          <div className="p-8 sm:p-10 lg:p-12 rounded-3xl border-2 border-[#D76B1A]/30 bg-[#FFF8F3]">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#D76B1A] text-white flex items-center justify-center mb-6 sm:mb-8">
+              <Heart className="w-6 h-6" />
+            </div>
+            <h3 className="text-3xl sm:text-4xl font-bold text-[#2E2E2E] mb-6">For Foster Parents</h3>
+            <ul className="space-y-4 sm:space-y-5 mb-8 sm:mb-10">
+              <li className="flex gap-3 items-start">
+                <CheckCircle2 className="w-5 h-5 text-[#D76B1A] flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg text-[#5A4A42]">Stay connected to your rescue team</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <CheckCircle2 className="w-5 h-5 text-[#D76B1A] flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg text-[#5A4A42]">Access care plans and medical records anytime</span>
+              </li>
+              <li className="flex gap-3 items-start">
+                <CheckCircle2 className="w-5 h-5 text-[#D76B1A] flex-shrink-0 mt-0.5" />
+                <span className="text-base sm:text-lg text-[#5A4A42]">Never miss an appointment or update</span>
+              </li>
+            </ul>
+            <a
+              href="#waitlist"
+              className="inline-block w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 bg-[#D76B1A] text-white font-semibold rounded-lg hover:bg-[#D76B1A]/90 transition-colors text-center"
+            >
+              Join as a Foster
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Waitlist Section */}
+      <section id="waitlist" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-[#F7E2BD]">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-4xl sm:text-5xl font-bold text-[#2E2E2E] mb-4">Be the first to know when we launch</h2>
+          <p className="text-lg sm:text-xl text-[#5A4A42]">Join rescue organizations and foster parents who are ready to change the game.</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-3 sm:gap-4 justify-center mb-8 sm:mb-10">
           <button
-            onClick={() => setActiveView("rescue")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-semibold transition-all text-base ${
-              activeView === "rescue" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            onClick={() => setActiveTab("rescue")}
+            className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold transition-all text-sm sm:text-base ${
+              activeTab === "rescue"
+                ? "bg-[#5A4A42] text-white"
+                : "bg-[#F7E2BD] text-[#5A4A42] hover:bg-[#F7E2BD]/80"
             }`}
-            style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
           >
-            For Rescue Organizations
+            I&apos;m a Rescue Org
           </button>
           <button
-            onClick={() => setActiveView("foster")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-semibold transition-all text-base ${
-              activeView === "foster" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            onClick={() => setActiveTab("foster")}
+            className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold transition-all text-sm sm:text-base ${
+              activeTab === "foster"
+                ? "bg-[#D76B1A] text-white"
+                : "bg-[#F7E2BD] text-[#5A4A42] hover:bg-[#F7E2BD]/80"
             }`}
-            style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
           >
-            For Foster Parents
+            I&apos;m a Foster Parent
           </button>
         </div>
 
-        {activeView === "foster" ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-            <div className="text-center px-4">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                1
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Get invited by your rescue</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Your rescue organization will send you an invitation link after you're approved to foster with them.
-              </p>
+        {/* Form */}
+        <form onSubmit={handleWaitlistSubmit} className="bg-[#FBF8F4] rounded-2xl p-8 sm:p-10 space-y-6 sm:space-y-7">
+          {submitted && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 text-center text-sm sm:text-base font-medium">
+              You&apos;re on the list! We&apos;ll be in touch soon.
             </div>
-            <div className="text-center px-4">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                2
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access your dashboard</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Log in to see the animals you're fostering, upcoming appointments, and messages from your rescue team.
-              </p>
-            </div>
-            <div className="text-center px-4">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                3
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Collaborate and coordinate</h3>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Track care, communicate with your rescue, and get the guidance you need to help your foster animal
-                thrive.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-            <div className="text-center px-4">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                style={{ backgroundColor: "#5a4a42" }}
-              >
-                1
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Set up your organization</h3>
-              <p className="text-gray-600 text-sm sm:text-lg mb-5 sm:mb-6 leading-relaxed">
-                Register your rescue, add team members, and customize your foster management system.
-              </p>
-            </div>
-            <div className="text-center px-4">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                style={{ backgroundColor: "#5a4a42" }}
-              >
-                2
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Invite and manage fosters</h3>
-              <p className="text-gray-600 text-sm sm:text-lg mb-5 sm:mb-6 leading-relaxed">
-                Onboard foster parents, assign animals, and build a network of trusted caregivers.
-              </p>
-            </div>
-            <div className="text-center px-4">
-              <div
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                style={{ backgroundColor: "#5a4a42" }}
-              >
-                3
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Coordinate care at scale</h3>
-              <p className="text-gray-600 text-sm sm:text-lg mb-5 sm:mb-6 leading-relaxed">
-                Track health records, schedule appointments, communicate efficiently, and focus on saving more lives.
-              </p>
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 sm:py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
-          {activeView === "foster" ? (
-            <>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2">
-                Foster with confidence and support
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
-                Second Tail keeps you connected to your rescue team so you're never figuring it out alone.
-              </p>
-              <Link
-                href="/login"
-                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Login to Dashboard
-              </Link>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2">
-                Build a foster network that actually scales.
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
-                Second Tail helps rescue organizations coordinate care, reduce admin burden, and focus on what
-                matters—saving more lives.
-              </p>
-              <Link
-                href="/sign-up/rescue"
-                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg transition-colors shadow-lg"
-                style={{ backgroundColor: "#5a4a42" }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              >
-                Register Your Organization
-              </Link>
-            </>
           )}
-        </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">Name</label>
+            <input
+              type="text"
+              required
+              placeholder="Your name"
+              className="w-full px-4 py-3 rounded-lg border border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">Email</label>
+            <input
+              type="email"
+              required
+              placeholder="your@email.com"
+              className="w-full px-4 py-3 rounded-lg border border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
+            />
+          </div>
+
+          <label className="flex items-start gap-3 p-4 rounded-lg border-2 border-[#F7E2BD] hover:border-[#D76B1A]/30 transition-colors">
+            <input
+              type="checkbox"
+              required
+              checked={agreeToTerms}
+              onChange={(e) => setAgreeToTerms(e.target.checked)}
+              className="w-5 h-5 mt-0.5 rounded accent-[#D76B1A]"
+            />
+            <span className="text-sm sm:text-base text-[#5A4A42]">
+              I agree to receive updates from Second Tail. We&apos;ll never spam you or share your data.{" "}
+              <Link href="/privacy" className="text-[#D76B1A] hover:underline font-semibold">
+                View our Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
+
+          <button
+            type="submit"
+            disabled={!agreeToTerms}
+            className="w-full px-6 py-4 sm:py-3.5 bg-[#D76B1A] text-white font-semibold rounded-lg hover:bg-[#D76B1A]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base sm:text-lg"
+          >
+            Get Early Access
+          </button>
+        </form>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
-        <p className="text-xs sm:text-sm text-gray-500 mb-6 sm:mb-8">Trusted by foster parents and rescue teams</p>
-        <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-3xl mx-auto">
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">500+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Active Fosters</div>
-          </div>
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">2,000+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Animals Saved</div>
-          </div>
-          <div>
-            <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">50+</div>
-            <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Rescue Partners</div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-gray-200 bg-white py-8 sm:py-12">
+      {/* Footer */}
+      <footer className="border-t border-[#F7E2BD] py-12 sm:py-16 mt-20 sm:mt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs sm:text-sm text-gray-500">
-            © 2026 Second Tail. Made with care for rescues and fosters.
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 mb-12 sm:mb-16">
+            <div>
+              <h3 className="font-bold text-[#2E2E2E] text-lg mb-2">Second Tail</h3>
+              <p className="text-sm sm:text-base text-[#5A4A42]">Making rescue and foster care simpler, together.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-[#2E2E2E] text-sm mb-4">Product</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="text-sm text-[#5A4A42] hover:text-[#D76B1A] transition-colors">
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="text-sm text-[#5A4A42] hover:text-[#D76B1A] transition-colors">
+                    Pricing
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-[#2E2E2E] text-sm mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li>
+                  <Link href="/privacy" className="text-sm text-[#5A4A42] hover:text-[#D76B1A] transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" className="text-sm text-[#5A4A42] hover:text-[#D76B1A] transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="border-t border-[#F7E2BD] pt-8 sm:pt-10 text-center text-sm text-[#5A4A42]">
+            © 2026 Second Tail. All rights reserved.
           </div>
         </div>
       </footer>

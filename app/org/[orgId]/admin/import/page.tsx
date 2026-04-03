@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState, useCallback } from "react"
-import { useParams } from "next/navigation"
+import { useState, useCallback, useEffect } from "react"
+import { useParams, useSearchParams } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -74,10 +74,19 @@ export default function ImportDataPage() {
 
 function ImportDataContent() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const orgId = params.orgId as string
 
   const [currentStep, setCurrentStep] = useState<ImportStep>("upload")
   const [importType, setImportType] = useState<ImportType | null>(null)
+
+  // Pre-select import type from URL param
+  useEffect(() => {
+    const typeParam = searchParams.get("type")
+    if (typeParam === "animals" || typeParam === "fosters") {
+      setImportType(typeParam)
+    }
+  }, [searchParams])
   const [file, setFile] = useState<File | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
   const [rawData, setRawData] = useState<string[][]>([])

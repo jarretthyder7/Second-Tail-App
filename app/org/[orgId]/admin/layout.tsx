@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { SetupSidebarWidget } from "@/components/admin/setup-sidebar-widget"
+import { getSetupProgress } from "@/lib/setup-steps"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -70,6 +70,7 @@ export default function OrgAdminLayout({
   const userName = profile?.name
 
   const isOrgAdmin = profile?.org_role === "org_admin"
+  const setupProgress = getSetupProgress(setupStatus)
 
   useEffect(() => {
     async function loadUserProfile() {
@@ -192,17 +193,23 @@ export default function OrgAdminLayout({
 
   const navItems = [
     // Foster-facing tools
+    ...(setupProgress.percentage < 100
+      ? [
+          {
+            href: `/org/${orgId}/admin/setup-wizard`,
+            label: "Setup Guide",
+            icon: CheckSquare,
+            adminOnly: false,
+            section: "main",
+            badge: `${setupProgress.percentage}%`,
+            setupBadge: true,
+          },
+        ]
+      : []),
     {
       href: `/org/${orgId}/admin/dashboard`,
       label: "Dashboard",
       icon: LayoutDashboard,
-      adminOnly: false,
-      section: "main",
-    },
-    {
-      href: `/org/${orgId}/admin/setup-wizard`,
-      label: "Setup Guide",
-      icon: CheckSquare,
       adminOnly: false,
       section: "main",
     },
@@ -344,6 +351,7 @@ export default function OrgAdminLayout({
                 const Icon = item.icon
                 const isActive = pathname === item.href
                 const isDisabled = item.adminOnly && !isOrgAdmin
+                const isSetupGuide = (item as any).setupBadge === true
 
                 return (
                   <Link
@@ -362,13 +370,25 @@ export default function OrgAdminLayout({
                         ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
                         : isActive
                           ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          : isSetupGuide
+                            ? "text-[#D76B1A] bg-[#D76B1A]/8 hover:bg-[#D76B1A]/15 border border-[#D76B1A]/20"
+                            : "text-[#5A4A42] hover:bg-[#FBF8F4]"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
                     {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isSetupGuide && item.badge && !isActive && (
+                      <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-[#D76B1A] text-white">
+                        {item.badge}
+                      </span>
+                    )}
+                    {isSetupGuide && item.badge && isActive && (
+                      <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-white text-[#D76B1A]">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -569,10 +589,9 @@ export default function OrgAdminLayout({
         </div>
       </aside>
 
-      {/* Main content with floating setup widget */}
+      {/* Main content */}
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         <main className="flex-1 overflow-y-auto pt-16 md:pt-0">{children}</main>
-        <SetupSidebarWidget orgId={orgId} initialCompletedSteps={setupStatus} />
       </div>
 
 

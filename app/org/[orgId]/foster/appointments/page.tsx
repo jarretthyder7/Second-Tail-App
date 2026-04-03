@@ -33,13 +33,14 @@ export default function FosterAppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
-  const [showRequestModal, setShowRequestModal] = useState(false) // Added state for request appointment modal
+  const [showRequestModal, setShowRequestModal] = useState(false)
+  const [dog, setDog] = useState<{ id: string; name: string; breed: string; image_url: string } | null>(null)
 
   useEffect(() => {
-    loadAppointments()
+    loadData()
   }, [orgId])
 
-  async function loadAppointments() {
+  async function loadData() {
     const supabase = createClient()
     const {
       data: { user },
@@ -47,6 +48,20 @@ export default function FosterAppointmentsPage() {
 
     if (!user) return
 
+    // Fetch foster's current dog
+    const { data: dogData } = await supabase
+      .from("dogs")
+      .select("id, name, breed, image_url")
+      .eq("foster_id", user.id)
+      .eq("status", "fostered")
+      .limit(1)
+      .single()
+
+    if (dogData) {
+      setDog(dogData)
+    }
+
+    // Fetch appointments
     const { data, error } = await supabase
       .from("appointments")
       .select(
@@ -99,13 +114,15 @@ export default function FosterAppointmentsPage() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-[#2E2E2E]">My Appointments</h1>
-          <Button
-            onClick={() => setShowRequestModal(true)}
-            className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4" />
-            Request Appointment
-          </Button>
+          {dog && (
+            <Button
+              onClick={() => setShowRequestModal(true)}
+              className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+            >
+              <Plus className="w-4 h-4" />
+              Request Appointment
+            </Button>
+          )}
         </div>
 
         {/* Upcoming Appointments */}
@@ -218,8 +235,8 @@ export default function FosterAppointmentsPage() {
         <AppointmentDetailModal appointment={selectedAppointment} onClose={() => setSelectedAppointment(null)} />
       )}
 
-      {showRequestModal && (
-        <AppointmentRequestModal dogId={appointments[0]?.dog_id} onClose={() => setShowRequestModal(false)} />
+      {showRequestModal && dog && (
+        <AppointmentRequestModal dog={dog} orgId={orgId} onClose={() => setShowRequestModal(false)} />
       )}
     </div>
   )

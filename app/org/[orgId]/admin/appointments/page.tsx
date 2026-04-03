@@ -61,6 +61,16 @@ export default function AppointmentsPage() {
   const [saving, setSaving] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [editForm, setEditForm] = useState({
+    title: "",
+    start_time: "",
+    end_time: "",
+    location: "",
+    notes: "",
+    description: "",
+  })
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [editSuccess, setEditSuccess] = useState(false)
   const [showColorSettings, setShowColorSettings] = useState(false)
   const [typeColors, setTypeColors] = useState<Record<string, string>>({
     vet_visit: "bg-blue-500",
@@ -276,7 +286,51 @@ export default function AppointmentsPage() {
 
   const handleAppointmentClick = (appt: Appointment) => {
     setSelectedAppointment(appt)
+    setEditForm({
+      title: appt.title,
+      start_time: appt.start_time.slice(0, 16), // Format for datetime-local input
+      end_time: appt.end_time.slice(0, 16),
+      location: appt.location || "",
+      notes: appt.notes || "",
+      description: appt.description || "",
+    })
+    setEditSuccess(false)
     setShowEditModal(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!selectedAppointment) return
+    setSavingEdit(true)
+    setEditSuccess(false)
+
+    try {
+      const res = await fetch(`/api/admin/appointments`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedAppointment.id,
+          title: editForm.title,
+          start_time: editForm.start_time,
+          end_time: editForm.end_time,
+          location: editForm.location || null,
+          notes: editForm.notes || null,
+          description: editForm.description || null,
+        }),
+      })
+
+      if (res.ok) {
+        setEditSuccess(true)
+        loadData()
+        setTimeout(() => setEditSuccess(false), 3000)
+      } else {
+        alert("Failed to save changes")
+      }
+    } catch (error) {
+      console.error("[v0] Error saving appointment:", error)
+      alert("Failed to save changes")
+    } finally {
+      setSavingEdit(false)
+    }
   }
 
   if (loading) {
@@ -534,13 +588,18 @@ export default function AppointmentsPage() {
               </div>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
+              {editSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+                  Changes saved successfully!
+                </div>
+              )}
               <div>
                 <Label>Title</Label>
                 <input
                   type="text"
-                  defaultValue={selectedAppointment.title}
-                  disabled
-                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg bg-gray-50"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
                 />
               </div>
               <div>
@@ -550,16 +609,32 @@ export default function AppointmentsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Start Time</Label>
-                  <p className="text-sm text-[#5A4A42] py-2">
-                    {new Date(selectedAppointment.start_time).toLocaleString()}
-                  </p>
+                  <input
+                    type="datetime-local"
+                    value={editForm.start_time}
+                    onChange={(e) => setEditForm({ ...editForm, start_time: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                  />
                 </div>
                 <div>
                   <Label>End Time</Label>
-                  <p className="text-sm text-[#5A4A42] py-2">
-                    {new Date(selectedAppointment.end_time).toLocaleString()}
-                  </p>
+                  <input
+                    type="datetime-local"
+                    value={editForm.end_time}
+                    onChange={(e) => setEditForm({ ...editForm, end_time: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                  />
                 </div>
+              </div>
+              <div>
+                <Label>Location</Label>
+                <input
+                  type="text"
+                  value={editForm.location}
+                  onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+                  placeholder="e.g., Vet clinic, foster home"
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                />
               </div>
               {selectedAppointment.dog && (
                 <div>
@@ -567,12 +642,26 @@ export default function AppointmentsPage() {
                   <p className="text-sm text-[#5A4A42] py-2">{selectedAppointment.dog.name}</p>
                 </div>
               )}
-              {selectedAppointment.description && (
-                <div>
-                  <Label>Description</Label>
-                  <p className="text-sm text-[#5A4A42] py-2">{selectedAppointment.description}</p>
-                </div>
-              )}
+              <div>
+                <Label>Description</Label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  placeholder="Additional details about the appointment..."
+                  rows={3}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                />
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  placeholder="Internal notes..."
+                  rows={2}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                />
+              </div>
               {selectedAppointment.arrival_instructions && (
                 <div>
                   <Label>Arrival Instructions</Label>
@@ -617,13 +706,20 @@ export default function AppointmentsPage() {
                           alert("Failed to send notification")
                         }
                       }}
-                      className="bg-[#D76B1A] text-white"
+                      variant="outline"
                     >
                       Send Notification
                     </Button>
                   )}
                   <Button onClick={() => setShowEditModal(false)} variant="outline">
                     Close
+                  </Button>
+                  <Button 
+                    onClick={handleSaveEdit} 
+                    disabled={savingEdit}
+                    className="bg-[#D76B1A] text-white"
+                  >
+                    {savingEdit ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </div>

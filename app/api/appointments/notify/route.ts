@@ -33,13 +33,13 @@ export async function POST(request: Request) {
       return Response.json({ error: "Foster email not found" }, { status: 404 })
     }
 
-    const appointmentDate = new Date(appointment.date).toLocaleDateString("en-US", {
+    const appointmentDate = new Date(appointment.start_time).toLocaleDateString("en-US", {
       weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
     })
-    const appointmentTime = new Date(appointment.date).toLocaleTimeString("en-US", {
+    const appointmentTime = new Date(appointment.start_time).toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,

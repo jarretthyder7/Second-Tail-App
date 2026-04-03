@@ -1,8 +1,6 @@
 "use client"
 
 import type React from "react"
-import { OnboardingTutorial } from "@/components/admin/onboarding-tutorial"
-import { FirstTimeSetupModal } from "@/components/admin/first-time-setup-modal"
 import { SetupSidebarWidget } from "@/components/admin/setup-sidebar-widget"
 import {
   DropdownMenu,
@@ -11,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { ChevronUp, LogOut, Upload } from "lucide-react"
+import { ChevronUp, LogOut, Upload, CheckSquare } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useParams, usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
@@ -198,6 +196,13 @@ export default function OrgAdminLayout({
       href: `/org/${orgId}/admin/dashboard`,
       label: "Dashboard",
       icon: LayoutDashboard,
+      adminOnly: false,
+      section: "main",
+    },
+    {
+      href: `/org/${orgId}/admin/setup-wizard`,
+      label: "Setup Guide",
+      icon: CheckSquare,
       adminOnly: false,
       section: "main",
     },
@@ -570,11 +575,7 @@ export default function OrgAdminLayout({
         <SetupSidebarWidget orgId={orgId} initialCompletedSteps={setupStatus} />
       </div>
 
-      {/* Onboarding Tutorial Overlay */}
-      <OnboardingTutorial />
 
-      {/* First-time setup modal */}
-      <FirstTimeSetupModal />
     </div>
   )
 }

@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-import { OnboardingTutorial } from "@/components/admin/onboarding-tutorial"
-import { FirstTimeSetupModal } from "@/components/admin/first-time-setup-modal"
-import { SetupSidebarWidget } from "@/components/admin/setup-sidebar-widget"
+import { getSetupProgress } from "@/lib/setup-steps"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -11,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { ChevronUp, LogOut, Upload } from "lucide-react"
+import { ChevronUp, LogOut, Upload, CheckSquare } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useParams, usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
@@ -69,9 +67,11 @@ export default function OrgAdminLayout({
   const [loading, setLoading] = useState(true)
   const [setupStatus, setSetupStatus] = useState<string[]>([])
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const userName = profile?.name
 
   const isOrgAdmin = profile?.org_role === "org_admin"
+  const setupProgress = getSetupProgress(setupStatus)
 
   useEffect(() => {
     async function loadUserProfile() {
@@ -177,7 +177,15 @@ export default function OrgAdminLayout({
         .eq("is_completed", true)
 
       if (!error && data) {
-        setSetupStatus(data.map((d: any) => d.setup_step_id))
+        const completedSteps = data.map((d: any) => d.setup_step_id)
+        setSetupStatus(completedSteps)
+
+        // Show welcome modal once for brand-new orgs that haven't dismissed it
+        const dismissedKey = `setup-welcome-dismissed-${orgId}`
+        const alreadyDismissed = localStorage.getItem(dismissedKey)
+        if (!alreadyDismissed && completedSteps.length === 0) {
+          setShowWelcomeModal(true)
+        }
       }
     }
 
@@ -194,6 +202,19 @@ export default function OrgAdminLayout({
 
   const navItems = [
     // Foster-facing tools
+    ...(setupProgress.percentage < 100
+      ? [
+          {
+            href: `/org/${orgId}/admin/setup-wizard`,
+            label: "Setup Guide",
+            icon: CheckSquare,
+            adminOnly: false,
+            section: "main",
+            badge: `${setupProgress.percentage}%`,
+            setupBadge: true,
+          },
+        ]
+      : []),
     {
       href: `/org/${orgId}/admin/dashboard`,
       label: "Dashboard",
@@ -339,6 +360,7 @@ export default function OrgAdminLayout({
                 const Icon = item.icon
                 const isActive = pathname === item.href
                 const isDisabled = item.adminOnly && !isOrgAdmin
+                const isSetupGuide = (item as any).setupBadge === true
 
                 return (
                   <Link
@@ -357,13 +379,25 @@ export default function OrgAdminLayout({
                         ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
                         : isActive
                           ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          : isSetupGuide
+                            ? "text-[#D76B1A] bg-[#D76B1A]/8 hover:bg-[#D76B1A]/15 border border-[#D76B1A]/20"
+                            : "text-[#5A4A42] hover:bg-[#FBF8F4]"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
                     {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isSetupGuide && item.badge && !isActive && (
+                      <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-[#D76B1A] text-white">
+                        {item.badge}
+                      </span>
+                    )}
+                    {isSetupGuide && item.badge && isActive && (
+                      <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-white text-[#D76B1A]">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 )
               })}
@@ -564,17 +598,59 @@ export default function OrgAdminLayout({
         </div>
       </aside>
 
-      {/* Main content with floating setup widget */}
+      {/* Main content */}
       <div className="flex flex-1 overflow-hidden flex-col md:flex-row">
         <main className="flex-1 overflow-y-auto pt-16 md:pt-0">{children}</main>
-        <SetupSidebarWidget orgId={orgId} initialCompletedSteps={setupStatus} />
       </div>
 
-      {/* Onboarding Tutorial Overlay */}
-      <OnboardingTutorial />
+      {/* One-time welcome / setup guide modal */}
+      {showWelcomeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 flex flex-col items-center text-center">
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-[#D76B1A]/10 flex items-center justify-center mb-5">
+              <CheckSquare className="w-8 h-8 text-[#D76B1A]" />
+            </div>
 
-      {/* First-time setup modal */}
-      <FirstTimeSetupModal />
+            <h2 className="text-2xl font-semibold text-[#2E2E2E] mb-2">Welcome to {org?.name || "your account"}!</h2>
+            <p className="text-[#5A4A42]/70 text-sm leading-relaxed mb-6">
+              Before you get going, take a few minutes to complete your one-time setup. It only takes a moment and makes sure everything is configured properly for your organization.
+            </p>
+
+            {/* Steps overview */}
+            <div className="w-full bg-[#FBF8F4] rounded-xl p-4 mb-6 text-left space-y-2">
+              <p className="text-xs font-semibold text-[#5A4A42]/60 uppercase tracking-wider mb-3">What you&apos;ll set up</p>
+              {[
+                "Organization profile & contact info",
+                "Foster application settings",
+                "Email & notification preferences",
+                "Invite your team members",
+              ].map((step) => (
+                <div key={step} className="flex items-center gap-2.5 text-sm text-[#5A4A42]">
+                  <div className="w-4 h-4 rounded-full border-2 border-[#D76B1A]/40 flex-shrink-0" />
+                  {step}
+                </div>
+              ))}
+            </div>
+
+            <p className="text-xs text-[#5A4A42]/50 mb-6">
+              Find the <span className="font-semibold text-[#D76B1A]">Setup Guide</span> in the sidebar menu at any time to pick up where you left off.
+            </p>
+
+            <button
+              onClick={() => {
+                localStorage.setItem(`setup-welcome-dismissed-${orgId}`, "true")
+                setShowWelcomeModal(false)
+              }}
+              className="w-full py-3 px-6 bg-[#D76B1A] hover:bg-[#C25E15] text-white font-semibold rounded-xl transition text-sm"
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      )}
+
+
     </div>
   )
 }

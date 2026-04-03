@@ -59,16 +59,21 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Upsert setup status
+    // Upsert setup status with conflict handling on the composite unique key
     const { data, error } = await supabase
       .from("organization_setup_status")
-      .upsert({
-        organization_id: orgId,
-        setup_step_id: stepId,
-        is_completed: isCompleted,
-        completed_at: isCompleted ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString(),
-      })
+      .upsert(
+        {
+          organization_id: orgId,
+          setup_step_id: stepId,
+          is_completed: isCompleted,
+          completed_at: isCompleted ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "organization_id,setup_step_id",
+        }
+      )
       .select()
       .single()
 

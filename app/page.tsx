@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { createClient } from "@/lib/supabase/client"
 import { Menu, X, ArrowRight, Heart, Users, Calendar, MessageSquare, Package, ClipboardList, CheckCircle2 } from "lucide-react"
 
 export default function Home() {
@@ -11,6 +12,8 @@ export default function Home() {
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [fosterSubmitted, setFosterSubmitted] = useState(false)
   const [fosterAgree, setFosterAgree] = useState(false)
+  const [fosterLoading, setFosterLoading] = useState(false)
+  const [fosterError, setFosterError] = useState<string | null>(null)
 
   const handleWaitlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -19,10 +22,35 @@ export default function Home() {
     setTimeout(() => setSubmitted(false), 4000)
   }
 
-  const handleFosterWaitlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFosterWaitlistSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!fosterAgree) return
-    setFosterSubmitted(true)
+
+    const form = e.currentTarget
+    const formData = new FormData(form)
+    const name = formData.get("name") as string
+    const email = formData.get("email") as string
+    const city_zip = formData.get("city_zip") as string
+
+    setFosterLoading(true)
+    setFosterError(null)
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from("waitlist").insert({
+        name,
+        email,
+        city_zip,
+        type: "foster",
+      })
+
+      if (error) throw error
+      setFosterSubmitted(true)
+    } catch {
+      setFosterError("Something went wrong. Please try again.")
+    } finally {
+      setFosterLoading(false)
+    }
   }
 
   return (
@@ -350,10 +378,16 @@ export default function Home() {
             </div>
           ) : (
             <form onSubmit={handleFosterWaitlistSubmit} className="space-y-5">
+              {fosterError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800 text-center text-sm font-medium">
+                  {fosterError}
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">Full Name</label>
                 <input
                   type="text"
+                  name="name"
                   required
                   placeholder="Your full name"
                   className="w-full px-4 py-3 rounded-lg border border-[#D76B1A]/20 bg-white focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
@@ -363,6 +397,7 @@ export default function Home() {
                 <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">Email</label>
                 <input
                   type="email"
+                  name="email"
                   required
                   placeholder="your@email.com"
                   className="w-full px-4 py-3 rounded-lg border border-[#D76B1A]/20 bg-white focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
@@ -372,6 +407,7 @@ export default function Home() {
                 <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">City / ZIP Code</label>
                 <input
                   type="text"
+                  name="city_zip"
                   required
                   placeholder="e.g. Austin, TX or 78701"
                   className="w-full px-4 py-3 rounded-lg border border-[#D76B1A]/20 bg-white focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
@@ -394,10 +430,10 @@ export default function Home() {
               </label>
               <button
                 type="submit"
-                disabled={!fosterAgree}
+                disabled={!fosterAgree || fosterLoading}
                 className="w-full px-6 py-4 bg-[#D76B1A] text-white font-semibold rounded-lg hover:bg-[#D76B1A]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
               >
-                Notify Me
+                {fosterLoading ? "Saving..." : "Notify Me"}
               </button>
             </form>
           )}

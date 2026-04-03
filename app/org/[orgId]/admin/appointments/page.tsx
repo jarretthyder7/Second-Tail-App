@@ -211,6 +211,27 @@ export default function AppointmentsPage() {
     }
   }
 
+  async function handleDeleteAppointment(appointmentId: string) {
+    if (!confirm("Permanently delete this appointment? This cannot be undone.")) return
+
+    try {
+      const res = await fetch(`/api/admin/appointments?id=${appointmentId}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        loadData()
+        setShowEditModal(false)
+      } else {
+        const data = await res.json()
+        alert(data.error || "Failed to delete appointment")
+      }
+    } catch (error) {
+      console.error("[v0] Error deleting appointment:", error)
+      alert("Failed to delete appointment")
+    }
+  }
+
   const saveColorSettings = () => {
     localStorage.setItem(`appointmentColors_${orgId}`, JSON.stringify(typeColors))
     setShowColorSettings(false)
@@ -671,6 +692,13 @@ export default function AppointmentsPage() {
                       Archive
                     </Button>
                   )}
+                  <Button
+                    onClick={() => handleDeleteAppointment(selectedAppointment.id)}
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
                 </div>
                 <div className="flex gap-2">
                   {selectedAppointment.foster_id && (

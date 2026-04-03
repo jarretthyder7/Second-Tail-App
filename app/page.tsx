@@ -2,11 +2,41 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Heart, Users, ArrowRight, Menu, X } from "lucide-react"
+import { Heart, Users, ArrowRight, Menu, X, CheckCircle2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 export default function Home() {
   const [activeView, setActiveView] = useState<"foster" | "rescue">("rescue")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [fosterName, setFosterName] = useState("")
+  const [fosterEmail, setFosterEmail] = useState("")
+  const [fosterCityZip, setFosterCityZip] = useState("")
+  const [fosterAgree, setFosterAgree] = useState(false)
+  const [fosterSubmitted, setFosterSubmitted] = useState(false)
+  const [fosterLoading, setFosterLoading] = useState(false)
+  const [fosterError, setFosterError] = useState<string | null>(null)
+
+  const handleFosterWaitlistSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!fosterAgree) return
+    setFosterLoading(true)
+    setFosterError(null)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from("waitlist").insert({
+        name: fosterName,
+        email: fosterEmail,
+        city_zip: fosterCityZip,
+        type: "foster",
+      })
+      if (error) throw error
+      setFosterSubmitted(true)
+    } catch {
+      setFosterError("Something went wrong. Please try again.")
+    } finally {
+      setFosterLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,6 +61,13 @@ export default function Home() {
               >
                 For Fosters
               </Link>
+              <a
+                href="#foster-waitlist"
+                className="text-sm font-semibold transition-colors"
+                style={{ color: "#D76B1A" }}
+              >
+                Foster Sign-Up
+              </a>
               <Link
                 href="/login"
                 className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
@@ -67,6 +104,14 @@ export default function Home() {
               >
                 For Fosters
               </Link>
+              <a
+                href="#foster-waitlist"
+                className="block px-4 py-2 text-sm font-semibold rounded-lg transition-colors"
+                style={{ color: "#D76B1A" }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Foster Sign-Up
+              </a>
               <Link
                 href="/login"
                 className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
@@ -340,6 +385,104 @@ export default function Home() {
           <div>
             <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">50+</div>
             <div className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Rescue Partners</div>
+          </div>
+        </div>
+      </section>
+
+      {/* Foster Waitlist Section */}
+      <section id="foster-waitlist" className="border-t border-gray-200 bg-orange-50/40">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+              Are you a foster parent?
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600">
+              Get notified when rescue organizations in your area join Second Tail.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-8">
+            {fosterSubmitted ? (
+              <div className="text-center py-6 space-y-4">
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
+                  style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}
+                >
+                  <CheckCircle2 className="w-7 h-7" style={{ color: "#D76B1A" }} />
+                </div>
+                <p className="text-base font-semibold text-gray-900">
+                  {"You're on the list! We'll notify you when rescues near you go live."}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleFosterWaitlistSubmit} className="space-y-5">
+                {fosterError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                    {fosterError}
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={fosterName}
+                    onChange={(e) => setFosterName(e.target.value)}
+                    placeholder="Your full name"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                    style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={fosterEmail}
+                    onChange={(e) => setFosterEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                    style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">City / ZIP Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={fosterCityZip}
+                    onChange={(e) => setFosterCityZip(e.target.value)}
+                    placeholder="e.g. Austin, TX or 78701"
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                    style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
+                  />
+                </div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={fosterAgree}
+                    onChange={(e) => setFosterAgree(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
+                    style={{ accentColor: "#D76B1A" }}
+                  />
+                  <span className="text-sm text-gray-600">
+                    I agree to receive updates from Second Tail.{" "}
+                    <Link href="/privacy" className="font-semibold hover:underline" style={{ color: "#D76B1A" }}>
+                      View our Privacy Policy
+                    </Link>
+                    .
+                  </span>
+                </label>
+                <button
+                  type="submit"
+                  disabled={!fosterAgree || fosterLoading}
+                  className="w-full px-6 py-3.5 rounded-lg text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                  style={{ backgroundColor: "#D76B1A" }}
+                >
+                  {fosterLoading ? "Saving..." : "Notify Me"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </section>

@@ -107,31 +107,45 @@ export async function GET(request: Request) {
         }
       }
 
+      // If profile lookup failed entirely, send to login
+      if (!profile) {
+        const forwardedHost = request.headers.get("x-forwarded-host")
+        const isLocalEnv = process.env.NODE_ENV === "development"
+        const fallback = `/login?message=please-sign-in`
+        if (isLocalEnv) return NextResponse.redirect(`${origin}${fallback}`)
+        if (forwardedHost) return NextResponse.redirect(`https://${forwardedHost}${fallback}`)
+        return NextResponse.redirect(`${origin}${fallback}`)
+      }
+
       let redirectPath = next
 
-      if (profile) {
-        const isProfileIncomplete =
-          !profile.name ||
-          !profile.phone ||
-          !profile.city ||
-          !profile.state ||
-          !profile.experience_level ||
-          !profile.dog_size_preference?.length ||
-          !profile.availability
+      const isProfileIncomplete =
+        !profile.name ||
+        !profile.phone ||
+        !profile.city ||
+        !profile.state ||
+        !profile.experience_level ||
+        !profile.dog_size_preference?.length ||
+        !profile.availability
 
-        // Redirect rescue users to their org dashboard
-        if (profile.role === "rescue" && profile.organization_id) {
-          redirectPath = `/org/${profile.organization_id}/admin/dashboard`
+      // Redirect rescue admin users
+      if (profile.role === "rescue") {
+        if (profile.organization_id) {
+          // New users start at setup wizard; existing (complete) users go to dashboard
+          redirectPath = `/org/${profile.organization_id}/admin/setup-wizard`
+        } else {
+          // Rescue user with no org — something went wrong during signup
+          redirectPath = `/sign-up/rescue?error=setup-incomplete`
         }
-        // Redirect fosters to unassigned dashboard if no org, or org dashboard if assigned
-        else if (profile.role === "foster") {
-          if (isProfileIncomplete) {
-            redirectPath = "/foster/onboarding"
-          } else if (profile.organization_id) {
-            redirectPath = `/org/${profile.organization_id}/foster/dashboard`
-          } else {
-            redirectPath = "/foster/dashboard"
-          }
+      }
+      // Redirect fosters to unassigned dashboard if no org, or org dashboard if assigned
+      else if (profile.role === "foster") {
+        if (isProfileIncomplete) {
+          redirectPath = "/foster/onboarding"
+        } else if (profile.organization_id) {
+          redirectPath = `/org/${profile.organization_id}/foster/dashboard`
+        } else {
+          redirectPath = "/foster/dashboard"
         }
       }
 

@@ -9,12 +9,20 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<"rescue" | "foster">("rescue")
   const [submitted, setSubmitted] = useState(false)
   const [agreeToTerms, setAgreeToTerms] = useState(false)
+  const [fosterSubmitted, setFosterSubmitted] = useState(false)
+  const [fosterAgree, setFosterAgree] = useState(false)
 
   const handleWaitlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!agreeToTerms) return
     setSubmitted(true)
     setTimeout(() => setSubmitted(false), 4000)
+  }
+
+  const handleFosterWaitlistSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!fosterAgree) return
+    setFosterSubmitted(true)
   }
 
   return (
@@ -34,6 +42,9 @@ export default function Home() {
               </a>
               <a href="#for-both" className="text-sm text-[#5A4A42] hover:opacity-70 transition-opacity">
                 Solutions
+              </a>
+              <a href="#foster-waitlist" className="text-sm text-[#D76B1A] font-semibold hover:opacity-70 transition-opacity">
+                For Fosters
               </a>
               <a
                 href="#waitlist"
@@ -69,6 +80,13 @@ export default function Home() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Solutions
+              </a>
+              <a
+                href="#foster-waitlist"
+                className="block px-4 py-2 text-sm text-[#D76B1A] font-semibold hover:bg-[#F7E2BD]/20 rounded-lg transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                For Fosters
               </a>
               <a
                 href="#waitlist"
@@ -303,6 +321,87 @@ export default function Home() {
             Get Early Access
           </button>
         </form>
+      </section>
+
+      {/* Foster Waitlist Section */}
+      <section id="foster-waitlist" className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 border-t border-[#F7E2BD]">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#D76B1A]/10 text-[#D76B1A] text-sm font-semibold mb-6">
+            <Heart className="w-4 h-4" />
+            For Foster Parents
+          </div>
+          <h2 className="text-4xl sm:text-5xl font-bold text-[#2E2E2E] mb-4 text-balance">
+            Are you a foster parent?
+          </h2>
+          <p className="text-lg sm:text-xl text-[#5A4A42]">
+            Get notified when rescue organizations in your area join Second Tail.
+          </p>
+        </div>
+
+        <div className="bg-[#FFF8F3] border-2 border-[#D76B1A]/20 rounded-2xl p-8 sm:p-10">
+          {fosterSubmitted ? (
+            <div className="text-center py-8 space-y-4">
+              <div className="w-14 h-14 rounded-full bg-[#D76B1A]/10 flex items-center justify-center mx-auto">
+                <CheckCircle2 className="w-7 h-7 text-[#D76B1A]" />
+              </div>
+              <p className="text-lg font-semibold text-[#2E2E2E]">
+                {"You're on the list! We'll notify you when rescues near you go live."}
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleFosterWaitlistSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Your full name"
+                  className="w-full px-4 py-3 rounded-lg border border-[#D76B1A]/20 bg-white focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 rounded-lg border border-[#D76B1A]/20 bg-white focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-[#2E2E2E] mb-2">City / ZIP Code</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Austin, TX or 78701"
+                  className="w-full px-4 py-3 rounded-lg border border-[#D76B1A]/20 bg-white focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] text-[#2E2E2E]"
+                />
+              </div>
+              <label className="flex items-start gap-3 p-4 rounded-lg border border-[#D76B1A]/20 bg-white cursor-pointer hover:border-[#D76B1A]/50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={fosterAgree}
+                  onChange={(e) => setFosterAgree(e.target.checked)}
+                  className="w-5 h-5 mt-0.5 rounded accent-[#D76B1A] flex-shrink-0"
+                />
+                <span className="text-sm text-[#5A4A42]">
+                  I agree to receive updates from Second Tail.{" "}
+                  <Link href="/privacy" className="text-[#D76B1A] hover:underline font-semibold">
+                    View our Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
+              <button
+                type="submit"
+                disabled={!fosterAgree}
+                className="w-full px-6 py-4 bg-[#D76B1A] text-white font-semibold rounded-lg hover:bg-[#D76B1A]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
+              >
+                Notify Me
+              </button>
+            </form>
+          )}
+        </div>
       </section>
 
       {/* Footer */}

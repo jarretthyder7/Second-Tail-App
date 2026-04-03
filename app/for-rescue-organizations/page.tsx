@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Users, MessageCircle, Clipboard, Shield, ArrowLeft, Menu, X } from "lucide-react"
+import { Users, MessageCircle, Clipboard, Shield, Menu, X } from "lucide-react"
 
 export default function ForRescueOrganizationsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -12,14 +12,9 @@ export default function ForRescueOrganizationsPage() {
       <nav className="border-b border-gray-200 bg-white sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="p-2 hover:bg-gray-100 rounded-lg transition-colors" aria-label="Back to home">
-                <ArrowLeft className="w-5 h-5 text-gray-700" />
-              </Link>
-              <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900">
+            <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900">
                 Second Tail
               </Link>
-            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6 lg:gap-8">

@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Check if record already exists
+    // Check if record already exists to avoid duplicate key constraint violation
     const { data: existing } = await supabase
       .from("organization_setup_status")
       .select("id")

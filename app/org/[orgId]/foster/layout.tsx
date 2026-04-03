@@ -22,6 +22,7 @@ import {
   X,
   Users,
   Package,
+  Bell,
 } from "lucide-react"
 import { useOrgBranding } from "@/lib/branding/use-org-branding"
 
@@ -35,9 +36,11 @@ export default function OrgFosterLayout({
   const orgId = params.orgId as string
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
+  const notificationRef = useRef<HTMLDivElement>(null)
 
   const { branding } = useOrgBranding(orgId)
 
@@ -81,6 +84,37 @@ export default function OrgFosterLayout({
               .or(`read_by.is.null,read_by.neq.${user.id}`)
 
             setUnreadMessageCount(count || 0)
+
+            // Subscribe to real-time changes on messages table
+            const subscription = supabase
+              .channel(`messages-${orgId}`)
+              .on(
+                "postgres_changes",
+                {
+                  event: "*",
+                  schema: "public",
+                  table: "messages",
+                  filter: `conversation_id=in.(${conversationIds.join(",")})`,
+                },
+                () => {
+                  // Refetch count when messages change
+                  ;(async () => {
+                    const { count: newCount } = await supabase
+                      .from("messages")
+                      .select("*", { count: "exact", head: true })
+                      .in("conversation_id", conversationIds)
+                      .neq("sender_id", user.id)
+                      .or(`read_by.is.null,read_by.neq.${user.id}`)
+
+                    setUnreadMessageCount(newCount || 0)
+                  })()
+                }
+              )
+              .subscribe()
+
+            return () => {
+              subscription.unsubscribe()
+            }
           }
         }
       }
@@ -94,16 +128,19 @@ export default function OrgFosterLayout({
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setShowNotificationDropdown(false)
+      }
     }
 
-    if (showUserMenu) {
+    if (showUserMenu || showNotificationDropdown) {
       document.addEventListener("mousedown", handleClickOutside)
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [showUserMenu])
+  }, [showUserMenu, showNotificationDropdown])
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -177,6 +214,52 @@ export default function OrgFosterLayout({
               </Link>
 
               <div className="flex items-center gap-3">
+                {/* Notification Bell */}
+                <div className="relative" ref={notificationRef}>
+                  <button
+                    onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+                    className="relative p-2 hover:bg-neutral-cream rounded-lg transition"
+                    title="Notifications"
+                  >
+                    <Bell className="w-5 h-5 text-text-muted" />
+                    {unreadMessageCount > 0 && (
+                      <span className="absolute top-0 right-0 w-4 h-4 flex items-center justify-center rounded-full bg-red-500 text-white text-xs font-bold">
+                        {unreadMessageCount > 9 ? "9+" : unreadMessageCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {showNotificationDropdown && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-lg border border-[color:var(--color-border-soft)] py-3 z-[60] max-h-96 overflow-y-auto">
+                      <div className="px-4 py-2 border-b border-[color:var(--color-border-soft)]">
+                        <h3 className="font-semibold text-primary-bark">Notifications</h3>
+                      </div>
+                      {unreadMessageCount > 0 ? (
+                        <div className="px-4 py-3">
+                          <Link
+                            href={`/org/${orgId}/foster/messages`}
+                            onClick={() => setShowNotificationDropdown(false)}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-neutral-cream transition"
+                          >
+                            <MessageSquare className="w-5 h-5 text-primary-orange flex-shrink-0" />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-primary-bark">
+                                {unreadMessageCount} unread message{unreadMessageCount !== 1 ? "s" : ""}
+                              </p>
+                              <p className="text-xs text-text-muted">from your rescue team</p>
+                            </div>
+                          </Link>
+                        </div>
+                      ) : (
+                        <div className="px-4 py-6 text-center">
+                          <Bell className="w-8 h-8 text-text-muted/30 mx-auto mb-2" />
+                          <p className="text-sm text-text-muted">All caught up!</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
                   className="md:hidden p-2 hover:bg-neutral-cream rounded-lg transition"

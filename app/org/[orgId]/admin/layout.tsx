@@ -67,6 +67,7 @@ export default function OrgAdminLayout({
   const [loading, setLoading] = useState(true)
   const [setupStatus, setSetupStatus] = useState<string[]>([])
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+  const [showSetupTooltip, setShowSetupTooltip] = useState(true)
   const userName = profile?.name
 
   const isOrgAdmin = profile?.org_role === "org_admin"
@@ -354,42 +355,63 @@ export default function OrgAdminLayout({
                 const isSetupGuide = (item as any).setupBadge === true
 
                 return (
-                  <Link
-                    key={item.href}
-                    href={isDisabled ? "#" : item.href}
-                    onClick={(e) => {
-                      if (isDisabled) {
-                        e.preventDefault()
-                        handleNavClick(item.href, item.adminOnly)
-                      } else {
-                        setMobileMenuOpen(false)
-                      }
-                    }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
-                      isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
-                        : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : isSetupGuide
-                            ? "text-[#D76B1A] bg-[#D76B1A]/8 hover:bg-[#D76B1A]/15 border border-[#D76B1A]/20"
-                            : "text-[#5A4A42] hover:bg-[#FBF8F4]"
-                    }`}
-                    title={item.description || (isDisabled ? "Admin only" : "")}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.label}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
-                    {isSetupGuide && item.badge && !isActive && (
-                      <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-[#D76B1A] text-white">
-                        {item.badge}
-                      </span>
+                  <div key={item.href} className="relative">
+                    <Link
+                      href={isDisabled ? "#" : item.href}
+                      onClick={(e) => {
+                        if (isDisabled) {
+                          e.preventDefault()
+                          handleNavClick(item.href, item.adminOnly)
+                        } else {
+                          setMobileMenuOpen(false)
+                          if (isSetupGuide) setShowSetupTooltip(false)
+                        }
+                      }}
+                      className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                        isDisabled
+                          ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                          : isActive
+                            ? "bg-[#D76B1A] text-white"
+                            : isSetupGuide
+                              ? "text-[#D76B1A] bg-[#D76B1A]/8 hover:bg-[#D76B1A]/15 border border-[#D76B1A]/20"
+                              : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                      }`}
+                      title={item.description || (isDisabled ? "Admin only" : "")}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {item.label}
+                      {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                      {isSetupGuide && item.badge && !isActive && (
+                        <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-[#D76B1A] text-white">
+                          {item.badge}
+                        </span>
+                      )}
+                      {isSetupGuide && item.badge && isActive && (
+                        <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-white text-[#D76B1A]">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                    {/* Setup Guide tooltip bubble */}
+                    {isSetupGuide && showSetupTooltip && !isActive && (
+                      <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 z-50 hidden md:block">
+                        <div className="relative bg-[#5A4A42] text-white text-xs rounded-lg px-3 py-2 shadow-lg max-w-[180px]">
+                          {/* Arrow pointing left */}
+                          <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-r-[6px] border-r-[#5A4A42]" />
+                          <p className="leading-snug">Complete this guide to set up your account properly.</p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setShowSetupTooltip(false)
+                            }}
+                            className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#5A4A42] border border-white/20 rounded-full flex items-center justify-center text-white/80 hover:text-white hover:bg-[#4a3a32] transition"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      </div>
                     )}
-                    {isSetupGuide && item.badge && isActive && (
-                      <span className="ml-auto min-w-[32px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 bg-white text-[#D76B1A]">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
+                  </div>
                 )
               })}
 

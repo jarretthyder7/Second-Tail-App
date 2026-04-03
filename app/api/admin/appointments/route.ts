@@ -139,7 +139,56 @@ export async function POST(request: Request) {
   return NextResponse.json({ appointment })
 }
 
-export async function PATCH(request: Request) {
+export async function DELETE(request: Request) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get("id")
+
+  if (!id) {
+    return NextResponse.json({ error: "Appointment ID required" }, { status: 400 })
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, role, organization_id")
+    .eq("id", user.id)
+    .single()
+
+  if (profileError || !profile || profile.role !== "rescue" || !profile.organization_id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { data: existing, error: loadError } = await supabase
+    .from("appointments")
+    .select("id, organization_id")
+    .eq("id", id)
+    .maybeSingle()
+
+  if (loadError || !existing) {
+    return NextResponse.json({ error: "Appointment not found" }, { status: 404 })
+  }
+
+  if (existing.organization_id !== profile.organization_id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { error } = await supabase.from("appointments").delete().eq("id", id)
+
+  if (error) {
+    console.error("[v0] Error deleting appointment:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ success: true })
+}
   const supabase = await createClient()
   const {
     data: { user },

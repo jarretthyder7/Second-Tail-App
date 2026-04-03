@@ -72,25 +72,25 @@ export default function SetupWizardPage() {
             : "border-[#F7E2BD] hover:border-[#D76B1A] bg-white hover:bg-[#FBF8F4]"
         }`}
       >
-        <div className="flex items-start gap-3">
-          {isComplete ? (
-            <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
-          ) : (
-            <Circle className="w-6 h-6 text-[#D76B1A] flex-shrink-0 mt-1" />
-          )}
-          {Icon && <Icon className="w-6 h-6 text-[#D76B1A] flex-shrink-0 mt-1" />}
-
-          <div className="flex-1 min-w-0">
-            <h3 className={`font-semibold ${isComplete ? "text-gray-500 line-through" : "text-[#5A4A42]"}`}>
-              {step.title}
-            </h3>
-            <p className={`text-sm mt-1 ${isComplete ? "text-gray-400" : "text-[#2E2E2E]/70"}`}>{step.description}</p>
-            {step.estimatedTime && (
-              <p className={`text-xs mt-2 ${isComplete ? "text-gray-300" : "text-[#2E2E2E]/50"}`}>
-                Est. {step.estimatedTime}
-              </p>
+          <div className="flex items-start gap-3">
+            {isComplete ? (
+              <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
+            ) : (
+              <Circle className="w-6 h-6 text-[#D76B1A] flex-shrink-0 mt-1" />
             )}
-          </div>
+            {Icon && <Icon className="w-6 h-6 text-[#D76B1A] flex-shrink-0 mt-1" />}
+
+            <div className="flex-1 min-w-0">
+              <h3 className={`font-semibold ${isComplete ? "text-[#5A4A42]/60 line-through" : "text-[#5A4A42]"}`}>
+                {step.title}
+              </h3>
+              <p className={`text-sm mt-1 ${isComplete ? "text-[#2E2E2E]/60" : "text-[#2E2E2E]/70"}`}>{step.description}</p>
+              {step.estimatedTime && (
+                <p className={`text-xs mt-2 ${isComplete ? "text-[#2E2E2E]/50" : "text-[#2E2E2E]/50"}`}>
+                  Est. {step.estimatedTime}
+                </p>
+              )}
+            </div>
 
           {!isComplete && <ChevronRight className="w-5 h-5 text-[#D76B1A] flex-shrink-0 mt-1" />}
         </div>
@@ -147,7 +147,7 @@ export default function SetupWizardPage() {
               <span className="w-2 h-2 bg-red-500 rounded-full"></span>
               Essential Setup
             </h2>
-            <p className="text-sm text-[#2E2E2E]/60 mt-1">Complete these first to enable core functionality</p>
+            <p className="text-sm text-[#2E2E2E]/75 mt-1">Complete these first to enable core functionality</p>
           </div>
           <div className="grid gap-4">
             {essentialSteps.map((step) => (
@@ -163,7 +163,7 @@ export default function SetupWizardPage() {
               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
               Start Coordinating
             </h2>
-            <p className="text-sm text-[#2E2E2E]/60 mt-1">Build connections with fosters and dogs</p>
+            <p className="text-sm text-[#2E2E2E]/75 mt-1">Build connections with fosters and dogs</p>
           </div>
           <div className="grid gap-4">
             {coordinateSteps.map((step) => (
@@ -179,7 +179,7 @@ export default function SetupWizardPage() {
               <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
               Advanced Configuration
             </h2>
-            <p className="text-sm text-[#2E2E2E]/60 mt-1">Optimize your workflow and team management</p>
+            <p className="text-sm text-[#2E2E2E]/75 mt-1">Optimize your workflow and team management</p>
           </div>
           <div className="grid gap-4">
             {configureSteps.map((step) => (

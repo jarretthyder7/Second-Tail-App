@@ -150,6 +150,18 @@ function OrgTeamsContent() {
         await addTeamMember(team.id, memberId, memberRoles[memberId] || "member")
       }
 
+      // Mark create_team setup step as complete
+      try {
+        await fetch("/api/admin/setup-status", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orgId, stepId: "create_team", isCompleted: true }),
+        })
+        window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "create_team" } }))
+      } catch (err) {
+        console.error("[v0] Error marking create_team setup step:", err)
+      }
+
       // Reset form
       setNewTeamName("")
       setNewTeamType("foster")

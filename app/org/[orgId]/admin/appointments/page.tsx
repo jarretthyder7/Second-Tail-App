@@ -23,7 +23,6 @@ type Appointment = {
   team: { id: string; name: string; type: string } | null
   assigned_staff: { id: string; name: string; email: string } | null
   notes: string | null
-  arrival_instructions: string | null
 }
 
 type Foster = {
@@ -96,7 +95,6 @@ export default function AppointmentsPage() {
     location: "",
     items_needed: "",
     notes: "",
-    arrival_instructions: "",
   })
 
   useEffect(() => {
@@ -163,6 +161,7 @@ export default function AppointmentsPage() {
               isCompleted: true,
             }),
           })
+          window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "first_appointment" } }))
         } catch (error) {
           console.error("[v0] Error marking setup step complete:", error)
         }
@@ -180,7 +179,6 @@ export default function AppointmentsPage() {
           location: "",
           items_needed: "",
           notes: "",
-          arrival_instructions: "",
         })
         loadData()
       }
@@ -210,6 +208,27 @@ export default function AppointmentsPage() {
       }
     } catch (error) {
       console.error("[v0] Error archiving appointment:", error)
+    }
+  }
+
+  async function handleDeleteAppointment(appointmentId: string) {
+    if (!confirm("Permanently delete this appointment? This cannot be undone.")) return
+
+    try {
+      const res = await fetch(`/api/admin/appointments?id=${appointmentId}`, {
+        method: "DELETE",
+      })
+
+      if (res.ok) {
+        loadData()
+        setShowEditModal(false)
+      } else {
+        const data = await res.json()
+        alert(data.error || "Failed to delete appointment")
+      }
+    } catch (error) {
+      console.error("[v0] Error deleting appointment:", error)
+      alert("Failed to delete appointment")
     }
   }
 
@@ -662,12 +681,6 @@ export default function AppointmentsPage() {
                   className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
                 />
               </div>
-              {selectedAppointment.arrival_instructions && (
-                <div>
-                  <Label>Arrival Instructions</Label>
-                  <p className="text-sm text-[#5A4A42] py-2">{selectedAppointment.arrival_instructions}</p>
-                </div>
-              )}
               <div className="flex justify-between gap-3 pt-4 border-t border-[#F7E2BD]">
                 <div className="flex gap-2">
                   {selectedAppointment.status !== "archived" && (
@@ -679,6 +692,13 @@ export default function AppointmentsPage() {
                       Archive
                     </Button>
                   )}
+                  <Button
+                    onClick={() => handleDeleteAppointment(selectedAppointment.id)}
+                    variant="outline"
+                    className="text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    Delete
+                  </Button>
                 </div>
                 <div className="flex gap-2">
                   {selectedAppointment.foster_id && (
@@ -878,17 +898,6 @@ export default function AppointmentsPage() {
                   className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
                   rows={2}
                   placeholder="Internal notes..."
-                />
-              </div>
-
-              <div>
-                <Label>Arrival Instructions</Label>
-                <textarea
-                  value={formData.arrival_instructions}
-                  onChange={(e) => setFormData({ ...formData, arrival_instructions: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
-                  rows={2}
-                  placeholder="Specific directions for the appointment..."
                 />
               </div>
 

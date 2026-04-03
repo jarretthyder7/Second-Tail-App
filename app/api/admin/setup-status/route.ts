@@ -60,12 +60,17 @@ export async function POST(request: NextRequest) {
 
   try {
     // Check if record already exists to avoid duplicate key constraint violation
-    const { data: existing } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from("organization_setup_status")
       .select("id")
       .eq("organization_id", orgId)
       .eq("setup_step_id", stepId)
-      .single()
+      .maybeSingle()
+
+    if (selectError) {
+      console.error("[v0] Error checking existing setup status:", selectError)
+      throw selectError
+    }
 
     let data
     let error

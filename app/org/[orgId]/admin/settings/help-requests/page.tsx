@@ -349,30 +349,6 @@ export default function HelpRequestSettingsPage() {
     </div>
   )
 }
-  const params = useParams()
-  const orgId = params.orgId as string
-
-  const [settings, setSettings] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    fetchSettings()
-  }, [orgId])
-
-  const fetchSettings = async () => {
-    try {
-      const response = await fetch(`/api/admin/help-settings?orgId=${orgId}`)
-      if (!response.ok) throw new Error("Failed to fetch settings")
-      const data = await response.json()
-      setSettings(data)
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setIsLoading(false)
-    }
   }
 
   const handleSave = async () => {

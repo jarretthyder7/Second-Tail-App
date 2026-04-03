@@ -163,16 +163,6 @@ export default function Home() {
               Register Rescue Org
               <ArrowRight className="w-5 h-5 ml-2" />
             </Link>
-            <Link
-              href="/for-rescue-organizations"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-2 text-gray-700 rounded-lg font-bold hover:text-gray-900 transition-colors text-sm sm:text-sm mt-3 sm:mt-2 gap-1.5 group"
-            >
-              Learn More
-              <ArrowRight
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                style={{ color: "#50402B" }}
-              />
-            </Link>
           </div>
 
           {/* Foster Card - Now on the right */}
@@ -198,16 +188,6 @@ export default function Home() {
             >
               Login to Dashboard
               <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
-            <Link
-              href="/for-fosters"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-2.5 sm:py-2 text-gray-700 rounded-lg font-bold hover:text-gray-900 transition-colors text-sm sm:text-sm mt-3 sm:mt-2 gap-1.5 group"
-            >
-              Learn More
-              <ArrowRight
-                className="w-4 h-4 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all"
-                style={{ color: "#D76B1A" }}
-              />
             </Link>
           </div>
         </div>
@@ -256,17 +236,9 @@ export default function Home() {
                 1
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Get invited by your rescue</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Your rescue organization will send you an invitation link after you're approved to foster with them.
               </p>
-              <Link
-                href="/for-fosters"
-                className="inline-flex items-center gap-1.5 text-sm font-bold group"
-                style={{ color: "#D76B1A" }}
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
             <div className="text-center px-4">
               <div
@@ -276,17 +248,9 @@ export default function Home() {
                 2
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access your dashboard</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Log in to see the animals you're fostering, upcoming appointments, and messages from your rescue team.
               </p>
-              <Link
-                href="/for-fosters"
-                className="inline-flex items-center gap-1.5 text-sm font-bold group"
-                style={{ color: "#D76B1A" }}
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
             <div className="text-center px-4">
               <div
@@ -296,18 +260,10 @@ export default function Home() {
                 3
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Collaborate and coordinate</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Track care, communicate with your rescue, and get the guidance you need to help your foster animal
                 thrive.
               </p>
-              <Link
-                href="/for-fosters"
-                className="inline-flex items-center gap-1.5 text-sm font-bold group"
-                style={{ color: "#D76B1A" }}
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
           </div>
         ) : (
@@ -320,17 +276,9 @@ export default function Home() {
                 1
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Set up your organization</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4 leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Register your rescue, add team members, and customize your foster management system.
               </p>
-              <Link
-                href="/for-rescue-organizations"
-                className="inline-flex items-center gap-1.5 text-sm font-bold group"
-                style={{ color: "#5a4a42" }}
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
             <div className="text-center px-4">
               <div
@@ -340,17 +288,9 @@ export default function Home() {
                 2
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Invite and manage fosters</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4 leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Onboard foster parents, assign animals, and build a network of trusted caregivers.
               </p>
-              <Link
-                href="/for-rescue-organizations"
-                className="inline-flex items-center gap-1.5 text-sm font-bold group"
-                style={{ color: "#5a4a42" }}
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
             <div className="text-center px-4">
               <div
@@ -360,17 +300,9 @@ export default function Home() {
                 3
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Coordinate care at scale</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4 leading-relaxed">
+              <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Track health records, schedule appointments, communicate efficiently, and focus on saving more lives.
               </p>
-              <Link
-                href="/for-rescue-organizations"
-                className="inline-flex items-center gap-1.5 text-sm font-bold group"
-                style={{ color: "#5a4a42" }}
-              >
-                Learn More
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-              </Link>
             </div>
           </div>
         )}

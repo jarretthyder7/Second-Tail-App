@@ -6,7 +6,6 @@ import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import {
-  ArrowLeft,
   CheckCircle2,
   Circle,
   ChevronRight,
@@ -110,15 +109,6 @@ export default function SetupWizardPage() {
   return (
     <div className="min-h-screen bg-[#FBF8F4] p-6">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <Link
-          href={`/org/${orgId}/admin/dashboard`}
-          className="inline-flex items-center gap-2 text-sm font-medium text-[#D76B1A] hover:text-[#B85A15] mb-6"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to dashboard
-        </Link>
-
         <div className="bg-white rounded-2xl shadow-sm border border-[#F7E2BD] p-8 mb-6">
           <div className="flex items-start gap-4 mb-6">
             <div className="p-3 rounded-xl bg-[#D76B1A]/10">

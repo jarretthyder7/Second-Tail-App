@@ -192,13 +192,20 @@ function OrgDogsContent() {
           <p className="text-sm text-[#2E2E2E]/70">Manage all animals in your organization</p>
         </div>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#D76B1A] hover:bg-[#D76B1A]/90 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Animal
+        <div className="flex items-center gap-2">
+          <Link href={`/org/${orgId}/admin/import?type=animals`}>
+            <Button variant="outline" className="border-[#F7E2BD] text-[#5A4A42] hover:bg-[#FBF8F4]">
+              <UploadCloud className="w-4 h-4 mr-2" />
+              Import
             </Button>
-          </DialogTrigger>
+          </Link>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#D76B1A] hover:bg-[#D76B1A]/90 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Animal
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-[#5A4A42]">Add New Animal</DialogTitle>
@@ -367,6 +374,7 @@ function OrgDogsContent() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">

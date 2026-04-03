@@ -59,23 +59,47 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Upsert setup status with conflict handling on the composite unique key
-    const { data, error } = await supabase
+    // Check if record already exists
+    const { data: existing } = await supabase
       .from("organization_setup_status")
-      .upsert(
-        {
+      .select("id")
+      .eq("organization_id", orgId)
+      .eq("setup_step_id", stepId)
+      .single()
+
+    let data
+    let error
+
+    if (existing) {
+      // Update existing record
+      const result = await supabase
+        .from("organization_setup_status")
+        .update({
+          is_completed: isCompleted,
+          completed_at: isCompleted ? new Date().toISOString() : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id)
+        .select()
+        .single()
+      data = result.data
+      error = result.error
+    } else {
+      // Insert new record
+      const result = await supabase
+        .from("organization_setup_status")
+        .insert({
           organization_id: orgId,
           setup_step_id: stepId,
           is_completed: isCompleted,
           completed_at: isCompleted ? new Date().toISOString() : null,
           updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "organization_id,setup_step_id",
-        }
-      )
-      .select()
-      .single()
+        })
+        .select()
+        .single()
+      data = result.data
+      error = result.error
+    }
 
     if (error) throw error
 

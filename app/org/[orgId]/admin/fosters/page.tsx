@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dog, Mail, UserPlus, X, Clock, AlertCircle, UserX, User, Users, Plus, Eye } from "lucide-react"
+import { Dog, Mail, UserPlus, X, Clock, AlertCircle, UserX, User, Users, Plus, Eye, Upload } from "lucide-react"
 import { createInvitation, cancelInvitation } from "@/lib/supabase/queries"
 import Link from "next/link"
 
@@ -231,10 +231,18 @@ export default function AdminFostersPage() {
           <h1 className="text-3xl font-bold text-primary-bark">Fosters</h1>
           <p className="text-text-muted mt-1">Manage foster families in your organization</p>
         </div>
-        <Button onClick={() => setShowInviteModal(true)} className="bg-primary-orange hover:bg-primary-orange/90">
-          <UserPlus className="w-4 h-4 mr-2" />
-          Invite Foster
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link href={`/org/${orgId}/admin/import?type=fosters`}>
+            <Button variant="outline" className="border-gray-200 text-gray-700 hover:bg-gray-50">
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+          </Link>
+          <Button onClick={() => setShowInviteModal(true)} className="bg-primary-orange hover:bg-primary-orange/90">
+            <UserPlus className="w-4 h-4 mr-2" />
+            Invite Foster
+          </Button>
+        </div>
       </div>
 
       {/* Active Fosters */}

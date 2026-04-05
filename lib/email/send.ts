@@ -2,9 +2,8 @@
 import { emailTemplates } from "./templates"
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
-// Always use Resend's default testing domain for reliability
-// The FROM_EMAIL env var requires a verified domain in Resend dashboard
-const FROM_EMAIL = "Second Tail <onboarding@resend.dev>"
+// Use Resend's default testing domain if no verified domain is configured
+const FROM_EMAIL = process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>"
 
 export interface EmailOptions {
   to: string

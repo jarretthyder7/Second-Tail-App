@@ -458,6 +458,7 @@ export default function OrgAdminLayout({
             {/* Staff-only section with divider */}
             <div className="pt-4 pb-1 border-t border-[#F7E2BD] mt-2">
               <div className="flex items-center gap-2 px-3">
+                <ChevronUp className="w-3 h-3 text-[#5A4A42]/50" />
                 <p className="text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Staff Only</p>
               </div>
             </div>

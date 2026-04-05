@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     const emailPromises = fosters.map(async (foster) => {
       try {
         const { data, error } = await resend.emails.send({
-          from: "Second Tail <onboarding@resend.dev>",
+          from: process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>",
           to: foster.email,
           subject,
           html: emailHtml,

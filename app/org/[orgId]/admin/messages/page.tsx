@@ -360,10 +360,10 @@ export default function OrgMessagesPage() {
   return (
     <ProtectedRoute allowedRoles={["rescue"]}>
       <div className="p-8">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-[#5A4A42]">Foster Messages</h1>
-            <p className="text-sm text-[#2E2E2E]/70 mt-1">Conversations with your foster parents</p>
+            <h1 className="text-2xl font-bold text-[#5A4A42]">Messages</h1>
+            <p className="text-sm text-[#2E2E2E]/70">View all conversations with fosters</p>
           </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
@@ -464,7 +464,6 @@ export default function OrgMessagesPage() {
           </Dialog>
         </div>
 
-        {/* Conversations List */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           {loading ? (
             <div className="text-center py-8">
@@ -479,28 +478,76 @@ export default function OrgMessagesPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {conversations.map((conv) => {
                 const fosterName = conv.foster?.name || conv.foster?.email || "Unknown Foster"
                 const dogName = conv.dog?.name
-                const lastMessage = "Last message" // Placeholder
-                const preview = "..."
+                let teamMembers: string[] = []
+                if (conv.team) {
+                  try {
+                    const parsed = JSON.parse(conv.team)
+                    teamMembers = Array.isArray(parsed) ? parsed : []
+                  } catch {
+                    // team is a plain string (team name), not a JSON array — treat as no staff members
+                    teamMembers = []
+                  }
+                }
+                const teamDisplay =
+                  teamMembers.length > 0 ? (
+                    <span className="bg-[#F7E2BD] text-[#5A4A42] text-xs px-2.5 py-1 rounded-full font-medium">
+                      {teamMembers.length} staff member{teamMembers.length !== 1 ? "s" : ""}
+                    </span>
+                  ) : (
+                    <span className="bg-[#FBF8F4] border border-[#E8DDD1] text-[#2E2E2E]/60 text-xs px-2.5 py-1 rounded-full font-medium">
+                      Unassigned
+                    </span>
+                  )
 
                 return (
-                  <Link key={conv.id} href={`/org/${orgId}/admin/messages/${conv.id}`}>
-                    <div className="border border-[#F7E2BD] rounded-xl p-4 hover:shadow-md transition cursor-pointer">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-[#5A4A42]">{fosterName}</h3>
-                          <p className="text-sm text-[#2E2E2E]/60 mt-1">
-                            {dogName ? `About: ${dogName}` : "General message"}
-                          </p>
-                          <p className="text-sm text-[#2E2E2E]/60 mt-1 line-clamp-1">{preview}</p>
-                          <p className="text-xs text-[#2E2E2E]/40 mt-2">{new Date(conv.updated_at).toLocaleDateString()}</p>
-                        </div>
+                  <div key={conv.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        <h3 className="font-semibold">{dogName || "Unknown Dog"}</h3>
                       </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedConversationForStaff(conv.id)
+                              setShowAddStaffDialog(true)
+                            }}
+                          >
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Add Staff Members
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/org/${orgId}/admin/messages/${conv.id}`}>View Conversation</Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
-                  </Link>
+
+                    <p className="text-sm text-muted-foreground mb-3">Foster: {fosterName}</p>
+
+                    {teamMembers.length > 0 && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <Users className="h-3 w-3" />
+                        <span>
+                          {teamMembers.length} staff member{teamMembers.length !== 1 ? "s" : ""} involved
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <span>Last updated: {new Date(conv.updated_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
                 )
               })}
             </div>

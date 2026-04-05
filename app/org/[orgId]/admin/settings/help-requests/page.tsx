@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { Phone, AlertCircle, Package, Calendar, CheckCircle2, Plus, X, GripVertical } from "lucide-react"
 
 const PRESET_SUPPLIES = ["Food", "Pee Pads", "Crate", "Toys", "Leash", "Medications", "Other"]
+const PRESET_APPOINTMENTS = ["Vet Visit", "Checkup", "Vaccination", "Dental", "Emergency", "Behavioral Consult", "Training", "Grooming"]
 
 export default function HelpRequestSettingsPage() {
   const params = useParams()
@@ -16,7 +17,9 @@ export default function HelpRequestSettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
   const [newSupply, setNewSupply] = useState("")
+  const [newAppointment, setNewAppointment] = useState("")
   const newSupplyInputRef = useRef<HTMLInputElement>(null)
+  const newAppointmentInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchSettings()
@@ -83,14 +86,22 @@ export default function HelpRequestSettingsPage() {
     })
   }
 
-  const toggleAppointmentType = (type: string) => {
+  const addAppointmentType = () => {
+    const trimmed = newAppointment.trim()
+    if (!trimmed || !settings) return
+    const current: string[] = settings.allowed_appointment_types || []
+    if (current.map((s: string) => s.toLowerCase()).includes(trimmed.toLowerCase())) return
+    setSettings({ ...settings, allowed_appointment_types: [...current, trimmed] })
+    setNewAppointment("")
+    newAppointmentInputRef.current?.focus()
+  }
+
+  const removeAppointmentType = (type: string) => {
     if (!settings) return
-    const types = settings.allowed_appointment_types || []
-    if (types.includes(type)) {
-      setSettings({ ...settings, allowed_appointment_types: types.filter((t: string) => t !== type) })
-    } else {
-      setSettings({ ...settings, allowed_appointment_types: [...types, type] })
-    }
+    setSettings({
+      ...settings,
+      allowed_appointment_types: (settings.allowed_appointment_types || []).filter((t: string) => t !== type),
+    })
   }
 
   if (isLoading) {
@@ -279,32 +290,105 @@ export default function HelpRequestSettingsPage() {
               </label>
             </div>
 
-            {/* Appointment Types */}
+            {/* Appointment Types — fully editable */}
             <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
-              <div className="flex items-center gap-3 mb-4">
-                <Calendar className="w-6 h-6 text-[#D76B1A]" />
-                <h2 className="text-2xl font-bold text-[#5A4A42]">Appointment Types</h2>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <Calendar className="w-6 h-6 text-[#D76B1A]" />
+                  <div>
+                    <h2 className="text-2xl font-bold text-[#5A4A42]">Appointment Types</h2>
+                    <p className="text-sm text-[#2E2E2E]/70 mt-0.5">
+                      Fosters will see exactly this list when requesting appointments.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#F7E2BD] text-[#5A4A42]">
+                  {(settings.allowed_appointment_types || []).length} types
+                </span>
               </div>
 
-              <p className="text-sm text-[#2E2E2E]/70 mb-4">Select which appointment types fosters can schedule</p>
+              {/* Quick-add preset items not yet in list */}
+              {PRESET_APPOINTMENTS.filter((s) => !(settings.allowed_appointment_types || []).includes(s)).length > 0 && (
+                <div>
+                  <p className="text-xs font-medium text-[#2E2E2E]/60 mb-2 uppercase tracking-wide">Quick add</p>
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_APPOINTMENTS.filter((s) => !(settings.allowed_appointment_types || []).includes(s)).map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() =>
+                          setSettings({
+                            ...settings,
+                            allowed_appointment_types: [...(settings.allowed_appointment_types || []), type],
+                          })
+                        }
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-[#D76B1A]/40 text-sm text-[#D76B1A] hover:bg-[#D76B1A]/5 transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {["Vet Visit", "Checkup", "Vaccination", "Dental", "Emergency"].map((type) => (
-                  <label
-                    key={type}
-                    className="flex items-center gap-3 p-3 rounded-xl border border-[#F7E2BD] cursor-pointer hover:bg-[#F7E2BD]/20"
+              {/* Current appointment type list */}
+              {(settings.allowed_appointment_types || []).length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-[#2E2E2E]/60 uppercase tracking-wide">Current list</p>
+                  {(settings.allowed_appointment_types || []).map((type: string) => (
+                    <div
+                      key={type}
+                      className="flex items-center gap-3 p-3 rounded-xl border-2 border-[#F7E2BD] bg-[#FBF8F4] group"
+                    >
+                      <GripVertical className="w-4 h-4 text-[#2E2E2E]/20 shrink-0" />
+                      <span className="flex-1 text-sm font-medium text-[#5A4A42]">{type}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeAppointmentType(type)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-50 text-[#2E2E2E]/40 hover:text-red-500 transition-all"
+                        aria-label={`Remove ${type}`}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 rounded-xl border-2 border-dashed border-[#F7E2BD]">
+                  <Calendar className="w-8 h-8 text-[#2E2E2E]/20 mx-auto mb-2" />
+                  <p className="text-sm text-[#2E2E2E]/50">No appointment types added yet. Use quick add or type a custom type below.</p>
+                </div>
+              )}
+
+              {/* Add custom appointment type */}
+              <div>
+                <p className="text-xs font-medium text-[#2E2E2E]/60 mb-2 uppercase tracking-wide">Add custom type</p>
+                <div className="flex gap-2">
+                  <input
+                    ref={newAppointmentInputRef}
+                    type="text"
+                    value={newAppointment}
+                    onChange={(e) => setNewAppointment(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { e.preventDefault(); addAppointmentType() }
+                    }}
+                    placeholder="e.g. Spay/Neuter, Microchip..."
+                    className="flex-1 px-4 py-2 rounded-xl border border-[#F7E2BD] text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
+                  />
+                  <button
+                    type="button"
+                    onClick={addAppointmentType}
+                    disabled={!newAppointment.trim()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#D76B1A] text-white text-sm font-semibold hover:bg-[#D76B1A]/90 transition disabled:opacity-40"
                   >
-                    <input
-                      type="checkbox"
-                      checked={(settings.allowed_appointment_types || []).includes(type)}
-                      onChange={() => toggleAppointmentType(type)}
-                      className="w-4 h-4 text-[#D76B1A] rounded focus:ring-[#D76B1A]"
-                    />
-                    <span className="text-sm text-[#5A4A42]">{type}</span>
-                  </label>
-                ))}
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
+                </div>
               </div>
 
+              {/* Enable toggle */}
               <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-[#F7E2BD] cursor-pointer hover:bg-[#F7E2BD]/20">
                 <input
                   type="checkbox"

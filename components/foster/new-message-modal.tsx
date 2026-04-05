@@ -113,21 +113,36 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
       }
 
       try {
+        // Get foster's name
         const { data: userProfile } = await supabase
           .from("profiles")
-          .select("id, name, email")
+          .select("id, name")
           .eq("id", user.id)
           .single()
 
-        if (userProfile) {
+        // Get org admin email to notify them
+        const { data: orgAdmin } = await supabase
+          .from("profiles")
+          .select("email, name")
+          .eq("organization_id", orgId)
+          .eq("role", "rescue")
+          .eq("org_role", "org_admin")
+          .limit(1)
+          .maybeSingle()
+
+        // Get org name
+        const { data: org } = await supabase.from("organizations").select("name").eq("id", orgId).single()
+
+        if (orgAdmin && userProfile && org) {
           await fetch("/api/email/send", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              type: "message",
-              fosterEmail: userProfile.email,
+              type: "message-to-org",
+              orgEmail: orgAdmin.email,
+              orgName: org.name,
               fosterName: userProfile.name,
-              senderName: "Rescue Team",
+              dogName: "their foster",
             }),
           })
         }

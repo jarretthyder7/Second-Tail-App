@@ -836,15 +836,12 @@ export default function AppointmentsPage() {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({
-                              type: "appointment_reminder",
+                              type: "appointment",
                               fosterEmail: selectedAppointment.foster?.email,
                               fosterName: selectedAppointment.foster?.name,
                               dogName: selectedAppointment.dog?.name,
                               appointmentTitle: selectedAppointment.title,
                               appointmentTime: new Date(selectedAppointment.start_time).toLocaleString(),
-                              location: selectedAppointment.location,
-                              itemsNeeded: selectedAppointment.items_needed,
-                              arrivalInstructions: selectedAppointment.description,
                             }),
                           })
                           alert("Notification sent to foster!")

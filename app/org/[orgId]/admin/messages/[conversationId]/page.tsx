@@ -139,6 +139,27 @@ export default function AdminConversationPage() {
       // Update conversation timestamp
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
+      // Notify foster via email
+      try {
+        if (foster?.email) {
+          // Get org name
+          const { data: org } = await supabase.from("organizations").select("name").eq("id", orgId).single()
+
+          await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "message-to-foster",
+              fosterEmail: foster.email,
+              fosterName: foster.name,
+              orgName: org?.name || "Your rescue organization",
+            }),
+          })
+        }
+      } catch (emailError) {
+        console.warn("[v0] Failed to send message notification email:", emailError)
+      }
+
       setMessages([...messages, message])
       setNewMessage("")
       setAttachments([])

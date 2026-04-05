@@ -201,6 +201,34 @@ export default function ConversationPage() {
       // Update conversation timestamp
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
+      // Notify org admin via email
+      try {
+        const { data: orgAdmin } = await supabase
+          .from("profiles")
+          .select("email, name")
+          .eq("organization_id", orgId)
+          .eq("role", "rescue")
+          .eq("org_role", "org_admin")
+          .limit(1)
+          .maybeSingle()
+
+        if (orgAdmin && organization) {
+          await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "message-to-org",
+              orgEmail: orgAdmin.email,
+              orgName: organization.name,
+              fosterName: user.name,
+              dogName: dog?.name || "their foster",
+            }),
+          })
+        }
+      } catch (emailError) {
+        console.warn("[v0] Failed to send message notification email:", emailError)
+      }
+
       setMessages([...messages, message])
       setNewMessage("")
       setAttachments([])

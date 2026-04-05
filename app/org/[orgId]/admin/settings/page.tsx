@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
-import { HelpCircle, X, CheckCircle2, ArrowRight, LogOut, Calendar, Upload, BookOpen, AlertCircle, Pause, Trash2 } from "lucide-react"
+import { HelpCircle, X, CheckCircle2, ArrowRight, LogOut, Calendar, Upload, BookOpen, AlertCircle, Pause, Trash2, Bell } from "lucide-react"
 
 // Inline SVG icon
 const SaveIcon = ({ className }: { className?: string }) => (
@@ -35,6 +35,12 @@ type Organization = {
     accent_color: string
     logo_url: string | null
   }
+  notification_preferences?: {
+    new_message_from_foster: boolean
+    foster_appointment_request: boolean
+    foster_supply_request: boolean
+    foster_reimbursement_request: boolean
+  }
 }
 
 export default function OrgSettingsPage() {
@@ -59,6 +65,12 @@ function OrgSettingsContent() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showPauseModal, setShowPauseModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
+  const [notificationPrefs, setNotificationPrefs] = useState({
+    new_message_from_foster: true,
+    foster_appointment_request: true,
+    foster_supply_request: true,
+    foster_reimbursement_request: true,
+  })
 
   useEffect(() => {
     async function loadOrg() {
@@ -72,6 +84,16 @@ function OrgSettingsContent() {
       }
 
       setOrg(data)
+
+      // Load notification preferences if they exist
+      if (data.notification_preferences) {
+        setNotificationPrefs({
+          new_message_from_foster: data.notification_preferences.new_message_from_foster ?? true,
+          foster_appointment_request: data.notification_preferences.foster_appointment_request ?? true,
+          foster_supply_request: data.notification_preferences.foster_supply_request ?? true,
+          foster_reimbursement_request: data.notification_preferences.foster_reimbursement_request ?? true,
+        })
+      }
     }
     loadOrg()
 
@@ -108,6 +130,7 @@ function OrgSettingsContent() {
         state: org.state,
         zip: org.zip,
         branding: org.branding,
+        notification_preferences: notificationPrefs,
         updated_at: new Date().toISOString(),
       })
       .eq("id", orgId)
@@ -293,14 +316,12 @@ function OrgSettingsContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            template: "org_paused",
-            to: org?.email,
-            data: {
-              orgName: org?.name,
-              pausedBy: currentUser?.name,
-              pausedUntil: pauseUntil.toDateString(),
-              months,
-            },
+            type: "org-paused",
+            email: org?.email,
+            orgName: org?.name,
+            pausedBy: currentUser?.name,
+            pausedUntil: pauseUntil.toDateString(),
+            months,
           }),
         })
       } catch (err) {
@@ -344,12 +365,10 @@ function OrgSettingsContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            template: "org_closed",
-            to: org?.email,
-            data: {
-              orgName: org?.name,
-              closedBy: currentUser?.name,
-            },
+            type: "org-closed",
+            email: org?.email,
+            orgName: org?.name,
+            closedBy: currentUser?.name,
           }),
         })
       } catch (err) {
@@ -520,6 +539,80 @@ function OrgSettingsContent() {
             </div>
           </div>
           <ArrowRight className="w-5 h-5 text-[#D76B1A] group-hover:translate-x-1 transition-transform" />
+        </button>
+      </div>
+
+      {/* Notification Preferences section */}
+      <div className="mt-6 bg-white rounded-2xl shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Bell className="w-5 h-5 text-[#D76B1A]" />
+          <h2 className="text-lg font-semibold text-[#5A4A42]">Notification Preferences</h2>
+        </div>
+        <p className="text-sm text-[#2E2E2E]/70 mb-6">
+          Control which email notifications you receive from foster activity.
+        </p>
+
+        <div className="space-y-4">
+          <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
+            <div>
+              <div className="font-medium text-[#5A4A42]">New message from foster</div>
+              <div className="text-xs text-[#2E2E2E]/70">Get notified when a foster sends you a message</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={notificationPrefs.new_message_from_foster}
+              onChange={(e) => setNotificationPrefs({ ...notificationPrefs, new_message_from_foster: e.target.checked })}
+              className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
+            <div>
+              <div className="font-medium text-[#5A4A42]">Foster appointment request</div>
+              <div className="text-xs text-[#2E2E2E]/70">Get notified when a foster requests an appointment</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={notificationPrefs.foster_appointment_request}
+              onChange={(e) => setNotificationPrefs({ ...notificationPrefs, foster_appointment_request: e.target.checked })}
+              className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
+            <div>
+              <div className="font-medium text-[#5A4A42]">Foster supply request</div>
+              <div className="text-xs text-[#2E2E2E]/70">Get notified when a foster requests supplies</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={notificationPrefs.foster_supply_request}
+              onChange={(e) => setNotificationPrefs({ ...notificationPrefs, foster_supply_request: e.target.checked })}
+              className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
+            />
+          </label>
+
+          <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
+            <div>
+              <div className="font-medium text-[#5A4A42]">Foster reimbursement request</div>
+              <div className="text-xs text-[#2E2E2E]/70">Get notified when a foster submits a reimbursement</div>
+            </div>
+            <input
+              type="checkbox"
+              checked={notificationPrefs.foster_reimbursement_request}
+              onChange={(e) => setNotificationPrefs({ ...notificationPrefs, foster_reimbursement_request: e.target.checked })}
+              className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
+            />
+          </label>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="mt-6 flex items-center gap-2 px-6 py-2 rounded-full bg-[#D76B1A] text-white text-sm font-semibold hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
+        >
+          <SaveIcon className="w-4 h-4" />
+          {isSaving ? "Saving..." : "Save Notification Preferences"}
         </button>
       </div>
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { CalendarIcon, Clock, Dog, MapPin, Package, CheckCircle2, Plus } from "lucide-react"
+import { CalendarIcon, Clock, Dog, MapPin, Package, CheckCircle2, Plus, Hourglass, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AppointmentDetailModal } from "@/components/foster/appointment-detail-modal"
@@ -31,6 +31,7 @@ export default function FosterAppointmentsPage() {
   const orgId = params.orgId as string
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [pendingRequests, setPendingRequests] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [showRequestModal, setShowRequestModal] = useState(false)
@@ -79,6 +80,18 @@ export default function FosterAppointmentsPage() {
     } else {
       setAppointments(data || [])
     }
+
+    // Fetch pending appointment requests submitted by this foster
+    const { data: requestsData } = await supabase
+      .from("appointment_requests")
+      .select("*, dog:dogs(id, name, breed, image_url)")
+      .eq("foster_id", user.id)
+      .eq("organization_id", orgId)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+
+    setPendingRequests(requestsData || [])
+
     setLoading(false)
   }
 
@@ -124,6 +137,73 @@ export default function FosterAppointmentsPage() {
             </Button>
           )}
         </div>
+
+        {/* Pending Requests */}
+        {pendingRequests.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-[#5A4A42] mb-4 flex items-center gap-2">
+              <Hourglass className="w-4 h-4 text-amber-500" />
+              Pending Requests
+              <span className="ml-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-amber-500 text-white">
+                {pendingRequests.length}
+              </span>
+            </h2>
+            <div className="space-y-3">
+              {pendingRequests.map((req) => (
+                <Card key={req.id} className="border-amber-200 bg-amber-50/50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-4">
+                      {req.dog?.image_url && (
+                        <img
+                          src={req.dog.image_url || "/placeholder.svg"}
+                          alt={req.dog?.name}
+                          className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="font-semibold text-[#2E2E2E] capitalize">
+                            {req.appointment_type?.replace(/-/g, " ")}
+                          </span>
+                          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                            Awaiting Confirmation
+                          </span>
+                        </div>
+                        {req.dog && (
+                          <div className="flex items-center gap-1.5 text-sm text-[#5A4A42] mb-1">
+                            <Dog className="w-3.5 h-3.5" />
+                            {req.dog.name}
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3 text-sm text-[#5A4A42]/70">
+                          {req.preferred_date && (
+                            <div className="flex items-center gap-1.5">
+                              <CalendarIcon className="w-3.5 h-3.5" />
+                              {new Date(req.preferred_date + "T00:00:00").toLocaleDateString(undefined, {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </div>
+                          )}
+                          {req.preferred_time && (
+                            <div className="flex items-center gap-1.5">
+                              <Clock className="w-3.5 h-3.5" />
+                              {req.preferred_time}
+                            </div>
+                          )}
+                        </div>
+                        {req.reason && (
+                          <p className="mt-1 text-xs text-[#5A4A42]/60 italic truncate">{req.reason}</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Upcoming Appointments */}
         <div className="mb-8">

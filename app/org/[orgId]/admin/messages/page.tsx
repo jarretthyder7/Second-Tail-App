@@ -506,7 +506,6 @@ export default function OrgMessagesPage() {
             </div>
           )}
         </div>
-      </div>
 
         <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
           <DialogContent className="sm:max-w-[500px]">

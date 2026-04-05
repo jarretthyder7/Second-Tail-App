@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     }
 
     const { data: emailResult, error: emailError } = await resend.emails.send({
-      from: process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>",
+      from: "Second Tail <onboarding@resend.dev>",
       to: foster.email,
       subject: emailData.subject,
       html: emailData.html,

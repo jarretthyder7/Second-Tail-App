@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Organization not found" }, { status: 404 })
     }
 
-    // Send email to admin
-    const adminEmail = process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>"
+    // Send email to admin - always use Resend's verified testing domain
+    const adminEmail = "Second Tail <onboarding@resend.dev>"
     const subject_line = `[Support Ticket] ${category} - ${org.name}`
 
     const emailHtml = `

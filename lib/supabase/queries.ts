@@ -498,7 +498,7 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
     if (existing.status === "pending") {
       throw new Error("An invitation has already been sent to this email address")
     } else if (existing.status === "accepted") {
-      throw new Error("This foster has already accepted an invitation to your organization")
+      throw new Error("This person is already a foster in your organization. Check your Active Fosters list.")
     } else if (existing.status === "declined") {
       // Update the declined invitation to pending with a fresh code
       const code = generateInvitationCode()

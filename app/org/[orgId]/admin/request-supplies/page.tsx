@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card } from "@/components/ui/card"
-import { Package, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react"
+import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings } from "lucide-react"
 
 type SupplyRequest = {
   id: string
@@ -20,6 +20,7 @@ type SupplyRequest = {
 export default function AdminSupplyRequestsPage() {
   const params = useParams()
   const orgId = params.orgId as string
+  const router = useRouter()
 
   const [requests, setRequests] = useState<SupplyRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -146,11 +147,20 @@ export default function AdminSupplyRequestsPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-primary-orange/10 rounded-lg">
-            <Package className="w-6 h-6 text-primary-orange" />
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-primary-orange/10 rounded-lg">
+              <Package className="w-6 h-6 text-primary-orange" />
+            </div>
+            <h1 className="text-3xl font-bold text-primary-bark">Supply Requests</h1>
           </div>
-          <h1 className="text-3xl font-bold text-primary-bark">Supply Requests</h1>
+          <button
+            onClick={() => router.push(`/org/${orgId}/admin/settings/help-requests`)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-neutral-200 text-sm font-medium text-text-main hover:bg-neutral-cream transition"
+          >
+            <Settings className="w-4 h-4" />
+            Configure Supply Types
+          </button>
         </div>
         <p className="text-text-muted">Manage supply requests submitted by fosters</p>
       </div>

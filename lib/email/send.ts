@@ -79,9 +79,29 @@ export async function sendAppointmentEmail(
   return sendEmail({ to: fosterEmail, ...template })
 }
 
-export async function sendNewMessageEmail(fosterEmail: string, fosterName: string, senderName: string) {
-  const template = emailTemplates.newMessage(fosterName, senderName)
+// Notify foster when the rescue org sends them a message
+export async function sendMessageNotificationToFoster(fosterEmail: string, fosterName: string, orgName: string) {
+  const template = emailTemplates.messageNotificationToFoster(fosterName, orgName)
   return sendEmail({ to: fosterEmail, ...template })
+}
+
+// Notify rescue org when a foster sends them a message
+export async function sendNewMessageEmailToOrg(orgEmail: string, orgName: string, fosterName: string, dogName: string) {
+  const template = emailTemplates.newMessageToOrg(orgName, fosterName, dogName)
+  return sendEmail({ to: orgEmail, ...template })
+}
+
+// Notify rescue org when a foster requests an appointment
+export async function sendAppointmentRequestEmail(
+  orgEmail: string,
+  orgName: string,
+  fosterName: string,
+  dogName: string,
+  appointmentType: string,
+  preferredDate: string
+) {
+  const template = emailTemplates.appointmentRequest(orgName, fosterName, dogName, appointmentType, preferredDate)
+  return sendEmail({ to: orgEmail, ...template })
 }
 
 export async function sendMedicalUpdateEmail(

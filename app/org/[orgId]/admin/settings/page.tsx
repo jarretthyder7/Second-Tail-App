@@ -293,14 +293,12 @@ function OrgSettingsContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            template: "org_paused",
-            to: org?.email,
-            data: {
-              orgName: org?.name,
-              pausedBy: currentUser?.name,
-              pausedUntil: pauseUntil.toDateString(),
-              months,
-            },
+            type: "org-paused",
+            email: org?.email,
+            orgName: org?.name,
+            pausedBy: currentUser?.name,
+            pausedUntil: pauseUntil.toDateString(),
+            months,
           }),
         })
       } catch (err) {
@@ -344,12 +342,10 @@ function OrgSettingsContent() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            template: "org_closed",
-            to: org?.email,
-            data: {
-              orgName: org?.name,
-              closedBy: currentUser?.name,
-            },
+            type: "org-closed",
+            email: org?.email,
+            orgName: org?.name,
+            closedBy: currentUser?.name,
           }),
         })
       } catch (err) {

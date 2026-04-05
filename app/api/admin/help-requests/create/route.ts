@@ -111,37 +111,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Send notification to foster if foster_id exists
-    if (foster_id) {
-      try {
-        const { data: foster } = await supabase
-          .from('profiles')
-          .select('email, name')
-          .eq('id', foster_id)
-          .single()
-
-        if (foster) {
-          // Send email notification (optional)
-          await fetch(
-            new URL('/api/email/send', process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:3000').href,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: 'support_request_created',
-                fosterEmail: foster.email,
-                fosterName: foster.name,
-                requestTitle: title || category,
-                requestDescription: description,
-              }),
-            }
-          )
-        }
-      } catch (emailError) {
-        console.warn('[v0] Failed to send notification email:', emailError)
-      }
-    }
-
     return NextResponse.json({
       helpRequest,
       appointmentId,

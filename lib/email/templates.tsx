@@ -250,6 +250,21 @@ export const emailTemplates = {
     `,
   }),
 
+  appointmentCancelled: (fosterName: string, animalName: string, appointmentTitle: string) => ({
+    subject: `Appointment Cancelled: ${appointmentTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #dc2626;">Appointment Cancelled</h1>
+        <p>Hi ${fosterName},</p>
+        <p>Unfortunately, the appointment <strong>${appointmentTitle}</strong> for <strong>${animalName}</strong> has been cancelled.</p>
+        <p>Please contact your rescue organization for more information.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Dashboard</a>
+        </div>
+      </div>
+    `,
+  }),
+
   fosterInvitation: (orgName: string, inviteCode: string, signUpUrl: string) => ({
     subject: `You've been invited to foster with ${orgName}`,
     html: `

@@ -2,6 +2,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import {
+  sendEmail,
   sendWelcomeEmailFoster,
   sendWelcomeEmailRescue,
   sendAssignedToRescueEmail,
@@ -80,6 +81,46 @@ export async function POST(request: NextRequest) {
         break
       case "supply-request":
         result = await sendSupplyRequestEmail(data.rescueEmail, data.rescueName, data.fosterName, data.supplies)
+        break
+      case "org-paused":
+        result = await sendEmail({
+          to: data.email,
+          subject: `${data.orgName} has been paused for ${data.months} month${data.months > 1 ? "s" : ""}`,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #f59e0b;">Organization Paused</h1>
+            <p>Your rescue organization <strong>${data.orgName}</strong> has been temporarily paused.</p>
+            <div style="background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Paused by:</strong> ${data.pausedBy}</p>
+              <p><strong>Duration:</strong> ${data.months} month${data.months > 1 ? "s" : ""}</p>
+              <p><strong>Pause until:</strong> ${data.pausedUntil}</p>
+            </div>
+            <p>During this time, foster activities will be limited.</p>
+          </div>`,
+        })
+        break
+      case "org-closed":
+        result = await sendEmail({
+          to: data.email,
+          subject: `${data.orgName} organization has been closed`,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #dc2626;">Organization Closed</h1>
+            <p>Your rescue organization <strong>${data.orgName}</strong> has been permanently closed.</p>
+            <div style="background-color: #fee2e2; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Closed by:</strong> ${data.closedBy}</p>
+              <p><strong>Closure date:</strong> ${new Date().toDateString()}</p>
+            </div>
+            <p>If you wish to reopen, please contact Second Tail support.</p>
+          </div>`,
+        })
+        break
+      case "appointment-cancelled":
+        result = await sendAppointmentEmail(
+          data.fosterEmail,
+          data.fosterName,
+          data.dogName,
+          `CANCELLED: ${data.appointmentTitle}`,
+          data.appointmentTime
+        )
         break
       default:
         return NextResponse.json({ error: "Unknown email type" }, { status: 400 })

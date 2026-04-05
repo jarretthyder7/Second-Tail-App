@@ -2,11 +2,11 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isRescueInOrg } from "@/lib/api/auth-helpers"
 
-export async function GET(request: NextRequest, { params }: { params: { fosterId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ fosterId: string }> }) {
   try {
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get("orgId")
-    const fosterId = params.fosterId
+    const { fosterId } = await params
 
     if (!orgId) {
       return NextResponse.json({ error: "Organization ID required" }, { status: 400 })
@@ -97,11 +97,11 @@ export async function GET(request: NextRequest, { params }: { params: { fosterId
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { fosterId: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ fosterId: string }> }) {
   try {
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get("orgId")
-    const fosterId = params.fosterId
+    const { fosterId } = await params
 
     if (!orgId) {
       return NextResponse.json({ error: "Organization ID required" }, { status: 400 })

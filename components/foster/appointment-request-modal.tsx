@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { X, Loader2, Calendar } from "lucide-react"
@@ -14,10 +14,14 @@ interface AppointmentRequestModalProps {
   onClose: () => void
 }
 
+const DEFAULT_APPOINTMENT_TYPES = ["Vet Visit", "Checkup", "Vaccination", "Dental", "Emergency"]
+
 export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequestModalProps) {
   const router = useRouter()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [appointmentTypes, setAppointmentTypes] = useState<string[]>([])
+  const [loadingTypes, setLoadingTypes] = useState(true)
   const [formData, setFormData] = useState({
     appointmentType: "",
     preferredDate: "",
@@ -25,6 +29,30 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
     reason: "",
     notes: "",
   })
+
+  useEffect(() => {
+    async function fetchAppointmentTypes() {
+      try {
+        const response = await fetch(`/api/admin/help-settings?orgId=${orgId}`)
+        if (response.ok) {
+          const data = await response.json()
+          if (data.allowed_appointment_types && data.allowed_appointment_types.length > 0) {
+            setAppointmentTypes(data.allowed_appointment_types)
+          } else {
+            setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
+          }
+        } else {
+          setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
+        }
+      } catch (error) {
+        console.error("[v0] Error fetching appointment types:", error)
+        setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
+      } finally {
+        setLoadingTypes(false)
+      }
+    }
+    fetchAppointmentTypes()
+  }, [orgId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -141,16 +169,20 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
               onChange={(e) => setFormData({ ...formData, appointmentType: e.target.value })}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
               required
+              disabled={loadingTypes}
             >
-              <option value="">Select type...</option>
-              <option value="vet-checkup">Veterinary Check-up</option>
-              <option value="vaccination">Vaccination</option>
-              <option value="emergency-vet">Emergency Vet Visit</option>
-              <option value="behavioral-consult">Behavioral Consultation</option>
-              <option value="grooming">Grooming Appointment</option>
-              <option value="training">Training Session</option>
-              <option value="foster-meeting">Foster Team Meeting</option>
-              <option value="other">Other</option>
+              {loadingTypes ? (
+                <option value="">Loading...</option>
+              ) : (
+                <>
+                  <option value="">Select type...</option>
+                  {appointmentTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </>
+              )}
             </select>
           </div>
 

@@ -189,6 +189,8 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ success: true })
 }
+
+export async function PATCH(request: Request) {
   const supabase = await createClient()
   const {
     data: { user },

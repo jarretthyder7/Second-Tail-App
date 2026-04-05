@@ -7,7 +7,9 @@ import {
   sendAssignedToRescueEmail,
   sendAssignedDogEmail,
   sendAppointmentEmail,
-  sendNewMessageEmail,
+  sendMessageNotificationToFoster,
+  sendNewMessageEmailToOrg,
+  sendAppointmentRequestEmail,
   sendMedicalUpdateEmail,
   sendSupplyRequestEmail,
   sendFosterInvitationEmail,
@@ -51,8 +53,24 @@ export async function POST(request: NextRequest) {
           data.appointmentTime,
         )
         break
-      case "message":
-        result = await sendNewMessageEmail(data.fosterEmail, data.fosterName, data.senderName)
+      case "message-to-foster":
+        // Rescue org sent a message to foster
+        result = await sendMessageNotificationToFoster(data.fosterEmail, data.fosterName, data.orgName)
+        break
+      case "message-to-org":
+        // Foster sent a message to rescue org
+        result = await sendNewMessageEmailToOrg(data.orgEmail, data.orgName, data.fosterName, data.dogName)
+        break
+      case "appointment-request":
+        // Foster requested an appointment
+        result = await sendAppointmentRequestEmail(
+          data.orgEmail,
+          data.orgName,
+          data.fosterName,
+          data.dogName,
+          data.appointmentType,
+          data.preferredDate
+        )
         break
       case "medical-update":
         result = await sendMedicalUpdateEmail(data.fosterEmail, data.fosterName, data.dogName, data.updateType)

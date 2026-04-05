@@ -84,14 +84,50 @@ export const emailTemplates = {
     `,
   }),
 
-  newMessage: (fosterName: string, senderName: string) => ({
-    subject: `New message from ${senderName}`,
+  // Notification to foster when rescue org sends them a message
+  messageNotificationToFoster: (fosterName: string, orgName: string) => ({
+    subject: `New message from ${orgName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #d97706;">New Message</h1>
         <p>Hi ${fosterName},</p>
-        <p><strong>${senderName}</strong> sent you a message.</p>
+        <p><strong>${orgName}</strong> sent you a message.</p>
         <p>Log in to your dashboard to read and reply.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+        </div>
+      </div>
+    `,
+  }),
+
+  // Notification to rescue org when foster sends them a message
+  newMessageToOrg: (orgName: string, fosterName: string, dogName: string) => ({
+    subject: `New message from ${fosterName} re: ${dogName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #92400e;">New Message from Foster</h1>
+        <p>Hi ${orgName},</p>
+        <p><strong>${fosterName}</strong> sent you a new message about <strong>${dogName}</strong>.</p>
+        <p>Log in to Second Tail to reply.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+        </div>
+      </div>
+    `,
+  }),
+
+  // Notification to rescue org when foster requests an appointment
+  appointmentRequest: (orgName: string, fosterName: string, dogName: string, appointmentType: string, preferredDate: string) => ({
+    subject: `${fosterName} requested a ${appointmentType} appointment`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #92400e;">Appointment Request</h1>
+        <p>Hi ${orgName},</p>
+        <p><strong>${fosterName}</strong> has requested a <strong>${appointmentType}</strong> for <strong>${dogName}</strong> on <strong>${preferredDate}</strong>.</p>
+        <p>Log in to review and schedule it.</p>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Request</a>
+        </div>
       </div>
     `,
   }),

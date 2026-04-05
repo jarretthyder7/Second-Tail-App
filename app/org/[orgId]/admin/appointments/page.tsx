@@ -50,12 +50,13 @@ export default function AppointmentsPage() {
   const orgId = params.orgId as string
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
+  const [pendingRequests, setPendingRequests] = useState<any[]>([])
   const [dogs, setDogs] = useState<Dog[]>([])
   const [fosters, setFosters] = useState<Foster[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewForm, setShowNewForm] = useState(false)
-  const [selectedView, setSelectedView] = useState<"calendar" | "list">("calendar")
+  const [selectedView, setSelectedView] = useState<"calendar" | "list" | "requests">("calendar")
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [saving, setSaving] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
@@ -122,6 +123,18 @@ export default function AppointmentsPage() {
       const supabase = createClient()
       const { data: teamsData } = await supabase.from("teams").select("*").eq("organization_id", orgId)
       setTeams(teamsData || [])
+
+      // Load pending appointment requests
+      const { data: requestsData, error: requestsError } = await supabase
+        .from("appointment_requests")
+        .select("*, dog:dogs(name), foster:profiles!appointment_requests_foster_id_fkey(name, email)")
+        .eq("organization_id", orgId)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+
+      if (!requestsError) {
+        setPendingRequests(requestsData || [])
+      }
     } catch (error) {
       console.error("[v0] Error loading data:", error)
     } finally {
@@ -232,17 +245,46 @@ export default function AppointmentsPage() {
     }
   }
 
+  async function handleScheduleRequest(request: any) {
+    // Open new appointment form with pre-filled data from request
+    setFormData({
+      title: `${request.appointment_type} for ${request.dog.name}`,
+      description: request.reason || "",
+      appointment_type: request.appointment_type,
+      start_time: request.preferred_date ? `${request.preferred_date}T${request.preferred_time || "10:00"}` : "",
+      end_time: request.preferred_date ? `${request.preferred_date}T${request.preferred_time ? String(parseInt(request.preferred_time) + 1).padStart(2, "0") + ":00" : "11:00"}` : "",
+      dog_id: request.dog_id,
+      foster_id: request.foster_id,
+      team_id: "",
+      location: "",
+      items_needed: "",
+      notes: request.notes || "",
+    })
+    setShowNewForm(true)
+  }
+
+  async function handleDeclineRequest(requestId: string) {
+    if (!confirm("Decline this appointment request? The foster will not be notified.")) return
+
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("appointment_requests")
+        .update({ status: "declined" })
+        .eq("id", requestId)
+
+      if (!error) {
+        loadData()
+      }
+    } catch (error) {
+      console.error("[v0] Error declining request:", error)
+    }
+  }
+
   const saveColorSettings = () => {
     localStorage.setItem(`appointmentColors_${orgId}`, JSON.stringify(typeColors))
     setShowColorSettings(false)
   }
-
-  useEffect(() => {
-    const savedColors = localStorage.getItem(`appointmentColors_${orgId}`)
-    if (savedColors) {
-      setTypeColors(JSON.parse(savedColors))
-    }
-  }, [orgId])
 
   const handleDogChange = (dogId: string) => {
     setFormData({ ...formData, dog_id: dogId })
@@ -394,6 +436,19 @@ export default function AppointmentsPage() {
           >
             List View
           </button>
+          <button
+            onClick={() => setSelectedView("requests")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${
+              selectedView === "requests" ? "bg-[#D76B1A] text-white" : "bg-white text-[#5A4A42] hover:bg-[#F7E2BD]"
+            }`}
+          >
+            Pending Requests
+            {pendingRequests.length > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold rounded-full bg-red-500 text-white">
+                {pendingRequests.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Calendar View */}
@@ -515,6 +570,78 @@ export default function AppointmentsPage() {
                           )}
                         </div>
                         {appt.description && <p className="mt-2 text-sm text-[#5A4A42]">{appt.description}</p>}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
+
+        {/* Pending Requests View */}
+        {selectedView === "requests" && (
+          <div className="space-y-4">
+            {pendingRequests.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center text-[#5A4A42]">
+                  <p className="text-lg font-medium">No pending requests</p>
+                  <p className="text-sm text-[#5A4A42]/70 mt-1">Fosters will submit appointment requests here</p>
+                </CardContent>
+              </Card>
+            ) : (
+              pendingRequests.map((request) => (
+                <Card key={request.id} className="overflow-hidden">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-semibold text-[#5A4A42]">{request.appointment_type}</h3>
+                          <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Pending</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm text-[#5A4A42]">
+                          {request.foster && (
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4" />
+                              <span>{request.foster.name}</span>
+                            </div>
+                          )}
+                          {request.dog && (
+                            <div className="flex items-center gap-2">
+                              <DogIcon className="w-4 h-4" />
+                              <span>{request.dog.name}</span>
+                            </div>
+                          )}
+                          {request.preferred_date && (
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4" />
+                              <span>{request.preferred_date}</span>
+                            </div>
+                          )}
+                          {request.preferred_time && (
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              <span>{request.preferred_time}</span>
+                            </div>
+                          )}
+                        </div>
+                        {request.reason && <p className="text-sm text-[#5A4A42]/70 mt-2">{request.reason}</p>}
+                        {request.notes && <p className="text-xs text-[#5A4A42]/60 italic">Notes: {request.notes}</p>}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleScheduleRequest(request)}
+                          className="bg-[#D76B1A] hover:bg-[#D76B1A]/90 text-white text-sm"
+                        >
+                          Schedule It
+                        </Button>
+                        <Button
+                          onClick={() => handleDeclineRequest(request.id)}
+                          variant="outline"
+                          className="text-gray-600 text-sm"
+                        >
+                          Decline
+                        </Button>
                       </div>
                     </div>
                   </CardContent>

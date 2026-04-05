@@ -60,6 +60,40 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
 
       if (error) throw error
 
+      // Get org admin email to send notification
+      const { data: orgAdmin, error: adminError } = await supabase
+        .from("profiles")
+        .select("email, name")
+        .eq("organization_id", orgId)
+        .eq("role", "rescue")
+        .eq("org_role", "org_admin")
+        .maybeSingle()
+
+      if (!adminError && orgAdmin) {
+        // Get current user (foster) details
+        const { data: currentUser } = await supabase.from("profiles").select("name").eq("id", user.id).single()
+
+        // Get org name
+        const { data: org } = await supabase.from("organizations").select("name").eq("id", orgId).single()
+
+        if (currentUser && org) {
+          // Send email notification to org admin
+          await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "appointment-request",
+              orgEmail: orgAdmin.email,
+              orgName: org.name,
+              fosterName: currentUser.name,
+              dogName: dog.name,
+              appointmentType: formData.appointmentType,
+              preferredDate: formData.preferredDate,
+            }),
+          })
+        }
+      }
+
       toast({
         title: "Request submitted",
         description: "Your appointment request has been sent to the rescue team. They'll respond within 24 hours.",

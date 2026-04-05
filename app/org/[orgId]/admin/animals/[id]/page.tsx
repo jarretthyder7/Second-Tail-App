@@ -453,26 +453,6 @@ function AdminDogDetailContent() {
     setEditingBasicInfo(false)
   }
 
-  const handleReassignFoster = () => {
-    console.log("[v0] Reassigning foster to:", editedDog.foster_id)
-    setEditingBasicInfo(false)
-  }
-
-  const handleAddLog = () => {
-    console.log("[v0] Adding log:", editedDog.newLog)
-    setEditingBasicInfo(false)
-  }
-
-  const handleAddMedicalNote = () => {
-    console.log("[v0] Adding medical note:", editedDog.newMedicalNote)
-    setEditingBasicInfo(false)
-  }
-
-  const handleAddBehaviorNote = () => {
-    console.log("[v0] Adding behavior note:", editedDog.newBehaviorNote)
-    setEditingBasicInfo(false)
-  }
-
   const handleCreateRequest = () => {
     console.log("[v0] Creating request:", editedDog.newRequest)
     setEditingBasicInfo(false)

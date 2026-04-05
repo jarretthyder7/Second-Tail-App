@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email to admin
-    const adminEmail = process.env.FROM_EMAIL || "support@secondtail.org"
+    const adminEmail = process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>"
     const subject_line = `[Support Ticket] ${category} - ${org.name}`
 
     const emailHtml = `

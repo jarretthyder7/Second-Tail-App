@@ -360,11 +360,153 @@ export default function OrgMessagesPage() {
   return (
     <ProtectedRoute allowedRoles={["rescue"]}>
       <div className="p-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-[#5A4A42]">Messages</h1>
-            <p className="text-sm text-[#2E2E2E]/70">View all conversations with fosters</p>
+            <h1 className="text-3xl font-bold text-[#5A4A42]">Foster Messages</h1>
+            <p className="text-sm text-[#2E2E2E]/70 mt-1">Conversations with your foster parents</p>
           </div>
+
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#D76B1A] hover:bg-[#C05A0A] text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                New Message
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>New Message</DialogTitle>
+                <DialogDescription>Send a message to a foster about their dog</DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="foster">Foster *</Label>
+                  <select
+                    id="foster"
+                    value={selectedFoster}
+                    onChange={(e) => setSelectedFoster(e.target.value)}
+                    className="w-full rounded-lg border border-[#E8DDD1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]"
+                  >
+                    <option value="">Select a foster...</option>
+                    {fosters.map((foster) => (
+                      <option key={foster.id} value={foster.id}>
+                        {foster.name || foster.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dog">Dog (Optional)</Label>
+                  <select
+                    id="dog"
+                    value={selectedDog}
+                    onChange={(e) => setSelectedDog(e.target.value)}
+                    disabled={!selectedFoster}
+                    className="w-full rounded-lg border border-[#E8DDD1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A] disabled:opacity-50"
+                  >
+                    <option value="">General message (not about a specific dog)</option>
+                    {availableDogs.map((dog) => (
+                      <option key={dog.id} value={dog.id}>
+                        {dog.name}
+                      </option>
+                    ))}
+                  </select>
+                  {!selectedFoster && (
+                    <p className="text-xs text-[#2E2E2E]/60">Select a foster first to see their dogs</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="team">Team (Optional)</Label>
+                  <select
+                    id="team"
+                    value={selectedTeam}
+                    onChange={(e) => setSelectedTeam(e.target.value)}
+                    className="w-full rounded-lg border border-[#E8DDD1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]"
+                  >
+                    <option value="">No team assigned</option>
+                    {teams.map((team) => (
+                      <option key={team.id} value={team.id}>
+                        {team.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="message">Message *</Label>
+                  <Textarea
+                    id="message"
+                    value={messageContent}
+                    onChange={(e) => setMessageContent(e.target.value)}
+                    placeholder="Type your message here..."
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!selectedFoster || !messageContent.trim()}
+                  className="bg-[#D76B1A] hover:bg-[#C05A0A] text-white"
+                >
+                  Send Message
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Conversations List */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-[#2E2E2E]/60">Loading conversations...</p>
+            </div>
+          ) : conversations.length === 0 ? (
+            <div className="text-center py-8">
+              <MessageSquare className="w-12 h-12 mx-auto text-[#2E2E2E]/40 mb-4" />
+              <p className="text-[#2E2E2E]/60">No conversations yet</p>
+              <p className="text-sm text-[#2E2E2E]/40 mt-1">
+                Click "New Message" to start a conversation with a foster
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {conversations.map((conv) => {
+                const fosterName = conv.foster?.name || conv.foster?.email || "Unknown Foster"
+                const dogName = conv.dog?.name
+                const lastMessage = "Last message" // Placeholder
+                const preview = "..."
+
+                return (
+                  <Link key={conv.id} href={`/org/${orgId}/admin/messages/${conv.id}`}>
+                    <div className="border border-[#F7E2BD] rounded-xl p-4 hover:shadow-md transition cursor-pointer">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-[#5A4A42]">{fosterName}</h3>
+                          <p className="text-sm text-[#2E2E2E]/60 mt-1">
+                            {dogName ? `About: ${dogName}` : "General message"}
+                          </p>
+                          <p className="text-sm text-[#2E2E2E]/60 mt-1 line-clamp-1">{preview}</p>
+                          <p className="text-xs text-[#2E2E2E]/40 mt-2">{new Date(conv.updated_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
 
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>

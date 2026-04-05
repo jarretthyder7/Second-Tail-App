@@ -198,47 +198,24 @@ export default function OrgFosterMessages() {
   }
 
   const handleSendNewMessage = async () => {
-    if (!user || !messageContent.trim() || (!isSingleDog && !selectedDog) || !selectedTeam) {
+    if (!user || !messageContent.trim() || (!isSingleDog && !selectedDog)) {
       return
     }
 
     setSending(true)
-    setUploading(true)
 
     try {
-      console.log("[v0] Starting message send process:", {
-        userId: user.id,
-        orgId,
-        dogId: isSingleDog ? dogs[0].id : selectedDog,
-        team: selectedTeam,
-        recipientId: selectedRecipient,
-        hasAttachments: attachments.length > 0,
-      })
-
-      // Upload attachments first
-      const uploadedUrls: string[] = []
-      for (const file of attachments) {
-        const blob = await put(file.name, file, { access: "public" })
-        uploadedUrls.push(blob.url)
-      }
-
-      setUploading(false)
+      const [subject, ...bodyLines] = messageContent.split("\n")
+      const body = bodyLines.join("\n").trim()
 
       const dogId = isSingleDog ? dogs[0].id : selectedDog
+
       const conversationData: any = {
         organization_id: orgId,
         dog_id: dogId,
-        team: selectedTeam,
+        team: "general",
       }
 
-      // Only add recipient_id if it's not a general message
-      if (selectedTeam !== "general" && selectedRecipient) {
-        conversationData.recipient_id = selectedRecipient
-      }
-
-      console.log("[v0] Creating conversation with data:", conversationData)
-
-      // Create conversation
       const { data: conversation, error: convError } = await supabase
         .from("conversations")
         .insert(conversationData)
@@ -246,45 +223,67 @@ export default function OrgFosterMessages() {
         .single()
 
       if (convError) {
-        console.error("[v0] Error creating conversation:", convError)
         throw convError
       }
 
-      console.log("[v0] Conversation created:", conversation)
-
-      // Create first message with attachments
       const messageData = {
         conversation_id: conversation.id,
         sender_id: user.id,
-        content: messageContent,
-        attachments: uploadedUrls.length > 0 ? uploadedUrls : null,
+        content: subject + "\n\n" + body,
       }
 
-      console.log("[v0] Creating message with data:", messageData)
-
-      const { data: message, error: msgError } = await supabase.from("messages").insert(messageData).select().single()
+      const { error: msgError } = await supabase.from("messages").insert(messageData).select().single()
 
       if (msgError) {
-        console.error("[v0] Error creating message:", msgError)
         throw msgError
       }
-
-      console.log("[v0] Message created successfully:", message)
 
       setSending(false)
       setShowNewMessage(false)
       setMessageContent("")
       setSelectedDog("")
-      setSelectedTeam("")
-      setSelectedRecipient("")
       setAttachments([])
 
-      // Navigate to new conversation
+      // Notify org admin
+      try {
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("id, name")
+          .eq("id", user.id)
+          .single()
+
+        const { data: orgAdmin } = await supabase
+          .from("profiles")
+          .select("email, name")
+          .eq("organization_id", orgId)
+          .eq("role", "rescue")
+          .eq("org_role", "org_admin")
+          .limit(1)
+          .maybeSingle()
+
+        const { data: org } = await supabase.from("organizations").select("name").eq("id", orgId).single()
+
+        if (orgAdmin && userProfile && org) {
+          await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "message-to-org",
+              orgEmail: orgAdmin.email,
+              orgName: org.name,
+              fosterName: userProfile.name,
+              dogName: "their foster",
+            }),
+          })
+        }
+      } catch (emailError) {
+        console.warn("[v0] Failed to send message email:", emailError)
+      }
+
       router.push(`/org/${orgId}/foster/messages/${conversation.id}`)
     } catch (error) {
       console.error("[v0] Error sending message:", error)
       setSending(false)
-      setUploading(false)
       alert("Failed to send message. Please try again.")
     }
   }
@@ -300,18 +299,25 @@ export default function OrgFosterMessages() {
   return (
     <div className="bg-[#FBF8F4]">
       <main className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-[#5A4A42]">Messages</h2>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-[#5A4A42] mb-2">Contact Your Rescue Team</h1>
+          <p className="text-[#2E2E2E]/70">Have a question about your foster dog? Message your rescue coordinator directly.</p>
+        </div>
+
+        {/* Send Message Button */}
+        <div className="mb-8">
           <button
             onClick={handleNewMessage}
-            className="inline-flex items-center gap-2 rounded-xl bg-[#D76B1A] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition shadow-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#D76B1A] px-6 py-3 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition shadow-sm"
           >
-            <Plus className="w-4 h-4" />
-            New message
+            <Plus className="w-5 h-5" />
+            Send a Message
           </button>
         </div>
 
-        <div className="space-y-4">
+        {/* Conversations List */}
+        <div className="space-y-3">
           {conversations.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-sm p-8 text-center">
               <MessageSquare className="w-12 h-12 text-[#2E2E2E]/20 mx-auto mb-3" />
@@ -327,28 +333,21 @@ export default function OrgFosterMessages() {
           ) : (
             conversations.map((conversation) => {
               const dog = conversation.dog
+              const lastMessage = conversation.last_message || "No messages yet"
+              const preview = lastMessage.substring(0, 60) + (lastMessage.length > 60 ? "..." : "")
 
               return (
                 <Link key={conversation.id} href={`/org/${orgId}/foster/messages/${conversation.id}`}>
-                  <div className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition cursor-pointer">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#D76B1A] flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-sm">
-                          {organization?.name?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-
+                  <div className="bg-white rounded-xl shadow-sm p-4 hover:shadow-md transition cursor-pointer border border-[#F7E2BD]">
+                    <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-[#5A4A42]">{organization?.name}</h3>
-                          </div>
-                          <span className="text-xs text-[#2E2E2E]/40 flex-shrink-0">
-                            {new Date(conversation.updated_at).toLocaleDateString()}
-                          </span>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-[#5A4A42]">
+                            {dog?.name || "Rescue Team"}
+                          </h3>
                         </div>
-
-                        {dog && <p className="text-sm text-[#2E2E2E]/60">About: {dog.name}</p>}
+                        <p className="text-sm text-[#2E2E2E]/60 mb-2 line-clamp-1">{preview}</p>
+                        <p className="text-xs text-[#2E2E2E]/40">{new Date(conversation.updated_at).toLocaleDateString()}</p>
                       </div>
                     </div>
                   </div>
@@ -363,7 +362,7 @@ export default function OrgFosterMessages() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-[#F7E2BD] px-6 py-4 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-[#5A4A42]">New Message</h3>
+              <h3 className="text-xl font-bold text-[#5A4A42]">Send a Message</h3>
               <button
                 onClick={() => {
                   setShowNewMessage(false)
@@ -388,6 +387,7 @@ export default function OrgFosterMessages() {
                     value={selectedDog}
                     onChange={(e) => setSelectedDog(e.target.value)}
                     className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
+                    required
                   >
                     <option value="">Select a dog</option>
                     {dogs.map((dog) => (
@@ -398,6 +398,53 @@ export default function OrgFosterMessages() {
                   </select>
                 </div>
               )}
+
+              {/* Subject */}
+              <div>
+                <label className="block text-sm font-medium text-[#5A4A42] mb-2">Subject *</label>
+                <input
+                  type="text"
+                  value={messageContent.split("\n")[0] || ""}
+                  onChange={(e) => {
+                    const lines = messageContent.split("\n")
+                    lines[0] = e.target.value
+                    setMessageContent(lines.join("\n"))
+                  }}
+                  placeholder="What is your message about?"
+                  className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
+                />
+              </div>
+
+              {/* Message Content */}
+              <div>
+                <label className="block text-sm font-medium text-[#5A4A42] mb-2">Message *</label>
+                <textarea
+                  value={messageContent.includes("\n") ? messageContent.split("\n").slice(1).join("\n") : ""}
+                  onChange={(e) => {
+                    const subject = messageContent.split("\n")[0] || ""
+                    setMessageContent(subject + "\n" + e.target.value)
+                  }}
+                  placeholder="Type your message here..."
+                  className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] resize-none min-h-[120px]"
+                />
+              </div>
+
+              <button
+                onClick={handleSendNewMessage}
+                disabled={
+                  sending ||
+                  uploading ||
+                  !messageContent.trim() ||
+                  (!isSingleDog && !selectedDog)
+                }
+                className="w-full inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
+              >
+                {uploading ? "Uploading attachments..." : sending ? "Sending..." : "Send Message"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
               {/* Team Selection */}
               <div>

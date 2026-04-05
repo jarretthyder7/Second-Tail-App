@@ -57,8 +57,8 @@ export function AdminDogTabs({
     behavior_notes: "",
   })
   const [isSavingLog, setIsSavingLog] = useState(false)
-  const [isSavingNotes, setIsSavingNotes] = useState(false)
-  const [isSavingBehavior, setIsSavingBehavior] = useState(false)
+  const [isSavingCarePlan, setIsSavingCarePlan] = useState(false)
+  const [selectedConversation, setSelectedConversation] = useState<any>(null)
   const [conversationMessages, setConversationMessages] = useState<any[]>([])
   const { toast } = useToast()
 
@@ -176,95 +176,7 @@ export function AdminDogTabs({
     }
   }
 
-  const handleSaveBehaviorNote = async () => {
-    if (!behaviorNotes.trim()) return
-
-    setIsSavingBehavior(true)
-    try {
-      const supabase = createClient()
-
-      // Update care plan special_instructions with behavior notes
-      const carePlanData = {
-        dog_id: dog.id,
-        special_instructions: behaviorNotes,
-        updated_at: new Date().toISOString(),
-      }
-
-      // Check if care plan exists
-      const { data: existingPlan } = await supabase.from("care_plans").select("id").eq("dog_id", dog.id).single()
-
-      let result
-      if (existingPlan) {
-        result = await supabase.from("care_plans").update(carePlanData).eq("dog_id", dog.id)
-      } else {
-        result = await supabase.from("care_plans").insert(carePlanData)
-      }
-
-      if (result.error) throw result.error
-
-      toast({
-        title: "Success",
-        description: "Behavior note saved successfully.",
-      })
-
-      setBehaviorNotes("")
-      onDataUpdate?.()
-    } catch (error) {
-      console.error("[v0] Error saving behavior note:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save behavior note.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSavingBehavior(false)
-    }
-  }
-
-  const handleSaveInternalNotes = async () => {
-    if (!internalNotes.trim()) return
-
-    setIsSavingNotes(true)
-    try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      // Insert into timeline_events with visible_to_foster=false for internal notes
-      const { error } = await supabase.from("timeline_events").insert({
-        animal_id: dog.id,
-        type: "internal_note",
-        title: "Internal Note",
-        description: internalNotes,
-        event_date: new Date().toISOString(),
-        visible_to_foster: false,
-        created_by: user?.email || "admin",
-        metadata: {
-          source: "internal_notes_tab",
-        },
-      })
-
-      if (error) throw error
-
-      toast({
-        title: "Success",
-        description: "Internal note saved successfully.",
-      })
-
-      setInternalNotes("")
-      onDataUpdate?.()
-    } catch (error) {
-      console.error("[v0] Error saving internal note:", error)
-      toast({
-        title: "Error",
-        description: "Failed to save internal note.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSavingNotes(false)
-    }
-  }
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!messageInput.trim() || !currentUser || !selectedConversation) return
 
@@ -749,13 +661,8 @@ export function AdminDogTabs({
                   className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 resize-none min-h-[100px]"
                   placeholder="Describe behavior observations..."
                 />
-                <button
-                  onClick={handleSaveBehaviorNote}
-                  disabled={isSavingBehavior}
-                  className="mt-3 inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isSavingBehavior ? "Saving..." : "Save Note"}
+                <button className="mt-3 inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition">
+                  Save Note
                 </button>
               </div>
             </div>
@@ -775,13 +682,8 @@ export function AdminDogTabs({
                 className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 resize-none min-h-[200px]"
                 placeholder="Add internal staff notes here..."
               />
-              <button
-                onClick={handleSaveInternalNotes}
-                disabled={isSavingNotes}
-                className="mt-3 inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                {isSavingNotes ? "Saving..." : "Save Notes"}
+              <button className="mt-3 inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-2 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition">
+                Save Notes
               </button>
             </div>
           </div>

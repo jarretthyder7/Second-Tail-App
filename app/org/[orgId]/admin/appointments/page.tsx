@@ -285,6 +285,8 @@ export default function AppointmentsPage() {
     localStorage.setItem(`appointmentColors_${orgId}`, JSON.stringify(typeColors))
     setShowColorSettings(false)
   }
+
+  const handleDogChange = (dogId: string) => {
     setFormData({ ...formData, dog_id: dogId })
 
     if (dogId) {

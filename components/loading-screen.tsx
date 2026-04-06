@@ -37,42 +37,57 @@ export function LoadingScreen() {
   return (
     <div className="fixed inset-0 bg-[#FBF8F4] flex items-center justify-center z-50 animate-fade-in">
       <div className="flex flex-col items-center gap-8">
-        {/* Animated Dog Icon */}
-        <div className="relative w-20 h-20">
+        {/* Animated Dog Icon - Matching Second Tail Logo */}
+        <div className="relative w-24 h-24">
           <svg
-            viewBox="0 0 100 100"
-            className="w-full h-full animate-gentle-bounce"
+            viewBox="0 0 200 240"
+            className="w-full h-full"
             fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
+            stroke="#D76B1A"
+            strokeWidth="12"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-[#D76B1A] animate-gentle-bounce"
           >
             {/* Head */}
-            <circle cx="50" cy="45" r="22" />
-            {/* Left ear */}
-            <path d="M 32 25 Q 28 15 32 10" />
-            {/* Right ear */}
-            <path d="M 68 25 Q 72 15 68 10" />
+            <path d="M 100 50 Q 130 50 140 70 Q 145 85 140 100 Q 130 115 100 120 Q 70 115 60 100 Q 55 85 60 70 Q 70 50 100 50" />
+            
+            {/* Left Ear */}
+            <path d="M 75 55 Q 65 40 75 20 Q 80 35 75 55" />
+            
+            {/* Right Ear */}
+            <path d="M 125 55 Q 135 40 125 20 Q 120 35 125 55" />
+            
             {/* Snout */}
-            <circle cx="50" cy="50" r="8" />
+            <circle cx="100" cy="100" r="15" />
+            
             {/* Eyes */}
-            <circle cx="45" cy="42" r="2" fill="currentColor" />
-            <circle cx="55" cy="42" r="2" fill="currentColor" />
-            {/* Mouth */}
-            <path d="M 50 52 Q 48 55 46 54" />
-            <path d="M 50 52 Q 52 55 54 54" />
-            {/* Neck/shoulders */}
-            <path d="M 35 62 Q 35 70 40 75" />
-            <path d="M 65 62 Q 65 70 60 75" />
-            {/* Body */}
-            <ellipse cx="50" cy="80" rx="18" ry="12" />
-            {/* Animated tail */}
-            <g className="origin-[50px_80px]">
-              <path
-                d="M 65 82 Q 75 75 80 65 Q 82 60 80 55"
-                className="animate-tail-wag"
+            <circle cx="90" cy="90" r="4" fill="#D76B1A" />
+            <circle cx="110" cy="90" r="4" fill="#D76B1A" />
+            
+            {/* Nose */}
+            <circle cx="100" cy="102" r="3" fill="#D76B1A" />
+            
+            {/* Body/Chest */}
+            <path d="M 80 120 Q 70 130 70 150 L 70 180" />
+            <path d="M 120 120 Q 130 130 130 150 L 130 180" />
+            
+            {/* Front Left Leg */}
+            <path d="M 80 180 Q 75 195 75 215" />
+            
+            {/* Front Right Leg */}
+            <path d="M 120 180 Q 125 195 125 215" />
+            
+            {/* Back Left Leg */}
+            <path d="M 60 160 Q 55 180 55 210" />
+            
+            {/* Back Right Leg */}
+            <path d="M 140 160 Q 145 180 145 210" />
+            
+            {/* Animated Heart Tail */}
+            <g className="animate-tail-wag" style={{ transformOrigin: '130px 120px' }}>
+              <path 
+                d="M 130 120 Q 160 110 170 85 Q 180 65 175 50 Q 165 40 155 45 Q 150 48 150 55 Q 150 48 145 45 Q 135 40 125 50 Q 120 65 130 85 Q 140 110 130 120" 
+                fill="none"
               />
             </g>
           </svg>
@@ -117,23 +132,13 @@ export function LoadingScreen() {
           }
         }
 
-        @keyframes gentle-bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-8px);
-          }
-        }
-
         @keyframes tail-wag {
           0%,
           100% {
             transform: rotate(0deg);
           }
           50% {
-            transform: rotate(-30deg);
+            transform: rotate(-35deg);
           }
         }
 
@@ -151,13 +156,9 @@ export function LoadingScreen() {
           animation: fade-in 0.3s ease-in-out;
         }
 
-        .animate-gentle-bounce {
-          animation: gentle-bounce 2s ease-in-out infinite;
-        }
-
         .animate-tail-wag {
-          animation: tail-wag 1.5s ease-in-out infinite;
-          transform-origin: 65px 82px;
+          animation: tail-wag 1.8s ease-in-out infinite;
+          transform-origin: 130px 120px;
         }
       `}</style>
     </div>

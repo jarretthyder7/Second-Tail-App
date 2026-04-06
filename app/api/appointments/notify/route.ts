@@ -7,6 +7,12 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    
     const { appointmentId, notificationType, customMessage } = await request.json()
 
     const { data: appointment, error: appointmentError } = await supabase

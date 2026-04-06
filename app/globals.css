@@ -117,16 +117,51 @@
   --font-sans: "Lora", serif;
   --font-mono: "Lora", serif;
 
-  /* Updated Second Tail brand colors to match brand guidelines */
+  /* ========================================
+     SECOND TAIL BOLD DESIGN SYSTEM
+     Clean, modern SaaS with punchy accents
+     ======================================== */
+
+  /* Core Brand Colors */
   --color-primary-orange: #d76b1a;
+  --color-primary-orange-hover: #c25f15;
+  --color-primary-orange-light: #fff7f0;
   --color-accent-beige: #f7e2bd;
   --color-accent-brown: #50402b;
   --color-background-cream: #fbf8f4;
-  --color-primary-bark: #50402b;
+  --color-primary-bark: #5a4a42;
   --color-neutral-cream: #fbf8f4;
 
+  /* Bold Status Colors - Vibrant & Clear */
+  --color-status-success: #16a34a;
+  --color-status-success-bg: #dcfce7;
+  --color-status-success-border: #bbf7d0;
+  --color-status-warning: #ea580c;
+  --color-status-warning-bg: #fff7ed;
+  --color-status-warning-border: #fed7aa;
+  --color-status-error: #dc2626;
+  --color-status-error-bg: #fef2f2;
+  --color-status-error-border: #fecaca;
+  --color-status-info: #2563eb;
+  --color-status-info-bg: #eff6ff;
+  --color-status-info-border: #bfdbfe;
+  --color-status-neutral: #6b7280;
+  --color-status-neutral-bg: #f3f4f6;
+  --color-status-neutral-border: #e5e7eb;
+
+  /* Card & Surface System */
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f9fafb;
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 10px 25px rgba(0,0,0,0.08), 0 4px 10px rgba(0,0,0,0.04);
+  --shadow-button: 0 1px 2px rgba(0,0,0,0.05);
+
   /* Border with alpha */
-  --color-border-soft: rgba(90, 74, 66, 0.18);
+  --color-border-soft: rgba(90, 74, 66, 0.12);
+  --color-border-strong: rgba(90, 74, 66, 0.25);
+
+  /* Focus Ring */
+  --color-focus-ring: rgba(215, 107, 26, 0.4);
 }
 
 @layer base {
@@ -167,5 +202,104 @@
     textarea {
       font-size: 16px;
     }
+  }
+}
+
+/* ========================================
+   BOLD UI UTILITY CLASSES
+   Micro-interactions & Typography
+   ======================================== */
+
+@layer components {
+  /* Card hover lift effect */
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  .card-hover:hover {
+    @apply shadow-lg -translate-y-0.5;
+  }
+
+  /* Button press effect */
+  .btn-press {
+    @apply transition-transform duration-100 active:scale-[0.98];
+  }
+
+  /* Bold stat number */
+  .stat-number {
+    @apply text-3xl font-bold tracking-tight text-primary-bark;
+  }
+  .stat-number-lg {
+    @apply text-4xl font-bold tracking-tight text-primary-bark;
+  }
+  .stat-label {
+    @apply text-xs font-medium text-primary-bark/60 uppercase tracking-wide;
+  }
+
+  /* Status badges - pre-styled */
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-success-bg text-status-success border border-status-success-border;
+  }
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-warning-bg text-status-warning border border-status-warning-border;
+  }
+  .badge-error {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-error-bg text-status-error border border-status-error-border;
+  }
+  .badge-info {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-info-bg text-status-info border border-status-info-border;
+  }
+  .badge-neutral {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-status-neutral-bg text-status-neutral border border-status-neutral-border;
+  }
+
+  /* Section headers */
+  .section-title {
+    @apply text-lg font-bold text-primary-bark;
+  }
+  .section-subtitle {
+    @apply text-sm text-primary-bark/60;
+  }
+
+  /* Navigation active state */
+  .nav-active {
+    @apply bg-primary-orange text-white shadow-sm;
+  }
+  .nav-inactive {
+    @apply text-primary-bark hover:bg-neutral-cream;
+  }
+
+  /* Input focus ring */
+  .input-focus {
+    @apply focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange;
+  }
+
+  /* Smooth fade in animation */
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  /* Slide up animation for modals/popovers */
+  .animate-slide-up {
+    animation: slideUp 0.2s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

@@ -410,16 +410,16 @@ export default function OrgAdminLayout({
               })}
 
             {/* Foster Tools — collapsible */}
-            <div className="pt-2">
+            <div className="pt-3">
               <button
                 onClick={() => setFosterToolsOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[#FBF8F4] transition"
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-cream transition-colors duration-150"
               >
-                <p className="text-xs font-semibold text-[#5A4A42]/60 uppercase tracking-wider">Foster Tools</p>
+                <p className="text-[11px] font-bold text-primary-bark/50 uppercase tracking-widest">Foster Tools</p>
                 {fosterToolsOpen ? (
-                  <ChevronUp className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                  <ChevronUp className="w-3.5 h-3.5 text-primary-bark/40" />
                 ) : (
-                  <ChevronDown className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                  <ChevronDown className="w-3.5 h-3.5 text-primary-bark/40" />
                 )}
               </button>
             </div>
@@ -442,12 +442,12 @@ export default function OrgAdminLayout({
                         setMobileMenuOpen(false)
                       }
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
                       isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                        ? "text-primary-bark/30 cursor-not-allowed"
                         : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          ? "bg-primary-orange text-white shadow-sm"
+                          : "text-primary-bark hover:bg-neutral-cream hover:text-primary-bark"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
@@ -455,29 +455,29 @@ export default function OrgAdminLayout({
                     {item.label}
                     {item.badge && (
                       <span
-                        className={`ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1 ${
-                          isActive ? "bg-white text-[#D76B1A]" : "bg-red-500 text-white"
+                        className={`ml-auto min-w-[20px] h-[20px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 ${
+                          isActive ? "bg-white text-primary-orange" : "bg-status-error text-white"
                         }`}
                       >
                         {item.badge}
                       </span>
                     )}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isDisabled && <span className="ml-auto text-xs text-primary-bark/25">🔒</span>}
                   </Link>
                 )
               })}
 
             {/* Staff Only — collapsible */}
-            <div className="pt-2 border-t border-[#F7E2BD] mt-2">
+            <div className="pt-3 border-t border-border-soft mt-3">
               <button
                 onClick={() => setStaffOnlyOpen((o) => !o)}
-                className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[#FBF8F4] transition"
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-cream transition-colors duration-150"
               >
-                <p className="text-xs font-semibold text-[#5A4A42]/60 uppercase tracking-wider">Staff Only</p>
+                <p className="text-[11px] font-bold text-primary-bark/50 uppercase tracking-widest">Staff Only</p>
                 {staffOnlyOpen ? (
-                  <ChevronUp className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                  <ChevronUp className="w-3.5 h-3.5 text-primary-bark/40" />
                 ) : (
-                  <ChevronDown className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                  <ChevronDown className="w-3.5 h-3.5 text-primary-bark/40" />
                 )}
               </button>
             </div>
@@ -500,25 +500,25 @@ export default function OrgAdminLayout({
                         setMobileMenuOpen(false)
                       }
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
                       isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                        ? "text-primary-bark/30 cursor-not-allowed"
                         : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          ? "bg-primary-orange text-white shadow-sm"
+                          : "text-primary-bark hover:bg-neutral-cream"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isDisabled && <span className="ml-auto text-xs text-primary-bark/25">🔒</span>}
                   </Link>
                 )
               })}
 
             {/* Admin section */}
-            <div className="pt-4 pb-1 border-t border-[#F7E2BD] mt-2">
-              <p className="px-3 text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Admin</p>
+            <div className="pt-4 pb-1 border-t border-border-soft mt-3">
+              <p className="px-3 text-[11px] font-bold text-primary-bark/50 uppercase tracking-widest">Admin</p>
             </div>
             {navItems
               .filter((item) => item.section === "admin")
@@ -539,35 +539,35 @@ export default function OrgAdminLayout({
                         setMobileMenuOpen(false)
                       }
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
                       isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                        ? "text-primary-bark/30 cursor-not-allowed"
                         : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          ? "bg-primary-orange text-white shadow-sm"
+                          : "text-primary-bark hover:bg-neutral-cream"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isDisabled && <span className="ml-auto text-xs text-primary-bark/25">🔒</span>}
                   </Link>
                 )
               })}
           </nav>
 
           {/* User footer display with dropdown menu */}
-          <div className="mt-auto pt-4 border-t border-[#F7E2BD]" style={{ lineHeight: 0 }}>
+          <div className="mt-auto pt-4 border-t border-border-soft" style={{ lineHeight: 0 }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full px-3 py-5 rounded-xl hover:bg-[#FBF8F4] transition cursor-pointer group">
+                <button className="w-full px-3 py-4 rounded-lg hover:bg-neutral-cream transition-colors duration-150 cursor-pointer group">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-[#D76B1A] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-primary-orange text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm">
                       {userName?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-semibold text-[#5A4A42] truncate leading-tight">{userName || "User"}</p>
-                      <p className="text-xs text-[#5A4A42]/50 mt-0.5">
+                      <p className="text-sm font-semibold text-primary-bark truncate leading-tight">{userName || "User"}</p>
+                      <p className="text-xs text-primary-bark/50 mt-0.5">
                         {profile?.org_role
                           ? profile.org_role
                               .split("_")
@@ -576,7 +576,7 @@ export default function OrgAdminLayout({
                           : "Staff"}
                       </p>
                     </div>
-                    <ChevronUp className="w-4 h-4 text-[#5A4A42]/40 group-data-[state=open]:rotate-180 transition-transform" />
+                    <ChevronUp className="w-4 h-4 text-primary-bark/40 group-data-[state=open]:rotate-180 transition-transform duration-150" />
                   </div>
                 </button>
               </DropdownMenuTrigger>

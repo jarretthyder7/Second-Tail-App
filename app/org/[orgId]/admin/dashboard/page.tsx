@@ -446,10 +446,10 @@ function OrgAdminDashboardContent() {
       group relative bg-white rounded-xl 
       transition-all duration-200 ease-out
       ${isCustomizing 
-        ? "cursor-grab active:cursor-grabbing border-2 border-gray-200 hover:border-primary-orange/40" 
-        : "border border-gray-200/80 hover:border-gray-300"
+        ? "cursor-grab active:cursor-grabbing border-2 border-border-soft hover:border-primary-orange/40" 
+        : "border border-border-soft hover:border-border-strong"
       }
-      ${isHovered && isCustomizing ? "shadow-xl border-primary-orange/60 scale-[1.01] ring-4 ring-primary-orange/10" : "shadow-sm hover:shadow-md"}
+      ${isHovered && isCustomizing ? "shadow-lg border-primary-orange/60 scale-[1.01] ring-4 ring-primary-orange/10" : "shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"}
       ${isDragging ? "opacity-40 scale-95" : ""}
       col-span-12
     `
@@ -465,8 +465,8 @@ function OrgAdminDashboardContent() {
             <div className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-base font-semibold text-gray-900">Priority Inbox</h3>
-                  <p className="text-xs text-gray-500 mt-0.5">Who needs a response?</p>
+                  <h3 className="text-base font-bold text-primary-bark">Priority Inbox</h3>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">Who needs a response?</p>
                 </div>
                 {isCustomizing && (
                   <button
@@ -474,7 +474,7 @@ function OrgAdminDashboardContent() {
                       e.stopPropagation()
                       removeWidget(widget.id)
                     }}
-                    className="p-1.5 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+                    className="p-1.5 rounded-md hover:bg-status-error-bg text-primary-bark/40 hover:text-status-error transition-colors"
                     title="Remove widget"
                   >
                     <X className="w-4 h-4" />
@@ -484,30 +484,30 @@ function OrgAdminDashboardContent() {
               
               {totalInboxItems === 0 ? (
                 <div className="py-6 text-center">
-                  <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-3">
-                    <Check className="w-6 h-6 text-emerald-600" />
+                  <div className="w-12 h-12 rounded-full bg-status-success-bg flex items-center justify-center mx-auto mb-3">
+                    <Check className="w-6 h-6 text-status-success" />
                   </div>
-                  <p className="text-sm font-medium text-gray-900">All caught up</p>
-                  <p className="text-xs text-gray-500 mt-1">No action needed right now</p>
+                  <p className="text-sm font-semibold text-primary-bark">All caught up</p>
+                  <p className="text-xs text-primary-bark/50 mt-1">No action needed right now</p>
                 </div>
               ) : (
                 <>
                   {/* Main count badge */}
                   <Link
                     href={`/org/${orgId}/admin/messages`}
-                    className="block p-4 rounded-lg bg-gradient-to-br from-orange-50 to-orange-50/50 border border-orange-100 hover:border-orange-200 hover:shadow-md transition-all mb-3"
+                    className="block p-4 rounded-lg bg-primary-orange-light border border-primary-orange/20 hover:border-primary-orange/40 hover:shadow-md transition-all mb-3"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                          <Inbox className="w-5 h-5 text-orange-600" />
+                        <div className="w-10 h-10 rounded-lg bg-primary-orange/10 flex items-center justify-center">
+                          <Inbox className="w-5 h-5 text-primary-orange" />
                         </div>
                         <div>
-                          <div className="text-2xl font-bold text-gray-900">{totalInboxItems}</div>
-                          <div className="text-xs text-gray-600">need attention</div>
+                          <div className="stat-number">{totalInboxItems}</div>
+                          <div className="text-xs text-primary-bark/60">need attention</div>
                         </div>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-5 h-5 text-primary-bark/30" />
                     </div>
                   </Link>
                   
@@ -516,25 +516,25 @@ function OrgAdminDashboardContent() {
                     {unansweredMessages > 0 && (
                       <Link
                         href={`/org/${orgId}/admin/messages`}
-                        className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-2.5 rounded-lg hover:bg-neutral-cream transition-colors"
                       >
                         <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-blue-600" />
-                          <span className="text-sm text-gray-600">Foster Messages</span>
+                          <MessageSquare className="w-4 h-4 text-status-info" />
+                          <span className="text-sm text-primary-bark/80">Foster Messages</span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">{unansweredMessages}</span>
+                        <span className="text-sm font-bold text-primary-bark">{unansweredMessages}</span>
                       </Link>
                     )}
                     {openSupportRequests > 0 && (
                       <Link
                         href={`/org/${orgId}/admin/help-requests`}
-                        className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50 transition-colors"
+                        className="flex items-center justify-between p-2.5 rounded-lg hover:bg-neutral-cream transition-colors"
                       >
                         <div className="flex items-center gap-2">
-                          <HelpCircle className="w-4 h-4 text-orange-600" />
-                          <span className="text-sm text-gray-600">Support Requests</span>
+                          <HelpCircle className="w-4 h-4 text-primary-orange" />
+                          <span className="text-sm text-primary-bark/80">Support Requests</span>
                         </div>
-                        <span className="text-sm font-semibold text-gray-900">{openSupportRequests}</span>
+                        <span className="text-sm font-bold text-primary-bark">{openSupportRequests}</span>
                       </Link>
                     )}
                   </div>
@@ -560,15 +560,15 @@ function OrgAdminDashboardContent() {
           const animalStatusConfig = {
             "needs-attention": {
               badge: "Needs attention",
-              badgeClass: "bg-red-100 text-red-700",
+              badgeClass: "bg-status-error-bg text-status-error border border-status-error-border",
             },
             "heads-up": {
               badge: "Heads up",
-              badgeClass: "bg-amber-100 text-amber-700",
+              badgeClass: "bg-status-warning-bg text-status-warning border border-status-warning-border",
             },
             "stable": {
               badge: "Stable",
-              badgeClass: "bg-emerald-100 text-emerald-700",
+              badgeClass: "bg-status-success-bg text-status-success border border-status-success-border",
             },
           }
           const currentAnimalStatus = animalStatusConfig[animalHealthStatus]
@@ -578,12 +578,12 @@ function OrgAdminDashboardContent() {
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-semibold text-gray-900">Animal Health & Status</h3>
-                    <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-medium ${currentAnimalStatus.badgeClass}`}>
+                    <h3 className="text-base font-bold text-primary-bark">Animal Health & Status</h3>
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-semibold ${currentAnimalStatus.badgeClass}`}>
                       {currentAnimalStatus.badge}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-0.5">Quick view of animals needing action</p>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">Quick view of animals needing action</p>
                 </div>
                 {isCustomizing && (
                   <button

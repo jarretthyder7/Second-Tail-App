@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Plus, ExternalLink, Trash2, Edit2, ArrowLeft } from "lucide-react"
-import { PageLoader } from "@/components/page-loader"
 import Link from "next/link"
 
 export default function FosterResourcesPage() {
@@ -75,7 +74,11 @@ export default function FosterResourcesPage() {
   }
 
   if (isLoading) {
-    return <PageLoader />
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-primary-orange border-t-transparent rounded-full" />
+      </div>
+    )
   }
 
   return (

@@ -5,7 +5,6 @@ import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { Heart, Calendar, DogIcon, Award, Clock } from "lucide-react"
-import { PageLoader } from "@/components/page-loader"
 
 export default function JourneyPage() {
   const params = useParams()
@@ -44,7 +43,14 @@ export default function JourneyPage() {
   }, [])
 
   if (isLoading) {
-    return <PageLoader />
+    return (
+      <div className="min-h-screen bg-neutral-cream flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-primary-bark font-medium">Loading your journey...</p>
+        </div>
+      </div>
+    )
   }
 
   const activeDogs = dogs.filter((dog) => dog.stage === "in_foster")

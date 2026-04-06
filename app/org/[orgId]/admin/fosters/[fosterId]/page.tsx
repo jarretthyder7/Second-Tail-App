@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Edit, Save, X, Dog } from "lucide-react"
-import { PageLoader } from "@/components/page-loader"
 import Link from "next/link"
 import useSWR from "swr"
 
@@ -91,7 +90,14 @@ function FosterProfileContent() {
   }
 
   if (isLoading) {
-    return <PageLoader />
+    return (
+      <div className="min-h-screen bg-neutral-cream flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-orange mx-auto"></div>
+          <p className="mt-4 text-text-muted">Loading foster profile...</p>
+        </div>
+      </div>
+    )
   }
 
   if (error || !foster) {

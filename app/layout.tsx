@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Lora, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import { LoadingScreen } from '@/components/loading-screen'
 import './globals.css'
 
 const lora = Lora({ subsets: ['latin'], weight: ['400', '600', '700'] })
@@ -21,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lora.className} antialiased`}>
-        <LoadingScreen />
         {children}
         <Analytics />
       </body>

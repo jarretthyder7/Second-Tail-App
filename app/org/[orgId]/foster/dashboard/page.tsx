@@ -5,7 +5,6 @@ import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { Calendar, AlertCircle, Package, Eye, ChevronRight, Smile, HelpCircle, Plus } from "lucide-react"
-import { PageLoader } from "@/components/page-loader"
 import { NewMessageModal } from "@/components/foster/new-message-modal"
 import { RequestHelpModal } from "@/components/foster/request-help-modal"
 import { AppointmentRequestModal } from "@/components/foster/appointment-request-modal"
@@ -83,7 +82,14 @@ export default function FosterDashboardPage() {
   }, [])
 
   if (isLoading) {
-    return <PageLoader />
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!dog) {

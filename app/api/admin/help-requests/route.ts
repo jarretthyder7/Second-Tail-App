@@ -2,6 +2,79 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isRescueInOrg } from "@/lib/api/auth-helpers"
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { requestId, status, orgId, internalNote } = body
+
+    if (!requestId || !orgId) {
+      return NextResponse.json({ error: "Request ID and Organization ID required" }, { status: 400 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("id, role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile || !isRescueInOrg(profile, orgId)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const updateData: Record<string, any> = {}
+    
+    if (status) {
+      updateData.status = status
+      if (status === "resolved") {
+        updateData.resolved_at = new Date().toISOString()
+      }
+    }
+
+    // If adding internal note, append to description or a notes field
+    if (internalNote) {
+      // Get current request to append note
+      const { data: currentRequest } = await supabase
+        .from("help_requests")
+        .select("description")
+        .eq("id", requestId)
+        .single()
+
+      const existingDesc = currentRequest?.description || ""
+      const noteTimestamp = new Date().toLocaleString()
+      const formattedNote = `\n\n---\n[Internal Note - ${noteTimestamp}]\n${internalNote}`
+      updateData.description = existingDesc + formattedNote
+    }
+
+    updateData.updated_at = new Date().toISOString()
+
+    const { data, error } = await supabase
+      .from("help_requests")
+      .update(updateData)
+      .eq("id", requestId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("[v0] Error updating help request:", error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, request: data })
+  } catch (error) {
+    console.error("[v0] API Error:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams

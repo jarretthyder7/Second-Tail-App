@@ -271,7 +271,7 @@ export default function OrgAdminLayout({
     // Staff-only tools (divider before)
     {
       href: `/org/${orgId}/admin/teams`,
-      label: "Staff Teams",
+      label: "Teams",
       icon: UsersRound,
       adminOnly: false,
       section: "staff",

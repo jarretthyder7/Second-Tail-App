@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { ChevronUp, LogOut, Upload, CheckSquare } from "lucide-react"
+import { ChevronUp, ChevronDown, LogOut, Upload, CheckSquare } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useParams, usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
@@ -68,6 +68,8 @@ export default function OrgAdminLayout({
   const [setupStatus, setSetupStatus] = useState<string[]>([])
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [fosterToolsOpen, setFosterToolsOpen] = useState(true)
+  const [staffOnlyOpen, setStaffOnlyOpen] = useState(true)
   const userName = profile?.name
 
   const isOrgAdmin = profile?.org_role === "org_admin"
@@ -230,15 +232,6 @@ export default function OrgAdminLayout({
     { href: `/org/${orgId}/admin/animals`, label: "Animals", icon: Dog, adminOnly: false, section: "main" },
     { href: `/org/${orgId}/admin/fosters`, label: "Fosters", icon: Users, adminOnly: false, section: "main" },
     {
-      href: `/org/${orgId}/admin/messages`,
-      label: "Foster Messages",
-      icon: MessageSquare,
-      adminOnly: false,
-      section: "foster",
-      description: "Message foster parents about their animals",
-      badge: unreadMessageCount > 0 ? (unreadMessageCount > 99 ? "99+" : unreadMessageCount.toString()) : undefined,
-    },
-    {
       href: `/org/${orgId}/admin/reimbursements`,
       label: "Reimbursements",
       icon: DollarSign,
@@ -258,6 +251,15 @@ export default function OrgAdminLayout({
       icon: CalendarIcon,
       adminOnly: false,
       section: "foster",
+    },
+    {
+      href: `/org/${orgId}/admin/messages`,
+      label: "Foster Messages",
+      icon: MessageSquare,
+      adminOnly: false,
+      section: "foster",
+      description: "Message foster parents about their animals",
+      badge: unreadMessageCount > 0 ? (unreadMessageCount > 99 ? "99+" : unreadMessageCount.toString()) : undefined,
     },
     {
       href: `/org/${orgId}/admin/communications`,
@@ -407,11 +409,21 @@ export default function OrgAdminLayout({
                 )
               })}
 
-            {/* Foster-facing section */}
-            <div className="pt-2 pb-1">
-              <p className="px-3 text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Foster Tools</p>
+            {/* Foster Tools — collapsible */}
+            <div className="pt-2">
+              <button
+                onClick={() => setFosterToolsOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[#FBF8F4] transition"
+              >
+                <p className="text-xs font-semibold text-[#5A4A42]/60 uppercase tracking-wider">Foster Tools</p>
+                {fosterToolsOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                )}
+              </button>
             </div>
-            {navItems
+            {fosterToolsOpen && navItems
               .filter((item) => item.section === "foster")
               .map((item) => {
                 const Icon = item.icon
@@ -455,14 +467,21 @@ export default function OrgAdminLayout({
                 )
               })}
 
-            {/* Staff-only section with divider */}
-            <div className="pt-4 pb-1 border-t border-[#F7E2BD] mt-2">
-              <div className="flex items-center gap-2 px-3">
-                <ChevronUp className="w-3 h-3 text-[#5A4A42]/50" />
-                <p className="text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Staff Only</p>
-              </div>
+            {/* Staff Only — collapsible */}
+            <div className="pt-2 border-t border-[#F7E2BD] mt-2">
+              <button
+                onClick={() => setStaffOnlyOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg hover:bg-[#FBF8F4] transition"
+              >
+                <p className="text-xs font-semibold text-[#5A4A42]/60 uppercase tracking-wider">Staff Only</p>
+                {staffOnlyOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                )}
+              </button>
             </div>
-            {navItems
+            {staffOnlyOpen && navItems
               .filter((item) => item.section === "staff")
               .map((item) => {
                 const Icon = item.icon
@@ -492,7 +511,6 @@ export default function OrgAdminLayout({
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                    {item.staffOnly && !isActive && <ChevronUp className="w-3 h-3 ml-auto text-[#5A4A42]/30" />}
                     {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
                   </Link>
                 )

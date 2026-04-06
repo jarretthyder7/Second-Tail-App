@@ -1,0 +1,36 @@
+<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#d76b1a" stroke-width="60" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Left ear -->
+  <path d="M300 400 Q250 350 250 250 Q250 150 300 120"/>
+  
+  <!-- Head -->
+  <circle cx="500" cy="400" r="180" />
+  
+  <!-- Right ear -->
+  <path d="M700 400 Q750 350 750 250 Q750 150 700 120"/>
+  
+  <!-- Eyes area (cat-like) -->
+  <circle cx="450" cy="350" r="30" fill="none"/>
+  <circle cx="550" cy="350" r="30" fill="none"/>
+  
+  <!-- Mouth -->
+  <path d="M500 420 Q480 450 460 440"/>
+  <path d="M500 420 Q520 450 540 440"/>
+  
+  <!-- Front left paw -->
+  <path d="M420 560 L420 780 Q420 820 400 840"/>
+  <path d="M420 800 Q400 800 380 820"/>
+  <path d="M420 800 Q420 820 420 850"/>
+  <path d="M420 800 Q440 820 460 840"/>
+  
+  <!-- Front right paw -->
+  <path d="M580 560 L580 780 Q580 820 600 840"/>
+  <path d="M580 800 Q560 800 540 820"/>
+  <path d="M580 800 Q580 820 580 850"/>
+  <path d="M580 800 Q600 820 620 840"/>
+  
+  <!-- Back left paw -->
+  <path d="M380 500 L300 620 Q280 660 260 680"/>
+  
+  <!-- Tail (heart shape) -->
+  <path d="M320 300 Q280 260 280 200 Q280 150 320 140 Q360 130 380 180 Q400 130 440 140 Q480 150 480 200 Q480 260 440 300"/>
+</svg>

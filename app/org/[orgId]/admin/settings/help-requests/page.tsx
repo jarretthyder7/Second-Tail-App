@@ -400,6 +400,26 @@ export default function HelpRequestSettingsPage() {
               </label>
             </div>
 
+            {/* Hours of Operation */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
+              <div className="flex items-center gap-3 mb-4">
+                <Calendar className="w-6 h-6 text-[#D76B1A]" />
+                <h2 className="text-2xl font-bold text-[#5A4A42]">Hours of Operation</h2>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-[#5A4A42] mb-2">Hours (displayed during emergency support)</label>
+                <textarea
+                  value={settings.hours_of_operation || ""}
+                  onChange={(e) => setSettings({ ...settings, hours_of_operation: e.target.value })}
+                  placeholder="e.g. Mon-Fri 9am-5pm EST, Sat 10am-2pm EST, Sun Closed"
+                  rows={4}
+                  className="w-full px-4 py-2 rounded-xl border border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 font-mono text-sm"
+                />
+                <p className="text-xs text-[#2E2E2E]/60 mt-2">Fosters will see these hours when they access emergency support</p>
+              </div>
+            </div>
+
             {/* Emergency Support */}
             <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
               <div className="flex items-center gap-3 mb-4">

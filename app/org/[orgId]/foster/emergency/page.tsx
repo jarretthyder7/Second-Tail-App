@@ -2,198 +2,263 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { getOrganization } from "@/lib/supabase/queries"
-import Link from "next/link"
-import { AlertCircle, Phone, MessageSquare, Clock, Heart, ExternalLink } from "lucide-react"
+import { AlertTriangle, Phone, MessageSquare, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 
-export default function EmergencyHelpPage() {
+export default function EmergencyPage() {
   const params = useParams()
   const orgId = params.orgId as string
-  const [organization, setOrganization] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
+
+  const [settings, setSettings] = useState<any>(null)
+  const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+  const [activeTab, setActiveTab] = useState<"contacts" | "submit">("contacts")
+  const [message, setMessage] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [submitError, setSubmitError] = useState("")
 
   useEffect(() => {
-    const fetchData = async () => {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+    fetchSettings()
+  }, [orgId])
 
-      if (user) {
-        const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-        setProfile(profileData)
-
-        if (profileData?.organization_id) {
-          const orgData = await getOrganization(profileData.organization_id)
-          setOrganization(orgData)
-        }
-      }
-      setIsLoading(false)
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`/api/admin/help-settings?orgId=${orgId}`)
+      if (!response.ok) throw new Error("Failed to fetch settings")
+      const data = await response.json()
+      setSettings(data)
+    } catch (err) {
+      console.error("[v0] Error fetching settings:", err)
+    } finally {
+      setIsLoadingSettings(false)
     }
+  }
 
-    fetchData()
-  }, [])
+  const handleSubmitHelpRequest = async () => {
+    if (!message.trim()) return
 
-  if (isLoading) {
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
+    setSubmitError("")
+
+    try {
+      const response = await fetch(`/api/foster/help-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgId,
+          message: message.trim(),
+          type: "emergency",
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to submit help request")
+      }
+
+      setSubmitStatus("success")
+      setMessage("")
+      setTimeout(() => setSubmitStatus("idle"), 3000)
+    } catch (err: any) {
+      setSubmitStatus("error")
+      setSubmitError(err.message)
+      console.error("[v0] Error submitting help request:", err)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoadingSettings) {
     return (
-      <div className="min-h-screen bg-neutral-cream flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-orange border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-primary-bark font-medium">Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-red-700 font-medium">Loading emergency support...</p>
         </div>
       </div>
     )
   }
 
-  const hasOrgConnection = !!profile?.organization_id
-
   return (
-    <main className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12 space-y-8">
-      <div className="text-center space-y-3">
-        <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto">
-          <AlertCircle className="w-8 h-8 text-red-600" />
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="bg-red-600 text-white rounded-2xl p-6 md:p-8 mb-8 flex items-start gap-4 shadow-lg">
+          <AlertTriangle className="w-8 h-8 flex-shrink-0 mt-0.5" />
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">Emergency Support</h1>
+            <p className="text-red-100">
+              Need immediate help? Contact our team using the options below.
+            </p>
+          </div>
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold text-primary-bark">Emergency Help</h1>
-        <p className="text-lg text-text-muted max-w-2xl mx-auto">Quick access to help when you need it most</p>
-      </div>
 
-      {/* Connected Organization Emergency Contact */}
-      {hasOrgConnection && organization && (
-        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 md:p-8 space-y-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-red-600 flex items-center justify-center flex-shrink-0">
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-red-900 mb-2">Contact {organization.name}</h2>
-              <p className="text-red-800 mb-4">
-                Your connected rescue organization. They know you and your foster dog best.
-              </p>
+        {/* Tab Navigation */}
+        <div className="flex gap-2 mb-8">
+          <button
+            onClick={() => setActiveTab("contacts")}
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+              activeTab === "contacts"
+                ? "bg-red-600 text-white shadow-lg"
+                : "bg-white text-red-600 hover:bg-red-50 border-2 border-red-200"
+            }`}
+          >
+            <Phone className="w-4 h-4 inline-block mr-2" />
+            Contact Numbers
+          </button>
+          <button
+            onClick={() => setActiveTab("submit")}
+            className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
+              activeTab === "submit"
+                ? "bg-red-600 text-white shadow-lg"
+                : "bg-white text-red-600 hover:bg-red-50 border-2 border-red-200"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4 inline-block mr-2" />
+            Submit Request
+          </button>
+        </div>
 
-              <div className="space-y-3">
-                {organization.phone && (
-                  <a
-                    href={`tel:${organization.phone}`}
-                    className="flex items-center gap-3 bg-white rounded-xl p-4 hover:shadow-md transition group"
-                  >
-                    <Phone className="w-5 h-5 text-red-600 group-hover:scale-110 transition" />
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-red-900">Call Emergency Line</div>
-                      <div className="text-sm text-red-700">{organization.phone}</div>
+        {/* Contacts Tab */}
+        {activeTab === "contacts" && (
+          <div className="space-y-6">
+            {/* Emergency Line */}
+            {settings?.emergency_phone && (
+              <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md border-l-4 border-red-600">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-red-600 mb-2">Life-Threatening Emergency</h2>
+                    <p className="text-[#2E2E2E]/70 mb-4">For immediate emergencies requiring urgent attention</p>
+                    <div className="bg-red-50 p-4 rounded-xl border-2 border-red-200 mb-4">
+                      <p className="text-xs text-red-600 font-semibold uppercase tracking-wide mb-1">Emergency Line</p>
+                      <p className="text-2xl md:text-3xl font-bold text-red-600 font-mono">{settings.emergency_phone}</p>
                     </div>
-                    <ExternalLink className="w-4 h-4 text-red-600" />
-                  </a>
-                )}
-
-                <Link
-                  href={`/org/${orgId}/foster/messages?new=true&urgent=true`}
-                  className="flex items-center gap-3 bg-white rounded-xl p-4 hover:shadow-md transition group"
-                >
-                  <MessageSquare className="w-5 h-5 text-red-600 group-hover:scale-110 transition" />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-red-900">Send Urgent Message</div>
-                    <div className="text-sm text-red-700">Team will be notified immediately</div>
                   </div>
-                  <ExternalLink className="w-4 h-4 text-red-600" />
-                </Link>
+                  <a
+                    href={`tel:${settings.emergency_phone}`}
+                    className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors shadow-lg"
+                  >
+                    <Phone className="w-5 h-5" />
+                    Call Now
+                  </a>
+                </div>
               </div>
+            )}
+
+            {/* Support Line */}
+            {settings?.contact_phone && (
+              <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md border-l-4 border-orange-500">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-orange-600 mb-2">Foster Support Line</h2>
+                    <p className="text-[#2E2E2E]/70 mb-4">For non-emergency help and general support</p>
+                    <div className="bg-orange-50 p-4 rounded-xl border-2 border-orange-200 mb-4">
+                      <p className="text-xs text-orange-600 font-semibold uppercase tracking-wide mb-1">Support Line</p>
+                      <p className="text-2xl md:text-3xl font-bold text-orange-600 font-mono">{settings.contact_phone}</p>
+                    </div>
+                    {settings?.hours_of_operation && (
+                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-4">
+                        <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-2">Hours of Operation</p>
+                        <p className="text-sm text-blue-900 whitespace-pre-wrap font-mono">{settings.hours_of_operation}</p>
+                      </div>
+                    )}
+                  </div>
+                  <a
+                    href={`tel:${settings.contact_phone}`}
+                    className="flex-shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors shadow-lg"
+                  >
+                    <Phone className="w-5 h-5" />
+                    Call Now
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {!settings?.emergency_phone && !settings?.contact_phone && (
+              <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6 flex gap-4">
+                <AlertCircle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-900 mb-1">Contact information not yet configured</h3>
+                  <p className="text-sm text-yellow-800">Your rescue has not set up emergency contact numbers. Please reach out to your rescue administrator.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Submit Request Tab */}
+        {activeTab === "submit" && (
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-md">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#5A4A42] mb-2">Submit a Help Request</h2>
+              <p className="text-[#2E2E2E]/70">
+                Describe your emergency situation below. We&apos;ll send your request to our team and add it to your chat for tracking.
+              </p>
+            </div>
+
+            {submitStatus === "success" && (
+              <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex gap-3 mb-6">
+                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-green-900">Request submitted successfully</p>
+                  <p className="text-sm text-green-800">Our team has been notified and will respond shortly.</p>
+                </div>
+              </div>
+            )}
+
+            {submitStatus === "error" && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex gap-3 mb-6">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-red-900">Failed to submit request</p>
+                  <p className="text-sm text-red-800">{submitError}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-[#5A4A42] mb-3">
+                  Describe your emergency
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Please provide as much detail as possible about the emergency situation..."
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none text-[#2E2E2E]"
+                  disabled={isSubmitting}
+                />
+                <p className="text-xs text-[#2E2E2E]/60 mt-2">
+                  {message.length} characters
+                </p>
+              </div>
+
+              <button
+                onClick={handleSubmitHelpRequest}
+                disabled={isSubmitting || !message.trim()}
+                className="w-full py-3 px-4 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-4 h-4" />
+                    Submit Emergency Request
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-[#2E2E2E]/60 text-center">
+                For life-threatening emergencies, call {settings?.emergency_phone || "your emergency line"} immediately.
+              </p>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* General Emergency Guidance */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
-        <h2 className="text-2xl font-bold text-primary-bark">Emergency Situations</h2>
-
-        <div className="space-y-4">
-          {/* Medical Emergency */}
-          <div className="border-l-4 border-red-600 bg-red-50 p-4 space-y-2">
-            <h3 className="font-semibold text-red-900">Medical Emergency</h3>
-            <p className="text-sm text-red-800">
-              If your foster dog is injured, having trouble breathing, bleeding heavily, or showing signs of distress:
-            </p>
-            <ul className="text-sm text-red-800 space-y-1 ml-4">
-              <li>• Call your rescue organization immediately</li>
-              <li>• Go to the nearest emergency vet clinic</li>
-              <li>• Keep the dog calm and comfortable</li>
-            </ul>
-          </div>
-
-          {/* Behavioral Crisis */}
-          <div className="border-l-4 border-orange-500 bg-orange-50 p-4 space-y-2">
-            <h3 className="font-semibold text-orange-900">Behavioral Crisis</h3>
-            <p className="text-sm text-orange-800">
-              If your foster dog is showing aggressive behavior, severe anxiety, or you feel unsafe:
-            </p>
-            <ul className="text-sm text-orange-800 space-y-1 ml-4">
-              <li>• Separate the dog to a safe, quiet space</li>
-              <li>• Contact your rescue coordinator</li>
-              <li>• Don't attempt to handle the dog if you feel unsafe</li>
-            </ul>
-          </div>
-
-          {/* Can't Continue Fostering */}
-          <div className="border-l-4 border-yellow-500 bg-yellow-50 p-4 space-y-2">
-            <h3 className="font-semibold text-yellow-900">Can't Continue Fostering</h3>
-            <p className="text-sm text-yellow-800">If an unexpected situation means you can no longer foster:</p>
-            <ul className="text-sm text-yellow-800 space-y-1 ml-4">
-              <li>• Contact your rescue organization as soon as possible</li>
-              <li>• They'll work with you to find a solution</li>
-              <li>• It's okay - they understand emergencies happen</li>
-            </ul>
-          </div>
-        </div>
+        )}
       </div>
-
-      {/* 24/7 Resources */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
-        <h2 className="text-2xl font-bold text-primary-bark">24/7 Emergency Resources</h2>
-
-        <div className="space-y-3">
-          <a
-            href="tel:888-426-4435"
-            className="flex items-center gap-3 border-2 border-primary-bark rounded-xl p-4 hover:bg-neutral-cream transition"
-          >
-            <Clock className="w-5 h-5 text-primary-bark" />
-            <div className="flex-1">
-              <div className="text-sm font-medium text-primary-bark">Pet Poison Helpline</div>
-              <div className="text-sm text-text-muted">888-426-4435 (fee may apply)</div>
-            </div>
-          </a>
-
-          <a
-            href="https://www.aspca.org/pet-care/animal-poison-control"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 border-2 border-primary-bark rounded-xl p-4 hover:bg-neutral-cream transition"
-          >
-            <ExternalLink className="w-5 h-5 text-primary-bark" />
-            <div className="flex-1">
-              <div className="text-sm font-medium text-primary-bark">ASPCA Poison Control</div>
-              <div className="text-sm text-text-muted">24/7 emergency assistance</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      {/* Not Connected to Organization */}
-      {!hasOrgConnection && (
-        <div className="bg-neutral-cream rounded-2xl p-6 text-center space-y-4">
-          <p className="text-text-muted">
-            You're not currently connected with a rescue organization. Connect with one to get dedicated emergency
-            support.
-          </p>
-          <Link
-            href="/foster/explore"
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-orange px-6 py-3 text-sm font-semibold text-white hover:bg-primary-orange/90 transition"
-          >
-            Explore Rescues
-          </Link>
-        </div>
-      )}
-    </main>
+    </div>
   )
 }

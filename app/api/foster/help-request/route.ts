@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { resend } from "@/lib/email/resend"
+import { sendEmail } from "@/lib/email/send"
 
 export async function POST(request: NextRequest) {
   try {
@@ -114,8 +114,7 @@ export async function POST(request: NextRequest) {
         const emailSubject = dogName 
           ? `Help Request from ${profile.name} for ${dogName}` 
           : `Help Request from ${profile.name}`
-        await resend.emails.send({
-          from: "Second Tail <noreply@secondtail.org>",
+        await sendEmail({
           to: org.email,
           subject: emailSubject,
           html: `

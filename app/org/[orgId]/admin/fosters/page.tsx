@@ -5,9 +5,9 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { PageLoader } from "@/components/page-loader"
 import { Dog, Mail, UserPlus, X, Clock, AlertCircle, UserX, User, Users, Plus, Eye, Upload } from "lucide-react"
 import { createInvitation, cancelInvitation } from "@/lib/supabase/queries"
 import Link from "next/link"
@@ -224,15 +224,7 @@ export default function AdminFostersPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (

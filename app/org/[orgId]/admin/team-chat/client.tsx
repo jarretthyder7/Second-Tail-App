@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PageLoader } from "@/components/page-loader"
 import {
   Dialog,
   DialogContent,
@@ -358,11 +359,7 @@ export default function TeamChatClient() {
   const filteredChannels = channels.filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-100px)]">
-        <p className="text-[#2E2E2E]/60">Loading chat...</p>
-      </div>
-    )
+    return <PageLoader />
   }
 
   return (

@@ -5,6 +5,7 @@ import type React from "react"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "./supabase/client"
+import { PageLoader } from "@/components/page-loader"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -62,14 +63,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }, [allowedRoles, router])
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FBF8F4]">
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-4 border-[#D76B1A] border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-[#5A4A42]">Loading...</p>
-        </div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (!isAuthorized) {

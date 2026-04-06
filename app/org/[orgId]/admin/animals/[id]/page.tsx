@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/lib/protected-route"
 import { fetchCarePlanForDog, updateDog, fetchLogsForDog, fetchDogById } from "@/lib/supabase/queries"
 import { ArrowLeft, Edit, Camera, AlertTriangle } from "lucide-react"
 import Link from "next/link"
+import { PageLoader } from "@/components/page-loader"
 import { AdminDogTabs } from "@/components/admin/admin-animal-tabs"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
@@ -651,14 +652,7 @@ function AdminDogDetailContent() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#8B6F47]"></div>
-          <p className="text-[#5A4A42]">Loading dog profile...</p>
-        </div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   if (error || !dog) {

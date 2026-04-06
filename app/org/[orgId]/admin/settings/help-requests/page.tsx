@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { Phone, AlertCircle, Package, Calendar, CheckCircle2, Plus, X, GripVertical } from "lucide-react"
+import { PageLoader } from "@/components/page-loader"
 
 const PRESET_SUPPLIES = ["Food", "Pee Pads", "Crate", "Toys", "Leash", "Medications", "Other"]
 const PRESET_APPOINTMENTS = ["Vet Visit", "Checkup", "Vaccination", "Dental", "Emergency", "Behavioral Consult", "Training", "Grooming"]
@@ -105,14 +106,7 @@ export default function HelpRequestSettingsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#FBF8F4] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-[#D76B1A] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[#5A4A42] text-sm">Loading settings...</p>
-        </div>
-      </div>
-    )
+    return <PageLoader />
   }
 
   const currentSupplies: string[] = settings?.allowed_supply_types || []

@@ -725,7 +725,7 @@ function OrgAdminDashboardContent() {
                 </div>
                 {fostersWithOpenRequests > 0 && (
                   <Link
-                    href={`/org/${orgId}/admin/help-requests`}
+                    href={`/org/${orgId}/admin/request-supplies`}
                     className="flex items-center justify-between p-2 rounded-md bg-red-50 hover:bg-red-100 transition-colors"
                   >
                     <span className="text-sm text-red-700">Fosters with open requests</span>

@@ -560,14 +560,14 @@ export default function OrgAdminLayout({
           <div className="mt-auto pt-4 border-t border-[#F7E2BD]">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full px-3 py-2 rounded-xl bg-[#FBF8F4] hover:bg-[#F7E2BD] transition cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#D76B1A] text-white flex items-center justify-center text-sm font-semibold">
+                <button className="w-full px-3 py-2.5 rounded-xl hover:bg-[#FBF8F4] transition cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-[#D76B1A] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
                       {userName?.charAt(0).toUpperCase() || "U"}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-[#5A4A42] truncate">{userName || "User"}</p>
-                      <p className="text-xs text-[#5A4A42]/60">
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-semibold text-[#5A4A42] truncate leading-tight">{userName || "User"}</p>
+                      <p className="text-xs text-[#5A4A42]/50 mt-0.5">
                         {profile?.org_role
                           ? profile.org_role
                               .split("_")
@@ -576,27 +576,27 @@ export default function OrgAdminLayout({
                           : "Staff"}
                       </p>
                     </div>
-                    <ChevronUp className="w-4 h-4 text-[#5A4A42]/60" />
+                    <ChevronUp className="w-4 h-4 text-[#5A4A42]/40 group-data-[state=open]:rotate-180 transition-transform" />
                   </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 mb-2">
                 <DropdownMenuItem asChild>
-                  <Link href={`/org/${orgId}/admin/settings`} className="flex items-center gap-3 cursor-pointer py-2.5">
-                    <Settings className="w-4 h-4 text-[#5A4A42]" />
-                    <div>
-                      <div className="font-medium text-[#2E2E2E]">Settings</div>
-                      <div className="text-xs text-[#5A4A42]/60">Manage organization</div>
+                  <Link href={`/org/${orgId}/admin/settings`} className="flex items-center gap-3 cursor-pointer px-2 py-2">
+                    <Settings className="w-4 h-4 text-[#5A4A42] flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#2E2E2E]">Settings</div>
+                      <div className="text-xs text-[#5A4A42]/50">Manage organization</div>
                     </div>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={`/org/${orgId}/admin/settings?support=true`} className="flex items-center gap-3 cursor-pointer py-2.5">
-                    <HelpCircle className="w-4 h-4 text-[#D76B1A]" />
-                    <div>
-                      <div className="font-medium text-[#2E2E2E]">Support</div>
-                      <div className="text-xs text-[#5A4A42]/60">Get help or report issues</div>
+                  <Link href={`/org/${orgId}/admin/settings?support=true`} className="flex items-center gap-3 cursor-pointer px-2 py-2">
+                    <HelpCircle className="w-4 h-4 text-[#D76B1A] flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#2E2E2E]">Support</div>
+                      <div className="text-xs text-[#5A4A42]/50">Get help or report issues</div>
                     </div>
                   </Link>
                 </DropdownMenuItem>
@@ -607,12 +607,12 @@ export default function OrgAdminLayout({
                     await supabase.auth.signOut()
                     window.location.href = "/login"
                   }}
-                  className="flex items-center gap-3 text-red-600 cursor-pointer py-2.5"
+                  className="flex items-center gap-3 text-red-600 cursor-pointer px-2 py-2"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <div>
-                    <div className="font-medium">Logout</div>
-                    <div className="text-xs text-red-600/60">Sign out of your account</div>
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Logout</div>
+                    <div className="text-xs text-red-600/50">Sign out of your account</div>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>

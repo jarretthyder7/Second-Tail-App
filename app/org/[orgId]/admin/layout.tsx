@@ -232,13 +232,6 @@ export default function OrgAdminLayout({
     { href: `/org/${orgId}/admin/animals`, label: "Animals", icon: Dog, adminOnly: false, section: "main" },
     { href: `/org/${orgId}/admin/fosters`, label: "Fosters", icon: Users, adminOnly: false, section: "main" },
     {
-      href: `/org/${orgId}/admin/reimbursements`,
-      label: "Reimbursements",
-      icon: DollarSign,
-      adminOnly: false,
-      section: "foster",
-    },
-    {
       href: `/org/${orgId}/admin/request-supplies`,
       label: "Supply Requests",
       icon: Package,
@@ -265,6 +258,13 @@ export default function OrgAdminLayout({
       href: `/org/${orgId}/admin/communications`,
       label: "Communications",
       icon: Mail,
+      adminOnly: false,
+      section: "foster",
+    },
+    {
+      href: `/org/${orgId}/admin/reimbursements`,
+      label: "Reimbursements",
+      icon: DollarSign,
       adminOnly: false,
       section: "foster",
     },

@@ -557,10 +557,10 @@ export default function OrgAdminLayout({
           </nav>
 
           {/* User footer display with dropdown menu */}
-          <div className="mt-auto pt-4 border-t border-[#F7E2BD]">
+          <div className="mt-auto pt-4 border-t border-[#F7E2BD]" style={{ lineHeight: 0 }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full px-3 py-2.5 rounded-xl hover:bg-[#FBF8F4] transition cursor-pointer group">
+                <button className="w-full px-3 py-5 rounded-xl hover:bg-[#FBF8F4] transition cursor-pointer group">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-[#D76B1A] text-white flex items-center justify-center text-sm font-semibold flex-shrink-0">
                       {userName?.charAt(0).toUpperCase() || "U"}

@@ -246,7 +246,7 @@ export default function OrgAdminLayout({
       section: "foster",
     },
     {
-      href: `/org/${orgId}/admin/help-requests`,
+      href: `/org/${orgId}/admin/request-supplies`,
       label: "Supply Requests",
       icon: Package,
       adminOnly: false,

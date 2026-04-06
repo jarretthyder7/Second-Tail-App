@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { orgId, message, type = "general" } = body
+    const { orgId, message, type = "general", dogId, dogName } = body
 
     if (!orgId || !message) {
       return NextResponse.json({ error: "Organization ID and message required" }, { status: 400 })
@@ -48,8 +48,12 @@ export async function POST(request: NextRequest) {
       .insert({
         organization_id: orgId,
         foster_id: user.id,
+        dog_id: dogId || null,
+        title: dogName ? `Help Request for ${dogName}` : "Help Request",
         description: message,
+        category: type,
         status: "open",
+        priority: type === "emergency" ? "high" : "medium",
         created_at: new Date().toISOString(),
       })
       .select()
@@ -93,12 +97,13 @@ export async function POST(request: NextRequest) {
 
     // Create message in conversation if conversation exists
     if (conversationId) {
+      const messageTitle = dogName ? `Help Request for ${dogName}` : "Help Request"
       await supabase
         .from("messages")
         .insert({
           conversation_id: conversationId,
-          user_id: user.id,
-          content: `**Emergency Help Request**\n\n${message}\n\n---\n[View request details](help-request-${helpRequest.id})`,
+          sender_id: user.id,
+          content: `**${messageTitle}**\n\n${message}\n\n---\n_Request submitted - our team will respond soon._`,
           created_at: new Date().toISOString(),
         })
     }
@@ -106,14 +111,17 @@ export async function POST(request: NextRequest) {
     // Send email to rescue organization
     if (org.email) {
       try {
+        const emailSubject = dogName 
+          ? `Help Request from ${profile.name} for ${dogName}` 
+          : `Help Request from ${profile.name}`
         await resend.emails.send({
           from: "Second Tail <noreply@secondtail.org>",
           to: org.email,
-          subject: `Emergency Help Request from ${profile.name}`,
+          subject: emailSubject,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #D76B1A;">Emergency Help Request</h1>
-              <p style="color: #666;">Foster parent <strong>${profile.name}</strong> (${profile.email}) has submitted an emergency help request.</p>
+              <h1 style="color: #D76B1A;">Help Request</h1>
+              <p style="color: #666;">Foster parent <strong>${profile.name}</strong> (${profile.email}) has submitted a help request${dogName ? ` for <strong>${dogName}</strong>` : ""}.</p>
               
               <div style="background-color: #FBF8F4; padding: 20px; border-left: 4px solid #D76B1A; border-radius: 4px; margin: 20px 0;">
                 <h3 style="color: #5A4A42; margin-top: 0;">Request Details</h3>

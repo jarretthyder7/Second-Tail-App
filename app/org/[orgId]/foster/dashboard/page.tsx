@@ -19,9 +19,6 @@ export default function FosterDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [showSupportModal, setShowSupportModal] = useState(false)
-  const [supportModalView, setSupportModalView] = useState<"menu" | "call" | "appointment" | "supplies" | "emergency">(
-    "menu",
-  )
   const [showAppointmentRequest, setShowAppointmentRequest] = useState(false)
 
   useEffect(() => {
@@ -219,11 +216,8 @@ export default function FosterDashboardPage() {
           </Link>
 
           {/* Request Supplies Button */}
-          <button
-            onClick={() => {
-              setShowSupportModal(true)
-              setSupportModalView("supplies")
-            }}
+          <Link
+            href={`/org/${orgId}/foster/request-supplies`}
             className="bg-card rounded-xl p-4 hover:shadow-md transition group text-left"
           >
             <div className="flex items-start justify-between">
@@ -236,7 +230,7 @@ export default function FosterDashboardPage() {
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
             </div>
-          </button>
+          </Link>
 
           {/* Request Appointment Button */}
           <button
@@ -257,10 +251,7 @@ export default function FosterDashboardPage() {
 
           {/* Need Help Button */}
           <button
-            onClick={() => {
-              setShowSupportModal(true)
-              setSupportModalView("menu")
-            }}
+            onClick={() => setShowSupportModal(true)}
             className="bg-card rounded-xl p-4 hover:shadow-md transition group text-left"
           >
             <div className="flex items-start justify-between">
@@ -305,11 +296,7 @@ export default function FosterDashboardPage() {
       {showSupportModal && (
         <RequestHelpModal
           dog={dog}
-          onClose={() => {
-            setShowSupportModal(false)
-            setSupportModalView("menu")
-          }}
-          initialView={supportModalView}
+          onClose={() => setShowSupportModal(false)}
         />
       )}
       {showAppointmentRequest && (

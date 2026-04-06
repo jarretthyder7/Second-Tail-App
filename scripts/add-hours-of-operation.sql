@@ -1,0 +1,3 @@
+-- Add hours_of_operation column to help_request_settings table
+ALTER TABLE help_request_settings 
+ADD COLUMN IF NOT EXISTS hours_of_operation jsonb DEFAULT '{"monday": {"open": "09:00", "close": "17:00", "closed": false}, "tuesday": {"open": "09:00", "close": "17:00", "closed": false}, "wednesday": {"open": "09:00", "close": "17:00", "closed": false}, "thursday": {"open": "09:00", "close": "17:00", "closed": false}, "friday": {"open": "09:00", "close": "17:00", "closed": false}, "saturday": {"open": "10:00", "close": "14:00", "closed": false}, "sunday": {"open": null, "close": null, "closed": true}}'::jsonb;

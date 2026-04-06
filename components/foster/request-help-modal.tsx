@@ -1,119 +1,29 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { useParams } from "next/navigation"
-
-const Phone = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-  </svg>
-)
-
-const Calendar = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M8 2v4" />
-    <path d="M16 2v4" />
-    <rect width="18" height="18" x="3" y="4" rx="2" />
-    <path d="M3 10h18" />
-  </svg>
-)
-
-const Package = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="m7.5 4.27 9 5.15" />
-    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-    <path d="m3.3 7 8.7 5 8.7-5" />
-    <path d="M12 22V12" />
-  </svg>
-)
-
-const AlertTriangle = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
-    <path d="M12 9v4" />
-    <path d="M12 17h.01" />
-  </svg>
-)
+import { Phone, AlertTriangle, MessageSquare, X, Loader2, CheckCircle2, Clock, AlertCircle } from "lucide-react"
 
 interface RequestHelpModalProps {
   dog: any
   onClose: () => void
-  initialView?: MainOption // Add initialView prop
+  initialView?: "menu" | "call" | "supplies" | "emergency"
 }
 
-type MainOption = "menu" | "call" | "appointment" | "supplies" | "emergency"
-
 export function RequestHelpModal({ dog, onClose, initialView = "menu" }: RequestHelpModalProps) {
-  // Accept initialView prop with default "menu"
   const params = useParams()
   const orgId = params.orgId as string
 
   const [settings, setSettings] = useState<any>(null)
   const [settingsLoading, setSettingsLoading] = useState(true)
-
-  const [currentView, setCurrentView] = useState<MainOption>(initialView) // Initialize with initialView prop instead of hardcoded "menu"
-  const [submitting, setSubmitting] = useState(false)
-  const [success, setSuccess] = useState(false)
-
-  // Form states
-  const [appointmentDate, setAppointmentDate] = useState("")
-  const [appointmentTime, setAppointmentTime] = useState("")
-  const [appointmentReason, setAppointmentReason] = useState("")
-
-  const [suppliesChecklist, setSuppliesChecklist] = useState<string[]>([])
-  const [suppliesNotes, setSuppliesNotes] = useState("")
-  const [suppliesPriority, setSuppliesPriority] = useState("medium")
-
-  const [emergencyDanger, setEmergencyDanger] = useState<boolean | null>(null)
-  const [emergencySymptoms, setEmergencySymptoms] = useState("")
-  const [emergencyWhen, setEmergencyWhen] = useState("")
+  const [activeTab, setActiveTab] = useState<"contacts" | "submit">("contacts")
+  
+  // Help ticket form state
+  const [message, setMessage] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
+  const [submitError, setSubmitError] = useState("")
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -133,116 +43,42 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
     fetchSettings()
   }, [orgId])
 
-  const handleSubmitAppointment = async () => {
-    if (!appointmentReason.trim()) return
-    setSubmitting(true)
+  const handleSubmitHelpRequest = async () => {
+    if (!message.trim()) return
+
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
+    setSubmitError("")
 
     try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) return
-
-      await supabase.from("help_requests").insert({
-        dog_id: dog?.id || null,
-        foster_id: user.id,
-        organization_id: orgId,
-        title: "Appointment Requested",
-        description: appointmentReason,
-        category: "appointment",
-        status: "open",
-        priority: "medium",
+      const response = await fetch(`/api/foster/help-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orgId,
+          message: message.trim(),
+          type: "general",
+          dogId: dog?.id,
+          dogName: dog?.name,
+        }),
       })
 
-      setSubmitting(false)
-      setSuccess(true)
-      setTimeout(() => onClose(), 1500)
-    } catch (error) {
-      setSubmitting(false)
-    }
-  }
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to submit help request")
+      }
 
-  const handleSubmitSupplies = async () => {
-    if (suppliesChecklist.length === 0) return
-    setSubmitting(true)
-
-    try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) return
-
-      const description = `Supplies requested: ${suppliesChecklist.join(", ")}${suppliesNotes ? ". Notes: " + suppliesNotes : ""}`
-
-      await supabase.from("help_requests").insert({
-        dog_id: dog?.id || null,
-        foster_id: user.id,
-        organization_id: orgId,
-        title: `Supply Request: ${suppliesChecklist.join(", ")}`,
-        description,
-        category: "supplies",
-        status: "open",
-        priority: suppliesPriority,
-      })
-
-      setSubmitting(false)
-      setSuccess(true)
-      setTimeout(() => onClose(), 1500)
-    } catch (error) {
-      setSubmitting(false)
-    }
-  }
-
-  const handleSubmitEmergency = async () => {
-    if (!emergencySymptoms.trim()) return
-    setSubmitting(true)
-
-    try {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (!user) return
-
-      const description = `EMERGENCY: ${emergencySymptoms}. Started: ${emergencyWhen}`
-
-      await supabase.from("help_requests").insert({
-        dog_id: dog?.id || null,
-        foster_id: user.id,
-        organization_id: orgId,
-        title: "Emergency Reported",
-        description,
-        category: "emergency",
-        status: "open",
-        priority: "high",
-      })
-
-      setSubmitting(false)
-      setSuccess(true)
-      setTimeout(() => onClose(), 1500)
-    } catch (error) {
-      setSubmitting(false)
-    }
-  }
-
-  const toggleSupply = (supply: string) => {
-    if (suppliesChecklist.includes(supply)) {
-      setSuppliesChecklist(suppliesChecklist.filter((s) => s !== supply))
-    } else {
-      setSuppliesChecklist([...suppliesChecklist, supply])
-    }
-  }
-
-  const handleBackClick = () => {
-    if (initialView !== "menu") {
-      onClose()
-    } else {
-      setCurrentView("menu")
+      setSubmitStatus("success")
+      setMessage("")
+      setTimeout(() => {
+        onClose()
+      }, 2000)
+    } catch (err: any) {
+      setSubmitStatus("error")
+      setSubmitError(err.message)
+      console.error("[v0] Error submitting help request:", err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -251,417 +87,210 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
       <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 text-center">
           <div className="w-8 h-8 border-4 border-[#D76B1A] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-[#5A4A42]">Loading contact information...</p>
+          <p className="text-[#5A4A42]">Loading support options...</p>
         </div>
       </div>
     )
   }
 
-  const contactPhone = settings?.contact_phone || "555-0100"
-  const emergencyPhone = settings?.emergency_phone || "555-0911"
-  const allowedSupplies = settings?.allowed_supply_types || [
-    "Food",
-    "Pee Pads",
-    "Crate",
-    "Toys",
-    "Leash",
-    "Medications",
-    "Other",
-  ]
-  const allowedAppointmentTypes = settings?.allowed_appointment_types || [
-    "Vet Visit",
-    "Checkup",
-    "Vaccination",
-    "Dental",
-    "Emergency",
-  ]
-  const suppliesEnabled = settings?.supplies_request_enabled !== false
-  const appointmentsEnabled = settings?.appointment_booking_enabled !== false
-  const emergencyEnabled = settings?.emergency_support_enabled !== false
-
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-[#F7E2BD] px-6 py-4 flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-bold text-[#5A4A42]">Contact Shelter</h3>
-            <p className="text-sm text-[#2E2E2E]/70">For {dog.name}</p>
-            {/* Use organization name from settings if available, otherwise fallback to mock data */}
-            {settings && settings.organization_name && (
-              <p className="text-xs text-[#2E2E2E]/60">via {settings.organization_name}</p>
-            )}
-            {!settings && dog.organization_name && <p className="text-xs text-[#2E2E2E]/60">via {dog.organization_name}</p>}
+        <div className="bg-gradient-to-r from-[#D76B1A] to-[#E8854A] px-6 py-5 flex items-start justify-between">
+          <div className="text-white">
+            <h3 className="text-xl font-bold">Need Help?</h3>
+            {dog && <p className="text-sm text-white/80 mt-1">For {dog.name}</p>}
           </div>
-          <button onClick={onClose} className="text-[#2E2E2E]/60 hover:text-[#2E2E2E] transition">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button 
+            onClick={onClose} 
+            className="text-white/80 hover:text-white transition p-1"
+          >
+            <X className="w-6 h-6" />
           </button>
         </div>
 
-        <div className="p-6">
-          {success ? (
-            <div className="py-8 text-center">
-              <div className="w-16 h-16 bg-[#E8EFE6] rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-[#5A4A42]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h4 className="text-lg font-semibold text-[#5A4A42] mb-2">Request submitted!</h4>
-              <p className="text-sm text-[#2E2E2E]/70">The rescue team will get back to you soon.</p>
-            </div>
-          ) : (
-            <>
-              {/* Main Menu */}
-              {currentView === "menu" && (
-                <div className="space-y-3">
-                  <p className="text-sm text-[#2E2E2E]/70 mb-4">How can we help you today?</p>
+        {/* Tab Navigation */}
+        <div className="flex border-b border-[#F7E2BD]">
+          <button
+            onClick={() => setActiveTab("contacts")}
+            className={`flex-1 py-3 px-4 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              activeTab === "contacts"
+                ? "text-[#D76B1A] border-b-2 border-[#D76B1A] bg-[#D76B1A]/5"
+                : "text-[#5A4A42]/60 hover:text-[#5A4A42]"
+            }`}
+          >
+            <Phone className="w-4 h-4" />
+            Contact Numbers
+          </button>
+          <button
+            onClick={() => setActiveTab("submit")}
+            className={`flex-1 py-3 px-4 font-semibold text-sm transition-all flex items-center justify-center gap-2 ${
+              activeTab === "submit"
+                ? "text-[#D76B1A] border-b-2 border-[#D76B1A] bg-[#D76B1A]/5"
+                : "text-[#5A4A42]/60 hover:text-[#5A4A42]"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Submit Request
+          </button>
+        </div>
 
-                  {/* Call Team - Always available */}
-                  <button
-                    onClick={() => setCurrentView("call")}
-                    className="w-full flex items-start gap-4 p-4 rounded-xl border-2 border-[#F7E2BD] hover:border-[#5A4A42] hover:bg-[#F7E2BD]/20 transition text-left"
-                  >
-                    <div className="flex-shrink-0 w-12 h-12 bg-[#E8EFE6] rounded-full flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-[#5A4A42]" />
+        {/* Content */}
+        <div className="p-6 overflow-y-auto flex-1">
+          {/* Contacts Tab */}
+          {activeTab === "contacts" && (
+            <div className="space-y-4">
+              {/* Emergency Line */}
+              {settings?.emergency_phone && (
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-semibold text-[#5A4A42]">Call Team</h4>
-                      <p className="text-sm text-[#2E2E2E]/70">Speak directly with our staff</p>
-                    </div>
-                  </button>
-
-                  {appointmentsEnabled && (
-                    <button
-                      onClick={() => setCurrentView("appointment")}
-                      className="w-full flex items-start gap-4 p-4 rounded-xl border-2 border-[#F7E2BD] hover:border-[#5A4A42] hover:bg-[#F7E2BD]/20 transition text-left"
-                    >
-                      <div className="flex-shrink-0 w-12 h-12 bg-[#E8EFE6] rounded-full flex items-center justify-center">
-                        <Calendar className="w-6 h-6 text-[#5A4A42]" />
+                      <h4 className="font-bold text-red-700">Life-Threatening Emergency</h4>
+                      <p className="text-sm text-red-600 mb-3">For immediate emergencies requiring urgent attention</p>
+                      <div className="bg-white p-3 rounded-lg border border-red-200 mb-3">
+                        <p className="text-xs text-red-500 font-semibold uppercase tracking-wide mb-1">Emergency Line</p>
+                        <p className="text-xl font-bold text-red-600 font-mono">{settings.emergency_phone}</p>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-[#5A4A42]">Request Appointment</h4>
-                        <p className="text-sm text-[#2E2E2E]/70">Schedule a vet visit or checkup</p>
-                      </div>
-                    </button>
-                  )}
-
-                  {suppliesEnabled && (
-                    <button
-                      onClick={() => setCurrentView("supplies")}
-                      className="w-full flex items-start gap-4 p-4 rounded-xl border-2 border-[#F7E2BD] hover:border-[#5A4A42] hover:bg-[#F7E2BD]/20 transition text-left"
-                    >
-                      <div className="flex-shrink-0 w-12 h-12 bg-[#E8EFE6] rounded-full flex items-center justify-center">
-                        <Package className="w-6 h-6 text-[#5A4A42]" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-[#5A4A42]">Request Supplies</h4>
-                        <p className="text-sm text-[#2E2E2E]/70">Food, toys, medications, etc.</p>
-                      </div>
-                    </button>
-                  )}
-
-                  {emergencyEnabled && (
-                    <button
-                      onClick={() => setCurrentView("emergency")}
-                      className="w-full flex items-start gap-4 p-4 rounded-xl border-2 border-[#D97A68] bg-[#D97A68]/5 hover:bg-[#D97A68]/10 transition text-left"
-                    >
-                      <div className="flex-shrink-0 w-12 h-12 bg-[#D97A68] rounded-full flex items-center justify-center">
-                        <AlertTriangle className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-[#D97A68]">Emergency</h4>
-                        <p className="text-sm text-[#2E2E2E]/70">Urgent medical or safety issue</p>
-                      </div>
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Call Team View - Use real phone numbers from settings */}
-              {currentView === "call" && (
-                <div className="space-y-4">
-                  <button onClick={handleBackClick} className="text-sm text-[#5A4A42] hover:underline mb-4">
-                    ← Back
-                  </button>
-
-                  <h4 className="font-semibold text-[#5A4A42] mb-3">Contact options:</h4>
-
-                  <a
-                    href={`tel:${contactPhone}`}
-                    className="block p-4 rounded-xl bg-[#F7E2BD]/40 hover:bg-[#F7E2BD]/60 transition"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-[#5A4A42]">Foster Support</p>
-                        <p className="text-sm text-[#2E2E2E]/70">General questions & support</p>
-                      </div>
-                      <span className="text-[#D76B1A] font-semibold">{contactPhone}</span>
-                    </div>
-                  </a>
-
-                  <a
-                    href={`tel:${emergencyPhone}`}
-                    className="block p-4 rounded-xl bg-[#D97A68] hover:bg-[#D97A68]/90 text-white transition"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold">Emergency Line</p>
-                        <p className="text-sm text-white/80">Life-threatening situations</p>
-                      </div>
-                      <span className="font-semibold">{emergencyPhone}</span>
-                    </div>
-                  </a>
-                </div>
-              )}
-
-              {/* Request Appointment View */}
-              {currentView === "appointment" && (
-                <div className="space-y-4">
-                  <button onClick={handleBackClick} className="text-sm text-[#5A4A42] hover:underline mb-4">
-                    ← Back
-                  </button>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Preferred Date</label>
-                    <input
-                      type="date"
-                      value={appointmentDate}
-                      onChange={(e) => setAppointmentDate(e.target.value)}
-                      className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Preferred Time</label>
-                    <input
-                      type="time"
-                      value={appointmentTime}
-                      onChange={(e) => setAppointmentTime(e.target.value)}
-                      className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Reason for Appointment *</label>
-                    <textarea
-                      value={appointmentReason}
-                      onChange={(e) => setAppointmentReason(e.target.value)}
-                      placeholder="Why does your foster dog need to see the vet?"
-                      className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] resize-none min-h-[100px]"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSubmitAppointment}
-                    disabled={submitting || !appointmentReason.trim()}
-                    className="w-full inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
-                  >
-                    {submitting ? "Submitting..." : "Submit Request"}
-                  </button>
-                </div>
-              )}
-
-              {/* Request Supplies View */}
-              {currentView === "supplies" && (
-                <div className="space-y-5">
-                  <button onClick={handleBackClick} className="text-sm text-[#5A4A42] hover:underline">
-                    ← Back
-                  </button>
-
-                  {/* Supply checklist */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#5A4A42] mb-3">
-                      What do you need? <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      {allowedSupplies.map((supply: string) => (
-                        <label
-                          key={supply}
-                          className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-colors ${
-                            suppliesChecklist.includes(supply)
-                              ? "border-[#D76B1A] bg-[#D76B1A]/5"
-                              : "border-[#F7E2BD] hover:border-[#D76B1A]/40 hover:bg-[#F7E2BD]/20"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={suppliesChecklist.includes(supply)}
-                            onChange={() => toggleSupply(supply)}
-                            className="w-4 h-4 rounded accent-[#D76B1A]"
-                          />
-                          <span className="text-sm font-medium text-[#5A4A42]">{supply}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Urgency grid */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#5A4A42] mb-3">Urgency</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { value: "low", label: "Low", desc: "Whenever convenient" },
-                        { value: "medium", label: "Normal", desc: "Within a few days" },
-                        { value: "high", label: "High", desc: "Needed soon" },
-                        { value: "urgent", label: "Urgent", desc: "Need ASAP" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => setSuppliesPriority(opt.value)}
-                          className={`p-3 rounded-xl border-2 text-left transition-colors ${
-                            suppliesPriority === opt.value
-                              ? "border-[#D76B1A] bg-[#D76B1A]/5"
-                              : "border-[#F7E2BD] hover:border-[#D76B1A]/40"
-                          }`}
-                        >
-                          <p className="text-sm font-semibold text-[#5A4A42]">{opt.label}</p>
-                          <p className="text-xs text-[#2E2E2E]/60">{opt.desc}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Notes */}
-                  <div>
-                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Additional Notes</label>
-                    <textarea
-                      value={suppliesNotes}
-                      onChange={(e) => setSuppliesNotes(e.target.value)}
-                      placeholder="Any specific details, brands, quantities, or context..."
-                      className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] resize-none min-h-[80px]"
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSubmitSupplies}
-                    disabled={submitting || suppliesChecklist.length === 0}
-                    className="w-full inline-flex items-center justify-center rounded-xl bg-[#D76B1A] px-4 py-3 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
-                  >
-                    {submitting ? "Submitting..." : "Submit Supply Request"}
-                  </button>
-                </div>
-              )}
-
-              {/* Emergency View */}
-              {currentView === "emergency" && (
-                <div className="space-y-4">
-                  <button onClick={handleBackClick} className="text-sm text-[#5A4A42] hover:underline mb-4">
-                    ← Back
-                  </button>
-
-                  {emergencyDanger === null && (
-                    <div className="space-y-4">
-                      <div className="bg-[#D97A68]/10 border-2 border-[#D97A68] rounded-xl p-4">
-                        <h4 className="font-semibold text-[#D97A68] mb-2">Emergency Assessment</h4>
-                        <p className="text-sm text-[#2E2E2E]/80 mb-4">
-                          Is your foster dog in immediate life-threatening danger?
-                        </p>
-
-                        <div className="space-y-2">
-                          <button
-                            onClick={() => setEmergencyDanger(true)}
-                            className="w-full p-3 rounded-xl bg-[#D97A68] text-white font-semibold hover:bg-[#D97A68]/90 transition"
-                          >
-                            Yes - Immediate Danger
-                          </button>
-                          <button
-                            onClick={() => setEmergencyDanger(false)}
-                            className="w-full p-3 rounded-xl border-2 border-[#D97A68] text-[#D97A68] font-semibold hover:bg-[#D97A68]/10 transition"
-                          >
-                            No - Urgent but Not Life-Threatening
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {emergencyDanger === true && (
-                    <div className="bg-[#D97A68]/10 border-2 border-[#D97A68] rounded-xl p-4 space-y-3">
-                      <h4 className="font-bold text-[#D97A68] text-lg">Call Emergency Vet Now</h4>
-                      <p className="text-sm text-[#2E2E2E]/80">Your foster dog needs immediate veterinary care.</p>
-
-                      <div className="space-y-2 mt-4">
-                        <a
-                          href={`tel:${emergencyPhone}`}
-                          className="block w-full p-4 rounded-xl bg-[#D97A68] text-white font-bold text-center hover:bg-[#D97A68]/90 transition"
-                        >
-                          Call Emergency Line: {emergencyPhone}
-                        </a>
-
-                        <div className="pt-3 border-t border-[#D97A68]/30">
-                          <p className="text-xs font-semibold text-[#5A4A42] mb-2">Emergency Steps:</p>
-                          <ul className="text-xs text-[#2E2E2E]/80 space-y-1 list-disc list-inside">
-                            <li>Keep your dog calm and comfortable</li>
-                            <li>Do not give food or water unless instructed</li>
-                            <li>Prepare to transport immediately</li>
-                            <li>Bring medical records if possible</li>
-                          </ul>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => setEmergencyDanger(null)}
-                        className="w-full text-sm text-[#5A4A42] hover:underline mt-4"
+                      <a
+                        href={`tel:${settings.emergency_phone}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors text-sm"
                       >
-                        ← Go Back
-                      </button>
+                        <Phone className="w-4 h-4" />
+                        Call Now
+                      </a>
                     </div>
-                  )}
-
-                  {emergencyDanger === false && (
-                    <div className="space-y-4">
-                      <div className="bg-[#D97A68]/10 rounded-xl p-3 mb-4">
-                        <p className="text-sm text-[#2E2E2E]/80">
-                          Fill out the form below and we'll respond as quickly as possible.
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-[#5A4A42] mb-2">
-                          What symptoms are you seeing? *
-                        </label>
-                        <textarea
-                          value={emergencySymptoms}
-                          onChange={(e) => setEmergencySymptoms(e.target.value)}
-                          placeholder="Describe what's happening..."
-                          className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A] resize-none min-h-[100px]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-[#5A4A42] mb-2">When did this start? *</label>
-                        <input
-                          type="text"
-                          value={emergencyWhen}
-                          onChange={(e) => setEmergencyWhen(e.target.value)}
-                          placeholder="e.g., 2 hours ago, this morning..."
-                          className="w-full rounded-xl border border-[#F7E2BD] bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
-                        />
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setEmergencyDanger(null)}
-                          className="flex-1 inline-flex items-center justify-center rounded-xl border border-[#5A4A42] bg-white px-4 py-3 text-sm font-semibold text-[#5A4A42] hover:bg-[#F7E2BD]/40 transition"
-                        >
-                          Back
-                        </button>
-                        <button
-                          onClick={handleSubmitEmergency}
-                          disabled={submitting || !emergencySymptoms.trim() || !emergencyWhen.trim()}
-                          className="flex-1 inline-flex items-center justify-center rounded-xl bg-[#D97A68] px-4 py-3 text-sm font-semibold text-white hover:bg-[#D97A68]/90 transition disabled:opacity-50"
-                        >
-                          {submitting ? "Submitting..." : "Submit Emergency"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
-            </>
+
+              {/* Support Line */}
+              {settings?.contact_phone && (
+                <div className="bg-[#F7E2BD]/30 border-2 border-[#F7E2BD] rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-[#D76B1A] rounded-full flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-[#5A4A42]">Foster Support Line</h4>
+                      <p className="text-sm text-[#5A4A42]/70 mb-3">For non-emergency help and general support</p>
+                      <div className="bg-white p-3 rounded-lg border border-[#F7E2BD] mb-3">
+                        <p className="text-xs text-[#D76B1A] font-semibold uppercase tracking-wide mb-1">Support Line</p>
+                        <p className="text-xl font-bold text-[#5A4A42] font-mono">{settings.contact_phone}</p>
+                      </div>
+                      
+                      {/* Hours of Operation */}
+                      {settings?.hours_of_operation && (
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-4 h-4 text-blue-600" />
+                            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Hours of Operation</p>
+                          </div>
+                          <p className="text-sm text-blue-900 whitespace-pre-wrap">{settings.hours_of_operation}</p>
+                        </div>
+                      )}
+                      
+                      <a
+                        href={`tel:${settings.contact_phone}`}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D76B1A] text-white font-semibold hover:bg-[#D76B1A]/90 transition-colors text-sm"
+                      >
+                        <Phone className="w-4 h-4" />
+                        Call Now
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!settings?.emergency_phone && !settings?.contact_phone && (
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-yellow-900 mb-1">Contact information not configured</h4>
+                    <p className="text-sm text-yellow-800">Your rescue has not set up contact numbers yet. Please submit a help request using the form instead.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Submit Request Tab */}
+          {activeTab === "submit" && (
+            <div className="space-y-4">
+              <div className="mb-4">
+                <h4 className="text-lg font-bold text-[#5A4A42] mb-1">Submit a Help Request</h4>
+                <p className="text-sm text-[#5A4A42]/70">
+                  Describe your issue below. We&apos;ll email your rescue and add this to your messages for easy tracking.
+                </p>
+              </div>
+
+              {submitStatus === "success" && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-4 flex gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-green-900">Request submitted successfully!</p>
+                    <p className="text-sm text-green-800">Our team has been notified and will respond shortly.</p>
+                  </div>
+                </div>
+              )}
+
+              {submitStatus === "error" && (
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-red-900">Failed to submit request</p>
+                    <p className="text-sm text-red-800">{submitError}</p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-semibold text-[#5A4A42] mb-2">
+                  How can we help?
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Describe what you need help with..."
+                  rows={5}
+                  className="w-full px-4 py-3 rounded-xl border-2 border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-[#D76B1A] focus:border-[#D76B1A] resize-none text-[#2E2E2E]"
+                  disabled={isSubmitting || submitStatus === "success"}
+                />
+                <p className="text-xs text-[#5A4A42]/60 mt-2">
+                  {message.length} characters
+                </p>
+              </div>
+
+              <button
+                onClick={handleSubmitHelpRequest}
+                disabled={isSubmitting || !message.trim() || submitStatus === "success"}
+                className="w-full py-3 px-4 rounded-xl bg-[#D76B1A] text-white font-semibold hover:bg-[#D76B1A]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : submitStatus === "success" ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Submitted!
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-4 h-4" />
+                    Submit Help Request
+                  </>
+                )}
+              </button>
+
+              <p className="text-xs text-center text-[#5A4A42]/60">
+                For life-threatening emergencies, call {settings?.emergency_phone || "your emergency line"} immediately.
+              </p>
+            </div>
           )}
         </div>
       </div>

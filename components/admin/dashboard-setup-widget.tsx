@@ -35,6 +35,7 @@ export function DashboardSetupWidget({ orgId }: DashboardSetupWidgetProps) {
   const missingCount = SETUP_STEPS.length - completedSteps.length
 
   if (loading) return null
+  // Remove widget after onboarding is complete
   if (completionPercentage === 100) return null
 
   return (

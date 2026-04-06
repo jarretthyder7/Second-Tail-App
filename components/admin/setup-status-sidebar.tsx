@@ -34,6 +34,7 @@ export function SetupStatusSidebar({ orgId }: SetupStatusSidebarProps) {
   const completionPercentage = Math.round((completedSteps.length / SETUP_STEPS.length) * 100)
 
   if (loading) return null
+  // Remove setup sidebar after onboarding is complete
   if (completionPercentage === 100) return null
 
   return (

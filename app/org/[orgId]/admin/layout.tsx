@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { ChevronUp, LogOut, Upload, CheckSquare } from "lucide-react"
+import { ChevronUp, ChevronDown, LogOut, Upload, CheckSquare } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useParams, usePathname } from "next/navigation"
 import { useRouter } from "next/navigation"
@@ -68,6 +68,8 @@ export default function OrgAdminLayout({
   const [setupStatus, setSetupStatus] = useState<string[]>([])
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [fosterToolsOpen, setFosterToolsOpen] = useState(true)
+  const [staffOnlyOpen, setStaffOnlyOpen] = useState(true)
   const userName = profile?.name
 
   const isOrgAdmin = profile?.org_role === "org_admin"
@@ -230,22 +232,6 @@ export default function OrgAdminLayout({
     { href: `/org/${orgId}/admin/animals`, label: "Animals", icon: Dog, adminOnly: false, section: "main" },
     { href: `/org/${orgId}/admin/fosters`, label: "Fosters", icon: Users, adminOnly: false, section: "main" },
     {
-      href: `/org/${orgId}/admin/messages`,
-      label: "Foster Messages",
-      icon: MessageSquare,
-      adminOnly: false,
-      section: "foster",
-      description: "Message foster parents about their animals",
-      badge: unreadMessageCount > 0 ? (unreadMessageCount > 99 ? "99+" : unreadMessageCount.toString()) : undefined,
-    },
-    {
-      href: `/org/${orgId}/admin/reimbursements`,
-      label: "Reimbursements",
-      icon: DollarSign,
-      adminOnly: false,
-      section: "foster",
-    },
-    {
       href: `/org/${orgId}/admin/request-supplies`,
       label: "Supply Requests",
       icon: Package,
@@ -260,16 +246,32 @@ export default function OrgAdminLayout({
       section: "foster",
     },
     {
+      href: `/org/${orgId}/admin/messages`,
+      label: "Foster Messages",
+      icon: MessageSquare,
+      adminOnly: false,
+      section: "foster",
+      description: "Message foster parents about their animals",
+      badge: unreadMessageCount > 0 ? (unreadMessageCount > 99 ? "99+" : unreadMessageCount.toString()) : undefined,
+    },
+    {
       href: `/org/${orgId}/admin/communications`,
       label: "Communications",
       icon: Mail,
       adminOnly: false,
       section: "foster",
     },
+    {
+      href: `/org/${orgId}/admin/reimbursements`,
+      label: "Reimbursements",
+      icon: DollarSign,
+      adminOnly: false,
+      section: "foster",
+    },
     // Staff-only tools (divider before)
     {
       href: `/org/${orgId}/admin/teams`,
-      label: "Staff Teams",
+      label: "Teams",
       icon: UsersRound,
       adminOnly: false,
       section: "staff",
@@ -277,7 +279,7 @@ export default function OrgAdminLayout({
     },
     {
       href: `/org/${orgId}/admin/team-chat`,
-      label: "Staff Chat",
+      label: "Chat",
       icon: MessageSquare,
       adminOnly: false,
       section: "staff",
@@ -407,11 +409,21 @@ export default function OrgAdminLayout({
                 )
               })}
 
-            {/* Foster-facing section */}
-            <div className="pt-2 pb-1">
-              <p className="px-3 text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Foster Tools</p>
+            {/* Foster Tools — collapsible */}
+            <div className="pt-3">
+              <button
+                onClick={() => setFosterToolsOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-cream transition-colors duration-150"
+              >
+                <p className="text-[11px] font-bold text-primary-bark/50 uppercase tracking-widest">Foster Tools</p>
+                {fosterToolsOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-primary-bark/40" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-primary-bark/40" />
+                )}
+              </button>
             </div>
-            {navItems
+            {fosterToolsOpen && navItems
               .filter((item) => item.section === "foster")
               .map((item) => {
                 const Icon = item.icon
@@ -430,12 +442,12 @@ export default function OrgAdminLayout({
                         setMobileMenuOpen(false)
                       }
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
                       isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                        ? "text-primary-bark/30 cursor-not-allowed"
                         : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          ? "bg-primary-orange text-white shadow-sm"
+                          : "text-primary-bark hover:bg-neutral-cream hover:text-primary-bark"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
@@ -443,26 +455,33 @@ export default function OrgAdminLayout({
                     {item.label}
                     {item.badge && (
                       <span
-                        className={`ml-auto min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[10px] font-bold px-1 ${
-                          isActive ? "bg-white text-[#D76B1A]" : "bg-red-500 text-white"
+                        className={`ml-auto min-w-[20px] h-[20px] flex items-center justify-center rounded-full text-[10px] font-bold px-1.5 ${
+                          isActive ? "bg-white text-primary-orange" : "bg-status-error text-white"
                         }`}
                       >
                         {item.badge}
                       </span>
                     )}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isDisabled && <span className="ml-auto text-xs text-primary-bark/25">🔒</span>}
                   </Link>
                 )
               })}
 
-            {/* Staff-only section with divider */}
-            <div className="pt-4 pb-1 border-t border-[#F7E2BD] mt-2">
-              <div className="flex items-center gap-2 px-3">
-                <ChevronUp className="w-3 h-3 text-[#5A4A42]/50" />
-                <p className="text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Staff Only</p>
-              </div>
+            {/* Staff Only — collapsible */}
+            <div className="pt-3 border-t border-border-soft mt-3">
+              <button
+                onClick={() => setStaffOnlyOpen((o) => !o)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-neutral-cream transition-colors duration-150"
+              >
+                <p className="text-[11px] font-bold text-primary-bark/50 uppercase tracking-widest">Staff Only</p>
+                {staffOnlyOpen ? (
+                  <ChevronUp className="w-3.5 h-3.5 text-primary-bark/40" />
+                ) : (
+                  <ChevronDown className="w-3.5 h-3.5 text-primary-bark/40" />
+                )}
+              </button>
             </div>
-            {navItems
+            {staffOnlyOpen && navItems
               .filter((item) => item.section === "staff")
               .map((item) => {
                 const Icon = item.icon
@@ -481,26 +500,25 @@ export default function OrgAdminLayout({
                         setMobileMenuOpen(false)
                       }
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
                       isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                        ? "text-primary-bark/30 cursor-not-allowed"
                         : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          ? "bg-primary-orange text-white shadow-sm"
+                          : "text-primary-bark hover:bg-neutral-cream"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                    {item.staffOnly && !isActive && <ChevronUp className="w-3 h-3 ml-auto text-[#5A4A42]/30" />}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isDisabled && <span className="ml-auto text-xs text-primary-bark/25">🔒</span>}
                   </Link>
                 )
               })}
 
             {/* Admin section */}
-            <div className="pt-4 pb-1 border-t border-[#F7E2BD] mt-2">
-              <p className="px-3 text-xs font-medium text-[#5A4A42]/50 uppercase tracking-wider">Admin</p>
+            <div className="pt-4 pb-1 border-t border-border-soft mt-3">
+              <p className="px-3 text-[11px] font-bold text-primary-bark/50 uppercase tracking-widest">Admin</p>
             </div>
             {navItems
               .filter((item) => item.section === "admin")
@@ -521,35 +539,35 @@ export default function OrgAdminLayout({
                         setMobileMenuOpen(false)
                       }
                     }}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition relative ${
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative ${
                       isDisabled
-                        ? "text-[#5A4A42]/40 cursor-not-allowed hover:bg-[#FBF8F4]/50"
+                        ? "text-primary-bark/30 cursor-not-allowed"
                         : isActive
-                          ? "bg-[#D76B1A] text-white"
-                          : "text-[#5A4A42] hover:bg-[#FBF8F4]"
+                          ? "bg-primary-orange text-white shadow-sm"
+                          : "text-primary-bark hover:bg-neutral-cream"
                     }`}
                     title={item.description || (isDisabled ? "Admin only" : "")}
                   >
                     <Icon className="w-4 h-4" />
                     {item.label}
-                    {isDisabled && <span className="ml-auto text-xs text-[#5A4A42]/30">🔒</span>}
+                    {isDisabled && <span className="ml-auto text-xs text-primary-bark/25">🔒</span>}
                   </Link>
                 )
               })}
           </nav>
 
           {/* User footer display with dropdown menu */}
-          <div className="mt-auto pt-4 border-t border-[#F7E2BD]">
+          <div className="mt-auto pt-4 border-t border-border-soft" style={{ lineHeight: 0 }}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="w-full px-3 py-2 rounded-xl bg-[#FBF8F4] hover:bg-[#F7E2BD] transition cursor-pointer">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#D76B1A] text-white flex items-center justify-center text-sm font-semibold">
+                <button className="w-full px-3 py-4 rounded-lg hover:bg-neutral-cream transition-colors duration-150 cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-primary-orange text-white flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-sm">
                       {userName?.charAt(0).toUpperCase() || "U"}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-[#5A4A42] truncate">{userName || "User"}</p>
-                      <p className="text-xs text-[#5A4A42]/60">
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-sm font-semibold text-primary-bark truncate leading-tight">{userName || "User"}</p>
+                      <p className="text-xs text-primary-bark/50 mt-0.5">
                         {profile?.org_role
                           ? profile.org_role
                               .split("_")
@@ -558,27 +576,27 @@ export default function OrgAdminLayout({
                           : "Staff"}
                       </p>
                     </div>
-                    <ChevronUp className="w-4 h-4 text-[#5A4A42]/60" />
+                    <ChevronUp className="w-4 h-4 text-primary-bark/40 group-data-[state=open]:rotate-180 transition-transform duration-150" />
                   </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 mb-2">
                 <DropdownMenuItem asChild>
-                  <Link href={`/org/${orgId}/admin/settings`} className="flex items-center gap-3 cursor-pointer py-2.5">
-                    <Settings className="w-4 h-4 text-[#5A4A42]" />
-                    <div>
-                      <div className="font-medium text-[#2E2E2E]">Settings</div>
-                      <div className="text-xs text-[#5A4A42]/60">Manage organization</div>
+                  <Link href={`/org/${orgId}/admin/settings`} className="flex items-center gap-3 cursor-pointer px-2 py-2">
+                    <Settings className="w-4 h-4 text-[#5A4A42] flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#2E2E2E]">Settings</div>
+                      <div className="text-xs text-[#5A4A42]/50">Manage organization</div>
                     </div>
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href={`/org/${orgId}/admin/settings?support=true`} className="flex items-center gap-3 cursor-pointer py-2.5">
-                    <HelpCircle className="w-4 h-4 text-[#D76B1A]" />
-                    <div>
-                      <div className="font-medium text-[#2E2E2E]">Support</div>
-                      <div className="text-xs text-[#5A4A42]/60">Get help or report issues</div>
+                  <Link href={`/org/${orgId}/admin/settings?support=true`} className="flex items-center gap-3 cursor-pointer px-2 py-2">
+                    <HelpCircle className="w-4 h-4 text-[#D76B1A] flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#2E2E2E]">Support</div>
+                      <div className="text-xs text-[#5A4A42]/50">Get help or report issues</div>
                     </div>
                   </Link>
                 </DropdownMenuItem>
@@ -589,12 +607,12 @@ export default function OrgAdminLayout({
                     await supabase.auth.signOut()
                     window.location.href = "/login"
                   }}
-                  className="flex items-center gap-3 text-red-600 cursor-pointer py-2.5"
+                  className="flex items-center gap-3 text-red-600 cursor-pointer px-2 py-2"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <div>
-                    <div className="font-medium">Logout</div>
-                    <div className="text-xs text-red-600/60">Sign out of your account</div>
+                  <LogOut className="w-4 h-4 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">Logout</div>
+                    <div className="text-xs text-red-600/50">Sign out of your account</div>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>

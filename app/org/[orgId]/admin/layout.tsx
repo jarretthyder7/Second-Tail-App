@@ -279,7 +279,7 @@ export default function OrgAdminLayout({
     },
     {
       href: `/org/${orgId}/admin/team-chat`,
-      label: "Staff Chat",
+      label: "Chat",
       icon: MessageSquare,
       adminOnly: false,
       section: "staff",

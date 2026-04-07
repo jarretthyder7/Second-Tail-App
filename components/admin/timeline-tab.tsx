@@ -17,6 +17,7 @@ import {
   Home,
 } from "lucide-react"
 import { addTimelineEvent } from "@/lib/timeline-helper"
+import { useToast } from "@/hooks/use-toast"
 
 interface TimelineEvent {
   id: string
@@ -37,10 +38,12 @@ interface TimelineTabProps {
 }
 
 export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
+  const { toast } = useToast()
   const [events, setEvents] = useState<TimelineEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [filterType, setFilterType] = useState<string>("all")
   const [showComposer, setShowComposer] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [newEvent, setNewEvent] = useState({
     title: "",
     description: "",
@@ -86,24 +89,36 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
   async function handleAddEvent() {
     if (!newEvent.title.trim()) return
 
+    setSubmitting(true)
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to add timeline entries.",
+          variant: "destructive",
+        })
+        setSubmitting(false)
+        return
+      }
 
       const eventDate = new Date(newEvent.event_date)
       eventDate.setHours(12, 0, 0, 0) // Set to noon to avoid timezone issues
 
-      await addTimelineEvent({
+      const savedEvent = await addTimelineEvent({
         animal_id: dogId,
-        type: newEvent.event_type,
+        type: newEvent.event_type as any,
         title: newEvent.title,
         description: newEvent.description,
         visible_to_foster: newEvent.visible_to_foster,
         created_by: user.email || user.id,
         event_date: eventDate.toISOString(),
       })
+
+      // Immediately add the new event to the top of the list
+      setEvents((prev) => [savedEvent, ...prev])
 
       setNewEvent({
         title: "",
@@ -113,9 +128,20 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
         event_date: new Date().toISOString().split("T")[0],
       })
       setShowComposer(false)
-      fetchEvents()
-    } catch (error) {
+
+      toast({
+        title: "Timeline entry added",
+        description: "The entry has been saved successfully.",
+      })
+    } catch (error: any) {
       console.error("[v0] Error adding timeline event:", error)
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to add timeline entry. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -266,14 +292,15 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
           <div className="flex gap-2">
             <button
               onClick={handleAddEvent}
-              disabled={!newEvent.title.trim()}
+              disabled={!newEvent.title.trim() || submitting}
               className="px-4 py-2 bg-[#D76B1A] text-white rounded-lg hover:bg-[#D76B1A]/90 transition-colors disabled:opacity-50 text-sm font-semibold"
             >
-              Add Entry
+              {submitting ? "Adding..." : "Add Entry"}
             </button>
             <button
               onClick={() => setShowComposer(false)}
-              className="px-4 py-2 border border-[#5A4A42] text-[#5A4A42] rounded-lg hover:bg-[#F7E2BD]/40 transition-colors text-sm font-semibold"
+              disabled={submitting}
+              className="px-4 py-2 border border-[#5A4A42] text-[#5A4A42] rounded-lg hover:bg-[#F7E2BD]/40 transition-colors text-sm font-semibold disabled:opacity-50"
             >
               Cancel
             </button>

@@ -206,19 +206,28 @@ export function AdminDogTabs({
     try {
       const supabase = createClient()
 
+      // Prepare next_vet_visit - only include if it has a value
+      const nextVetVisit = editedCarePlan.next_vet_visit || editedCarePlan.vetInfo?.nextVisit || null
+
       const carePlanData = {
         dog_id: dog.id,
         medications: editedCarePlan.medications || [],
         feeding_schedule: editedCarePlan.feeding_schedule || editedCarePlan.feedingInstructions || "",
         vet_clinic: editedCarePlan.vet_clinic || editedCarePlan.vetInfo?.clinic || "",
         vet_phone: editedCarePlan.vet_phone || editedCarePlan.vetInfo?.phone || "",
-        next_vet_visit: editedCarePlan.next_vet_visit || editedCarePlan.vetInfo?.nextVisit || null,
+        next_vet_visit: nextVetVisit || null,
         special_instructions: editedCarePlan.special_instructions || editedCarePlan.behaviorNotes || "",
         updated_at: new Date().toISOString(),
       }
 
       // Check if care plan exists
-      const { data: existingPlan } = await supabase.from("care_plans").select("id").eq("dog_id", dog.id).single()
+      const { data: existingPlan, error: fetchError } = await supabase
+        .from("care_plans")
+        .select("id")
+        .eq("dog_id", dog.id)
+        .maybeSingle()
+
+      if (fetchError) throw fetchError
 
       let result
       if (existingPlan) {
@@ -229,14 +238,23 @@ export function AdminDogTabs({
 
       if (result.error) throw result.error
 
+      // Update local state to show the saved care plan immediately
+      setEditedCarePlan(carePlanData)
       setEditingCarePlan(false)
-      onDataUpdate?.()
+
+      // Notify parent components
       onCarePlanChange?.(carePlanData)
-    } catch (error) {
+      onDataUpdate?.()
+
+      toast({
+        title: "Care plan saved",
+        description: "The care plan has been saved successfully.",
+      })
+    } catch (error: any) {
       console.error("[v0] Error saving care plan:", error)
       toast({
         title: "Error",
-        description: "Failed to save care plan.",
+        description: error?.message || "Failed to save care plan. Please try again.",
         variant: "destructive",
       })
     } finally {

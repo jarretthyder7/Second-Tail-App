@@ -510,39 +510,59 @@ function AdminDogDetailContent() {
     setIsUpdatingStage(true)
     setShowStageConfirmation(false)
 
+    const oldStage = dog.stage || "Not set"
+
+    // Optimistically update the dog state so the dropdown and profile card
+    // reflect the new stage immediately — no page refresh required.
+    setDog((prev) => (prev ? { ...prev, stage: pendingStageChange } : prev))
+
     try {
       const supabase = createClient()
-      const oldStage = dog.stage || "Not set"
 
       const { error: updateError } = await supabase.from("dogs").update({ stage: pendingStageChange }).eq("id", dogId)
 
       if (updateError) throw updateError
 
+      // Get the current user's name to attribute the timeline entry correctly.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      let createdByName = "Admin"
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("name, email")
+          .eq("id", user.id)
+          .maybeSingle()
+        createdByName = profile?.name || profile?.email || user.email || "Admin"
+      }
+
+      // Use the correct field names expected by createTimelineEvent and a valid type.
       await createTimelineEvent({
-        animalId: dogId,
-        type: "stage_change",
-        title: `Stage updated to ${pendingStageChange}`,
-        description: `Stage changed from "${oldStage}" to "${pendingStageChange}"`,
-        createdBy: "rescue_admin",
-        visibleToFoster: true,
-        eventDate: new Date().toISOString(),
+        animal_id: dogId,
+        type: "status_change",
+        title: `Stage changed from ${oldStage} to ${pendingStageChange}`,
+        description: `Stage changed from "${oldStage}" to "${pendingStageChange}". Added by ${createdByName}.`,
+        created_by: createdByName,
+        visible_to_foster: true,
+        event_date: new Date().toISOString(),
         metadata: {
           old_stage: oldStage,
           new_stage: pendingStageChange,
         },
       })
 
-      await refetchDog()
-
       toast({
         title: "Stage updated",
         description: `${dog.name}'s stage has been updated to ${pendingStageChange}`,
       })
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Error updating stage:", error)
+      // Roll back the optimistic update if the DB write failed.
+      setDog((prev) => (prev ? { ...prev, stage: oldStage === "Not set" ? undefined : oldStage } : prev))
       toast({
         title: "Error",
-        description: "Failed to update stage. Please try again.",
+        description: error?.message || "Failed to update stage. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -925,6 +945,33 @@ function AdminDogDetailContent() {
                         <p className="text-xs text-[#2E2E2E]/50 mt-1">
                           Intake: {new Date(dog.intake_date).toLocaleDateString()}
                         </p>
+                      )}
+                      {dog.stage && (
+                        <span
+                          className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                            dog.stage === "in_foster"
+                              ? "bg-[#E8EFE6] text-[#5A4A42]"
+                              : dog.stage === "medical_hold"
+                                ? "bg-[#D97A68] text-white"
+                                : dog.stage === "adopted"
+                                  ? "bg-[#8FAF99] text-white"
+                                  : "bg-[#F7E2BD] text-[#5A4A42]"
+                          }`}
+                        >
+                          {dog.stage === "in_foster"
+                            ? "In Foster Care"
+                            : dog.stage === "medical_hold"
+                              ? "Medical Hold"
+                              : dog.stage === "available"
+                                ? "Available"
+                                : dog.stage === "adoption_pending"
+                                  ? "Adoption Pending"
+                                  : dog.stage === "adopted"
+                                    ? "Adopted"
+                                    : dog.stage === "returned"
+                                      ? "Returned to Rescue"
+                                      : dog.stage.charAt(0).toUpperCase() + dog.stage.slice(1)}
+                        </span>
                       )}
                     </div>
                     <button

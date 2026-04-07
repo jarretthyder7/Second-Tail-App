@@ -126,7 +126,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
         title: newEvent.title,
         description: newEvent.description,
         visible_to_foster: newEvent.visible_to_foster,
-        created_by: user.email || user.id,
+        created_by: user.id,
         event_date: eventDate.toISOString(),
       })
 
@@ -147,7 +147,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
         description: "The entry has been saved successfully.",
       })
     } catch (error: any) {
-      console.error("[v0] Error adding timeline event:", error)
+      console.error("[v0] Error adding timeline event:", error?.message || JSON.stringify(error))
       toast({
         title: "Error",
         description: error?.message || "Failed to add timeline entry. Please try again.",

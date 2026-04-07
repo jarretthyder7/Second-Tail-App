@@ -359,7 +359,7 @@ export default function OrgAdminLayout({
           </div>
 
           {/* Nav Items */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto min-h-0">
+          <nav className="flex-1 p-4 space-y-1 overflow-hidden">
             {/* Main section */}
             {navItems
               .filter((item) => item.section === "main")

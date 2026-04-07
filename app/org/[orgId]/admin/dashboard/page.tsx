@@ -403,10 +403,12 @@ function OrgAdminDashboardContent() {
   }
 
   const handleDragStart = (widgetId: string) => {
+    if (!isCustomizing) return
     setDraggedWidget(widgetId)
   }
 
   const handleDragOver = (e: React.DragEvent, targetWidgetId: string) => {
+    if (!isCustomizing) return
     e.preventDefault()
     if (!draggedWidget || !dashboardConfig || draggedWidget === targetWidgetId) return
 
@@ -423,6 +425,7 @@ function OrgAdminDashboardContent() {
   }
 
   const handleDragEnd = () => {
+    if (!isCustomizing) return
     setDraggedWidget(null)
     saveDashboardConfig()
   }

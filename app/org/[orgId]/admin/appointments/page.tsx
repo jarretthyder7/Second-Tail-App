@@ -337,6 +337,29 @@ export default function AppointmentsPage() {
     setShowScheduleModal(true)
   }
 
+  // Map foster request types to valid appointment table types
+  function mapRequestTypeToAppointmentType(requestType: string): string {
+    const mapping: Record<string, string> = {
+      "vet-checkup": "vet_visit",
+      "vaccination": "vet_visit",
+      "emergency-vet": "vet_visit",
+      "behavioral-consult": "training",
+      "grooming": "other",
+      "training": "training",
+      "foster-meeting": "foster_check_in",
+      "other": "other",
+      // Also handle any direct snake_case values that might come through
+      "vet_visit": "vet_visit",
+      "home_check": "home_check",
+      "drop_off": "drop_off",
+      "pick_up": "pick_up",
+      "meet_and_greet": "meet_and_greet",
+      "foster_check_in": "foster_check_in",
+      "team_meeting": "team_meeting",
+    }
+    return mapping[requestType] || "other"
+  }
+
   async function handleConfirmSchedule() {
     if (!formData.title || !formData.start_time || !formData.end_time) {
       toast({
@@ -351,12 +374,16 @@ export default function AppointmentsPage() {
     try {
       const supabase = createClient()
 
+      // Map the appointment type from the request to a valid appointments table value
+      const mappedAppointmentType = mapRequestTypeToAppointmentType(formData.appointment_type)
+
       // 1. Create the appointment
       const appointmentRes = await fetch(`/api/admin/appointments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          appointment_type: mappedAppointmentType,
           organization_id: orgId,
           dog_id: formData.dog_id || null,
           foster_id: formData.foster_id || null,

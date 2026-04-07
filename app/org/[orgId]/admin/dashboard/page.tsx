@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import {
   Inbox,
@@ -157,12 +158,15 @@ export default function OrgAdminDashboard() {
 function OrgAdminDashboardContent() {
   const params = useParams()
   const orgId = params.orgId as string
+  const { toast } = useToast()
+  const newTileRef = useRef<HTMLDivElement | null>(null)
 
   const [isCustomizing, setIsCustomizing] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig | null>(null)
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null)
   const [hoveredWidget, setHoveredWidget] = useState<string | null>(null)
+  const [highlightedWidgetId, setHighlightedWidgetId] = useState<string | null>(null)
 
   const [dogs, setDogs] = useState<any[]>([])
   const [fosters, setFosters] = useState<any[]>([])
@@ -362,7 +366,31 @@ function OrgAdminDashboardContent() {
       ...dashboardConfig,
       widgets: [...dashboardConfig.widgets, newWidget],
     })
+    
+    // Close the modal immediately
     setShowAddModal(false)
+    
+    // Enter customize mode so user can reposition
+    setIsCustomizing(true)
+    
+    // Show toast notification with drag icon
+    toast({
+      title: "Tile added",
+      description: "Drag to reposition",
+    })
+    
+    // Highlight the new tile and scroll to it after a brief delay
+    setHighlightedWidgetId(newWidget.id)
+    setTimeout(() => {
+      const element = document.querySelector(`[data-widget-id="${newWidget.id}"]`)
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" })
+      }
+      // Remove highlight after 2 seconds
+      setTimeout(() => {
+        setHighlightedWidgetId(null)
+      }, 2000)
+    }, 100)
   }
 
   const removeWidget = (widgetId: string) => {
@@ -495,6 +523,7 @@ function OrgAdminDashboardContent() {
   const renderWidget = (widget: Widget) => {
     const isHovered = hoveredWidget === widget.id
     const isDragging = draggedWidget === widget.id
+    const isHighlighted = highlightedWidgetId === widget.id
 
     const baseClasses = `
       group relative bg-white rounded-xl 
@@ -505,6 +534,7 @@ function OrgAdminDashboardContent() {
       }
       ${isHovered && isCustomizing ? "shadow-lg border-primary-orange/60 scale-[1.01] ring-4 ring-primary-orange/10" : "shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"}
       ${isDragging ? "opacity-40 scale-95" : ""}
+      ${isHighlighted ? "animate-highlight-pulse" : ""}
       col-span-12
     `
 
@@ -1432,6 +1462,7 @@ function OrgAdminDashboardContent() {
     return (
       <div
         key={widget.id}
+        data-widget-id={widget.id}
         className={baseClasses}
         draggable={isCustomizing}
         onDragStart={() => handleDragStart(widget.id)}

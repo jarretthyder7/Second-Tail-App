@@ -303,3 +303,22 @@
     transform: translateY(0);
   }
 }
+
+@keyframes highlightPulse {
+  0% {
+    border-color: rgb(215, 107, 26);
+    box-shadow: 0 0 0 3px rgba(215, 107, 26, 0.1);
+  }
+  50% {
+    border-color: rgb(215, 107, 26);
+    box-shadow: 0 0 0 3px rgba(215, 107, 26, 0.2);
+  }
+  100% {
+    border-color: rgba(90, 74, 66, 0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+}
+
+.animate-highlight-pulse {
+  animation: highlightPulse 2s ease-in-out forwards;
+}

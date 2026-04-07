@@ -131,12 +131,13 @@ export default function AppointmentsPage() {
       const { data: teamsData } = await supabase.from("teams").select("*").eq("organization_id", orgId)
       setTeams(teamsData || [])
 
-      // Load pending appointment requests
+      // Load pending appointment requests from help_requests where category = "appointment"
       const { data: requestsData, error: requestsError } = await supabase
-        .from("appointment_requests")
-        .select("*, dog:dogs(name), foster:profiles!appointment_requests_foster_id_fkey(name, email)")
+        .from("help_requests")
+        .select("*, dog:dogs(name), foster:profiles!help_requests_foster_id_fkey(name, email)")
         .eq("organization_id", orgId)
-        .eq("status", "pending")
+        .eq("category", "appointment")
+        .eq("status", "open")
         .order("created_at", { ascending: false })
 
       if (!requestsError) {
@@ -299,37 +300,22 @@ export default function AppointmentsPage() {
   }
 
   async function handleScheduleRequest(request: any) {
-    if (!request.preferred_date || !request.preferred_time) {
-      toast({
-        title: "Error",
-        description: "Request missing date or time information",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Parse the preferred time (format: "HH:MM") and calculate end time as 1 hour later
-    const timeparts = request.preferred_time.split(":")
-    const startHour = parseInt(timeparts[0], 10)
-    const startMinute = timeparts[1] || "00"
+    // Extract appointment type from title (format: "Appointment Request: [type]")
+    const appointmentType = request.title?.replace("Appointment Request: ", "") || "other"
     
-    // Calculate end time (1 hour later, same minute)
-    const endHour = (startHour + 1) % 24
-    const endTime = `${String(endHour).padStart(2, "0")}:${startMinute}`
-
-    // Pre-fill the form with the request data
+    // Pre-fill the form with the request data - admin will set the date/time
     setFormData({
-      title: `${request.appointment_type} for ${request.dog?.name ?? ""}`.trim(),
-      description: request.reason || "",
-      appointment_type: request.appointment_type,
-      start_time: `${request.preferred_date}T${request.preferred_time}`,
-      end_time: `${request.preferred_date}T${endTime}`,
-      dog_id: request.dog_id,
-      foster_id: request.foster_id,
+      title: request.title || "Appointment",
+      description: request.description || "",
+      appointment_type: appointmentType,
+      start_time: "",
+      end_time: "",
+      dog_id: request.dog_id || "",
+      foster_id: request.foster_id || "",
       team_id: "",
       location: "",
       items_needed: "",
-      notes: request.notes || "",
+      notes: "",
     })
     
     // Store the original request so we can update it and send email after saving
@@ -387,30 +373,33 @@ export default function AppointmentsPage() {
       // Map the appointment type from the request to a valid appointments table value
       const mappedAppointmentType = mapRequestTypeToAppointmentType(formData.appointment_type)
 
-      // 1. Create the appointment
-      const appointmentRes = await fetch(`/api/admin/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
+      // 1. Create the appointment directly via Supabase client instead of API
+      const { data: newAppointment, error: insertError } = await supabase
+        .from("appointments")
+        .insert({
+          title: formData.title,
+          description: formData.description || null,
           appointment_type: mappedAppointmentType,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          location: formData.location || null,
+          items_needed: formData.items_needed ? formData.items_needed.split(",").map((i) => i.trim()) : [],
           organization_id: orgId,
           dog_id: formData.dog_id || null,
           foster_id: formData.foster_id || null,
           team_id: formData.team_id || null,
-          items_needed: formData.items_needed ? formData.items_needed.split(",").map((i) => i.trim()) : [],
-        }),
-      })
+          notes: formData.notes || null,
+        })
+        .select()
 
-      if (!appointmentRes.ok) {
-        const error = await appointmentRes.json()
-        throw new Error(error.message || "Failed to create appointment")
+      if (insertError) {
+        throw new Error(insertError.message || "Failed to create appointment")
       }
 
-      // 2. Update the appointment_requests status
+      // 2. Update the help_requests status to "scheduled"
       if (pendingRequestSource) {
         const { error: updateError } = await supabase
-          .from("appointment_requests")
+          .from("help_requests")
           .update({ status: "scheduled" })
           .eq("id", pendingRequestSource.id)
 
@@ -442,10 +431,13 @@ export default function AppointmentsPage() {
             minute: "2-digit",
           })
 
+          // Extract appointment type from title
+          const appointmentType = pendingRequestSource.title?.replace("Appointment Request: ", "") || "Appointment"
+          
           await sendAppointmentConfirmedEmail(
             fosterEmail,
             fosterName,
-            pendingRequestSource.appointment_type,
+            appointmentType,
             confirmedDate,
             confirmedTime,
             formData.notes || "",
@@ -478,7 +470,7 @@ export default function AppointmentsPage() {
       })
       loadData()
     } catch (error: any) {
-      console.error("[v0] Error scheduling appointment:", error)
+      console.error("[v0] Error scheduling appointment:", error?.message || JSON.stringify(error))
       toast({
         title: "Error",
         description: error?.message || "Failed to schedule appointment. Please try again.",
@@ -495,7 +487,7 @@ export default function AppointmentsPage() {
     try {
       const supabase = createClient()
       const { error } = await supabase
-        .from("appointment_requests")
+        .from("help_requests")
         .update({ status: "declined" })
         .eq("id", request.id)
 
@@ -515,20 +507,14 @@ export default function AppointmentsPage() {
       const fosterName = fosterProfile?.name ?? "Foster"
 
       if (fosterEmail) {
-        const requestedDate = request.preferred_date
-          ? new Date(request.preferred_date).toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          : "Not specified"
+        // Extract appointment type from title
+        const appointmentType = request.title?.replace("Appointment Request: ", "") || "Appointment"
 
         await sendAppointmentDeclinedEmail(
           fosterEmail,
           fosterName,
-          request.appointment_type,
-          requestedDate,
+          appointmentType,
+          "As requested",
           orgName,
         )
       }
@@ -854,7 +840,7 @@ export default function AppointmentsPage() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
                         <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-[#5A4A42]">{request.appointment_type}</h3>
+                          <h3 className="font-semibold text-[#5A4A42]">{request.title}</h3>
                           <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Pending</span>
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm text-[#5A4A42]">
@@ -870,21 +856,8 @@ export default function AppointmentsPage() {
                               <span>{request.dog.name}</span>
                             </div>
                           )}
-                          {request.preferred_date && (
-                            <div className="flex items-center gap-2">
-                              <CalendarIcon className="w-4 h-4" />
-                              <span>{request.preferred_date}</span>
-                            </div>
-                          )}
-                          {request.preferred_time && (
-                            <div className="flex items-center gap-2">
-                              <Clock className="w-4 h-4" />
-                              <span>{request.preferred_time}</span>
-                            </div>
-                          )}
                         </div>
-                        {request.reason && <p className="text-sm text-[#5A4A42]/70 mt-2">{request.reason}</p>}
-                        {request.notes && <p className="text-xs text-[#5A4A42]/60 italic">Notes: {request.notes}</p>}
+                        {request.description && <p className="text-sm text-[#5A4A42]/70 mt-2 whitespace-pre-wrap">{request.description}</p>}
                       </div>
                       <div className="flex gap-2">
                         <Button

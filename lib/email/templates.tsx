@@ -265,6 +265,34 @@ export const emailTemplates = {
     `,
   }),
 
+  appointmentConfirmed: (
+    fosterName: string,
+    appointmentType: string,
+    confirmedDate: string,
+    confirmedTime: string,
+    notes: string,
+    orgName: string,
+  ) => ({
+    subject: "Your appointment has been confirmed",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #16a34a;">Your appointment has been confirmed ✓</h1>
+        <p>Hi ${fosterName.split(" ")[0]},</p>
+        <p>Good news — your appointment has been confirmed.</p>
+
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
+          <p style="margin: 6px 0;"><strong>Type:</strong> ${appointmentType}</p>
+          <p style="margin: 6px 0;"><strong>Date:</strong> ${confirmedDate}</p>
+          <p style="margin: 6px 0;"><strong>Time:</strong> ${confirmedTime}</p>
+          ${notes ? `<p style="margin: 6px 0;"><strong>Notes from your rescue:</strong> ${notes}</p>` : ""}
+        </div>
+
+        <p>See you then!</p>
+        <p style="margin-top: 30px; color: #666;">— ${orgName}</p>
+      </div>
+    `,
+  }),
+
   appointmentRequestConfirmation: (
     fosterName: string,
     appointmentType: string,

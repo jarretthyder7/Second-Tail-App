@@ -7,6 +7,7 @@ import { CalendarIcon, Clock, Plus, DogIcon, User, Users, MapPin, X, Settings } 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { sendAppointmentConfirmedEmail } from "@/lib/email/send"
 
 type Appointment = {
   id: string
@@ -61,6 +62,9 @@ export default function AppointmentsPage() {
   const [saving, setSaving] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  // Track which pending request (if any) opened the new-appointment form so we
+  // can mark it confirmed and email the foster after saving.
+  const [pendingRequestSource, setPendingRequestSource] = useState<any | null>(null)
   const [editForm, setEditForm] = useState({
     title: "",
     start_time: "",
@@ -164,22 +168,68 @@ export default function AppointmentsPage() {
       })
 
       if (res.ok) {
+        // Mark setup step complete
         try {
           await fetch(`/api/admin/setup-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              orgId,
-              stepId: "first_appointment",
-              isCompleted: true,
-            }),
+            body: JSON.stringify({ orgId, stepId: "first_appointment", isCompleted: true }),
           })
           window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "first_appointment" } }))
         } catch (error) {
           console.error("[v0] Error marking setup step complete:", error)
         }
 
+        // If this appointment was scheduled from a pending foster request,
+        // mark the request as confirmed and email the foster.
+        if (pendingRequestSource) {
+          const supabase = createClient()
+
+          // 1. Mark the appointment_requests row as confirmed
+          await supabase
+            .from("appointment_requests")
+            .update({ status: "confirmed" })
+            .eq("id", pendingRequestSource.id)
+
+          // 2. Fetch the org name for the email signature
+          const { data: orgData } = await supabase
+            .from("organizations")
+            .select("name")
+            .eq("id", orgId)
+            .maybeSingle()
+          const orgName = orgData?.name || "Your Rescue"
+
+          // 3. Fetch the foster's email address from their profile
+          const fosterProfile = pendingRequestSource.foster as { name?: string; email?: string } | undefined
+          const fosterEmail = fosterProfile?.email ?? ""
+          const fosterName = fosterProfile?.name ?? "Foster"
+
+          if (fosterEmail) {
+            const confirmedDate = new Date(formData.start_time).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+            const confirmedTime = new Date(formData.start_time).toLocaleTimeString("en-US", {
+              hour: "numeric",
+              minute: "2-digit",
+            })
+
+            await sendAppointmentConfirmedEmail(
+              fosterEmail,
+              fosterName,
+              pendingRequestSource.appointment_type,
+              confirmedDate,
+              confirmedTime,
+              formData.notes || "",
+              orgName,
+            )
+          }
+        }
+
         setShowNewForm(false)
+        setPendingRequestSource(null)
         setFormData({
           title: "",
           description: "",
@@ -246,9 +296,9 @@ export default function AppointmentsPage() {
   }
 
   async function handleScheduleRequest(request: any) {
-    // Open new appointment form with pre-filled data from request
+    // Pre-fill the new appointment form with data from the foster's request
     setFormData({
-      title: `${request.appointment_type} for ${request.dog.name}`,
+      title: `${request.appointment_type} for ${request.dog?.name ?? ""}`.trim(),
       description: request.reason || "",
       appointment_type: request.appointment_type,
       start_time: request.preferred_date ? `${request.preferred_date}T${request.preferred_time || "10:00"}` : "",
@@ -260,6 +310,8 @@ export default function AppointmentsPage() {
       items_needed: "",
       notes: request.notes || "",
     })
+    // Remember the originating request so we can email the foster after saving
+    setPendingRequestSource(request)
     setShowNewForm(true)
   }
 
@@ -1026,7 +1078,7 @@ export default function AppointmentsPage() {
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-[#F7E2BD]">
-                <Button onClick={() => setShowNewForm(false)} variant="outline">
+                <Button onClick={() => { setShowNewForm(false); setPendingRequestSource(null) }} variant="outline">
                   Cancel
                 </Button>
                 <Button onClick={handleCreateAppointment} disabled={saving} className="bg-[#D76B1A] text-white">

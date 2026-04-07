@@ -134,6 +134,27 @@ export async function sendSupplyRequestEmail(
   return sendEmail({ to: rescueEmail, ...template })
 }
 
+// Send confirmation email to foster when admin schedules their appointment request
+export async function sendAppointmentConfirmedEmail(
+  fosterEmail: string,
+  fosterName: string,
+  appointmentType: string,
+  confirmedDate: string,
+  confirmedTime: string,
+  notes: string,
+  orgName: string,
+) {
+  const template = emailTemplates.appointmentConfirmed(
+    fosterName,
+    appointmentType,
+    confirmedDate,
+    confirmedTime,
+    notes,
+    orgName,
+  )
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
 // Send appointment request confirmation to foster
 export async function sendAppointmentRequestConfirmationEmail(
   fosterEmail: string,

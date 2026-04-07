@@ -338,17 +338,27 @@ export default function AppointmentsPage() {
   }
 
   // Map foster request types to valid appointment table types
+  // The appointments table constraint allows: 'vet_visit', 'home_check', 'drop_off', 'pick_up', 'training', 'meet_and_greet', 'foster_check_in', 'team_meeting', 'other'
   function mapRequestTypeToAppointmentType(requestType: string): string {
+    // Normalize the input to lowercase for consistent matching
+    const normalized = (requestType || "").toLowerCase().trim()
+    
     const mapping: Record<string, string> = {
-      "vet-checkup": "vet_visit",
+      // Title Case values from DEFAULT_APPOINTMENT_TYPES in appointment-request-modal.tsx
+      "vet visit": "vet_visit",
+      "checkup": "vet_visit",
       "vaccination": "vet_visit",
+      "dental": "vet_visit",
+      "emergency": "vet_visit",
+      // Kebab-case values (legacy or from other forms)
+      "vet-checkup": "vet_visit",
       "emergency-vet": "vet_visit",
       "behavioral-consult": "training",
       "grooming": "other",
       "training": "training",
       "foster-meeting": "foster_check_in",
       "other": "other",
-      // Also handle any direct snake_case values that might come through
+      // Direct snake_case values (already valid)
       "vet_visit": "vet_visit",
       "home_check": "home_check",
       "drop_off": "drop_off",
@@ -357,7 +367,7 @@ export default function AppointmentsPage() {
       "foster_check_in": "foster_check_in",
       "team_meeting": "team_meeting",
     }
-    return mapping[requestType] || "other"
+    return mapping[normalized] || "other"
   }
 
   async function handleConfirmSchedule() {

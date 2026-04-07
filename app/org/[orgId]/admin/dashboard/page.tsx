@@ -1425,6 +1425,10 @@ function OrgAdminDashboardContent() {
       }
     }
 
+    // Don't render the wrapper if the widget has no content (e.g. unknown type)
+    const content = widgetContent()
+    if (!content) return null
+
     return (
       <div
         key={widget.id}
@@ -1444,7 +1448,7 @@ function OrgAdminDashboardContent() {
             </div>
           </div>
         )}
-        {widgetContent()}
+        {content}
       </div>
     )
   }

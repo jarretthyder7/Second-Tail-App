@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 import { CalendarIcon, Clock, Plus, DogIcon, User, Users, MapPin, X, Settings } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -49,6 +50,7 @@ type Dog = {
 export default function AppointmentsPage() {
   const params = useParams()
   const orgId = params.orgId as string
+  const { toast } = useToast()
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [pendingRequests, setPendingRequests] = useState<any[]>([])
@@ -57,6 +59,7 @@ export default function AppointmentsPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [showNewForm, setShowNewForm] = useState(false)
+  const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [selectedView, setSelectedView] = useState<"calendar" | "list" | "requests">("calendar")
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [saving, setSaving] = useState(false)
@@ -296,13 +299,31 @@ export default function AppointmentsPage() {
   }
 
   async function handleScheduleRequest(request: any) {
-    // Pre-fill the new appointment form with data from the foster's request
+    if (!request.preferred_date || !request.preferred_time) {
+      toast({
+        title: "Error",
+        description: "Request missing date or time information",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Parse the preferred time (format: "HH:MM") and calculate end time as 1 hour later
+    const timeparts = request.preferred_time.split(":")
+    const startHour = parseInt(timeparts[0], 10)
+    const startMinute = timeparts[1] || "00"
+    
+    // Calculate end time (1 hour later, same minute)
+    const endHour = (startHour + 1) % 24
+    const endTime = `${String(endHour).padStart(2, "0")}:${startMinute}`
+
+    // Pre-fill the form with the request data
     setFormData({
       title: `${request.appointment_type} for ${request.dog?.name ?? ""}`.trim(),
       description: request.reason || "",
       appointment_type: request.appointment_type,
-      start_time: request.preferred_date ? `${request.preferred_date}T${request.preferred_time || "10:00"}` : "",
-      end_time: request.preferred_date ? `${request.preferred_date}T${request.preferred_time ? String(parseInt(request.preferred_time) + 1).padStart(2, "0") + ":00" : "11:00"}` : "",
+      start_time: `${request.preferred_date}T${request.preferred_time}`,
+      end_time: `${request.preferred_date}T${endTime}`,
       dog_id: request.dog_id,
       foster_id: request.foster_id,
       team_id: "",
@@ -310,9 +331,162 @@ export default function AppointmentsPage() {
       items_needed: "",
       notes: request.notes || "",
     })
-    // Remember the originating request so we can email the foster after saving
+    
+    // Store the original request so we can update it and send email after saving
     setPendingRequestSource(request)
-    setShowNewForm(true)
+    setShowScheduleModal(true)
+  }
+
+  // Map foster request types to valid appointment table types
+  // The appointments table constraint allows: 'vet_visit', 'home_check', 'drop_off', 'pick_up', 'training', 'meet_and_greet', 'foster_check_in', 'team_meeting', 'other'
+  function mapRequestTypeToAppointmentType(requestType: string): string {
+    // Normalize the input to lowercase for consistent matching
+    const normalized = (requestType || "").toLowerCase().trim()
+    
+    const mapping: Record<string, string> = {
+      // Title Case values from DEFAULT_APPOINTMENT_TYPES in appointment-request-modal.tsx
+      "vet visit": "vet_visit",
+      "checkup": "vet_visit",
+      "vaccination": "vet_visit",
+      "dental": "vet_visit",
+      "emergency": "vet_visit",
+      // Kebab-case values (legacy or from other forms)
+      "vet-checkup": "vet_visit",
+      "emergency-vet": "vet_visit",
+      "behavioral-consult": "training",
+      "grooming": "other",
+      "training": "training",
+      "foster-meeting": "foster_check_in",
+      "other": "other",
+      // Direct snake_case values (already valid)
+      "vet_visit": "vet_visit",
+      "home_check": "home_check",
+      "drop_off": "drop_off",
+      "pick_up": "pick_up",
+      "meet_and_greet": "meet_and_greet",
+      "foster_check_in": "foster_check_in",
+      "team_meeting": "team_meeting",
+    }
+    return mapping[normalized] || "other"
+  }
+
+  async function handleConfirmSchedule() {
+    if (!formData.title || !formData.start_time || !formData.end_time) {
+      toast({
+        title: "Error",
+        description: "Please fill in required fields",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setSaving(true)
+    try {
+      const supabase = createClient()
+
+      // Map the appointment type from the request to a valid appointments table value
+      const mappedAppointmentType = mapRequestTypeToAppointmentType(formData.appointment_type)
+
+      // 1. Create the appointment
+      const appointmentRes = await fetch(`/api/admin/appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          appointment_type: mappedAppointmentType,
+          organization_id: orgId,
+          dog_id: formData.dog_id || null,
+          foster_id: formData.foster_id || null,
+          team_id: formData.team_id || null,
+          items_needed: formData.items_needed ? formData.items_needed.split(",").map((i) => i.trim()) : [],
+        }),
+      })
+
+      if (!appointmentRes.ok) {
+        const error = await appointmentRes.json()
+        throw new Error(error.message || "Failed to create appointment")
+      }
+
+      // 2. Update the appointment_requests status
+      if (pendingRequestSource) {
+        const { error: updateError } = await supabase
+          .from("appointment_requests")
+          .update({ status: "scheduled" })
+          .eq("id", pendingRequestSource.id)
+
+        if (updateError) throw updateError
+
+        // 3. Send confirmation email to foster
+        const fosterProfile = pendingRequestSource.foster as { name?: string; email?: string } | undefined
+        const fosterEmail = fosterProfile?.email ?? ""
+        const fosterName = fosterProfile?.name ?? "Foster"
+
+        if (fosterEmail) {
+          // Fetch org name for email signature
+          const { data: orgData } = await supabase
+            .from("organizations")
+            .select("name")
+            .eq("id", orgId)
+            .maybeSingle()
+          const orgName = orgData?.name || "Your Rescue"
+
+          // Format the confirmed date and time
+          const confirmedDate = new Date(formData.start_time).toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+          const confirmedTime = new Date(formData.start_time).toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+          })
+
+          await sendAppointmentConfirmedEmail(
+            fosterEmail,
+            fosterName,
+            pendingRequestSource.appointment_type,
+            confirmedDate,
+            confirmedTime,
+            formData.notes || "",
+            orgName,
+          )
+        }
+      }
+
+      // 4. Show success toast
+      toast({
+        title: "Appointment scheduled",
+        description: "The appointment has been confirmed and the foster has been notified.",
+      })
+
+      // 5. Close the modal and reload data
+      setShowScheduleModal(false)
+      setPendingRequestSource(null)
+      setFormData({
+        title: "",
+        description: "",
+        appointment_type: "foster_check_in",
+        start_time: "",
+        end_time: "",
+        dog_id: "",
+        foster_id: "",
+        team_id: "",
+        location: "",
+        items_needed: "",
+        notes: "",
+      })
+      loadData()
+    } catch (error: any) {
+      console.error("[v0] Error scheduling appointment:", error)
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to schedule appointment. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleDeclineRequest(request: any) {
@@ -950,6 +1124,107 @@ export default function AppointmentsPage() {
                     {savingEdit ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Schedule Request Modal */}
+      {showScheduleModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-auto">
+            <CardHeader className="border-b border-[#F7E2BD]">
+              <div className="flex items-center justify-between">
+                <CardTitle>Schedule Appointment</CardTitle>
+                <button onClick={() => setShowScheduleModal(false)} className="p-2 hover:bg-[#F7E2BD] rounded">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <Label>Title</Label>
+                <input
+                  type="text"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Start Time</Label>
+                  <input
+                    type="datetime-local"
+                    value={formData.start_time}
+                    onChange={(e) => {
+                      const startTime = e.target.value
+                      // Auto-calculate end time as 1 hour later
+                      if (startTime) {
+                        const start = new Date(startTime)
+                        const end = new Date(start.getTime() + 60 * 60 * 1000)
+                        const endFormatted = end.toISOString().slice(0, 16)
+                        setFormData({ 
+                          ...formData, 
+                          start_time: startTime,
+                          end_time: endFormatted
+                        })
+                      } else {
+                        setFormData({ ...formData, start_time: startTime })
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                  />
+                </div>
+                <div>
+                  <Label>End Time</Label>
+                  <input
+                    type="datetime-local"
+                    value={formData.end_time}
+                    onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Location</Label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                />
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#F7E2BD] rounded-lg"
+                  rows={2}
+                />
+              </div>
+              <div className="flex gap-3 pt-4 border-t border-[#F7E2BD]">
+                <Button onClick={() => setShowScheduleModal(false)} variant="outline">
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleConfirmSchedule} 
+                  disabled={saving}
+                  className="bg-[#D76B1A] text-white"
+                >
+                  {saving ? "Scheduling..." : "Schedule Appointment"}
+                </Button>
               </div>
             </CardContent>
           </Card>

@@ -7,7 +7,7 @@ import { CalendarIcon, Clock, Plus, DogIcon, User, Users, MapPin, X, Settings } 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { sendAppointmentConfirmedEmail } from "@/lib/email/send"
+import { sendAppointmentConfirmedEmail, sendAppointmentDeclinedEmail } from "@/lib/email/send"
 
 type Appointment = {
   id: string
@@ -315,19 +315,51 @@ export default function AppointmentsPage() {
     setShowNewForm(true)
   }
 
-  async function handleDeclineRequest(requestId: string) {
-    if (!confirm("Decline this appointment request? The foster will not be notified.")) return
+  async function handleDeclineRequest(request: any) {
+    if (!confirm("Decline this appointment request? The foster will be notified by email.")) return
 
     try {
       const supabase = createClient()
       const { error } = await supabase
         .from("appointment_requests")
         .update({ status: "declined" })
-        .eq("id", requestId)
+        .eq("id", request.id)
 
-      if (!error) {
-        loadData()
+      if (error) throw error
+
+      // Fetch org name for the email signature
+      const { data: orgData } = await supabase
+        .from("organizations")
+        .select("name")
+        .eq("id", orgId)
+        .maybeSingle()
+      const orgName = orgData?.name || "Your Rescue"
+
+      // Fetch the foster's email from their profile
+      const fosterProfile = request.foster as { name?: string; email?: string } | undefined
+      const fosterEmail = fosterProfile?.email ?? ""
+      const fosterName = fosterProfile?.name ?? "Foster"
+
+      if (fosterEmail) {
+        const requestedDate = request.preferred_date
+          ? new Date(request.preferred_date).toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "Not specified"
+
+        await sendAppointmentDeclinedEmail(
+          fosterEmail,
+          fosterName,
+          request.appointment_type,
+          requestedDate,
+          orgName,
+        )
       }
+
+      loadData()
     } catch (error) {
       console.error("[v0] Error declining request:", error)
     }
@@ -688,7 +720,7 @@ export default function AppointmentsPage() {
                           Schedule It
                         </Button>
                         <Button
-                          onClick={() => handleDeclineRequest(request.id)}
+                          onClick={() => handleDeclineRequest(request)}
                           variant="outline"
                           className="text-gray-600 text-sm"
                         >

@@ -155,6 +155,18 @@ export async function sendAppointmentConfirmedEmail(
   return sendEmail({ to: fosterEmail, ...template })
 }
 
+// Send decline notification to foster when admin declines their appointment request
+export async function sendAppointmentDeclinedEmail(
+  fosterEmail: string,
+  fosterName: string,
+  appointmentType: string,
+  requestedDate: string,
+  orgName: string,
+) {
+  const template = emailTemplates.appointmentDeclined(fosterName, appointmentType, requestedDate, orgName)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
 // Send appointment request confirmation to foster
 export async function sendAppointmentRequestConfirmationEmail(
   fosterEmail: string,

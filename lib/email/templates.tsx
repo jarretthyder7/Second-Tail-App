@@ -265,6 +265,30 @@ export const emailTemplates = {
     `,
   }),
 
+  appointmentDeclined: (
+    fosterName: string,
+    appointmentType: string,
+    requestedDate: string,
+    orgName: string,
+  ) => ({
+    subject: "Update on your appointment request",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #5A4A42;">Update on your appointment request</h1>
+        <p>Hi ${fosterName.split(" ")[0]},</p>
+        <p>Your recent appointment request wasn't able to be scheduled at this time.</p>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9ca3af;">
+          <p style="margin: 6px 0;"><strong>Type:</strong> ${appointmentType}</p>
+          <p style="margin: 6px 0;"><strong>Requested date:</strong> ${requestedDate}</p>
+        </div>
+
+        <p>Please reach out to your rescue directly if you'd like to find another time, or submit a new request through the app.</p>
+        <p style="margin-top: 30px; color: #666;">— ${orgName}</p>
+      </div>
+    `,
+  }),
+
   appointmentConfirmed: (
     fosterName: string,
     appointmentType: string,

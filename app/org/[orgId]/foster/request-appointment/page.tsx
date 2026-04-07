@@ -3,22 +3,23 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Calendar, Loader2 } from "lucide-react"
+import { ArrowLeft, Calendar, Loader2, CheckCircle2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
 
 export default function RequestAppointmentPage() {
   const params = useParams()
-  const router = useRouter()
   const orgId = params.orgId as string
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const [formData, setFormData] = useState({
     appointmentType: "",
     preferredDate: "",
@@ -32,24 +33,84 @@ export default function RequestAppointmentPage() {
     setLoading(true)
 
     try {
-      // TODO: Submit to actual API endpoint
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-      toast({
-        title: "Request submitted",
-        description: "Your appointment request has been sent to the rescue team.",
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to request an appointment.",
+          variant: "destructive",
+        })
+        setLoading(false)
+        return
+      }
+
+      // Build a structured description with all appointment details
+      const description = [
+        `Appointment Type: ${formData.appointmentType}`,
+        `Preferred Date: ${formData.preferredDate}`,
+        `Preferred Time: ${formData.preferredTime}`,
+        `Reason: ${formData.reason}`,
+        formData.notes ? `Notes: ${formData.notes}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n")
+
+      // Insert into help_requests with category = "appointment"
+      const { error } = await supabase.from("help_requests").insert({
+        organization_id: orgId,
+        foster_id: user.id,
+        category: "appointment",
+        title: `Appointment Request: ${formData.appointmentType}`,
+        description,
+        status: "open",
+        priority: "medium",
       })
 
-      router.push(`/org/${orgId}/foster/dashboard`)
-    } catch (error) {
+      if (error) {
+        throw error
+      }
+
+      setSubmitted(true)
+    } catch (error: any) {
+      console.error("Failed to submit appointment request:", error)
       toast({
         title: "Error",
-        description: "Failed to submit request. Please try again.",
+        description: error?.message || "Failed to submit your appointment request. Please try again.",
         variant: "destructive",
       })
     } finally {
       setLoading(false)
     }
+  }
+
+  // Show confirmation screen after successful submission
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-background-soft p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="pt-12 pb-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-primary-bark mb-3">Request Submitted</h2>
+              <p className="text-text-muted mb-8">
+                Your appointment request has been submitted. Your rescue will be in touch soon.
+              </p>
+              <Link href={`/org/${orgId}/foster/dashboard`}>
+                <Button className="bg-primary-orange hover:bg-primary-orange/90 text-white">
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -149,14 +210,11 @@ export default function RequestAppointmentPage() {
                   {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Submit Request
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push(`/org/${orgId}/foster/dashboard`)}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
+                <Link href={`/org/${orgId}/foster/dashboard`}>
+                  <Button type="button" variant="outline" disabled={loading}>
+                    Cancel
+                  </Button>
+                </Link>
               </div>
             </form>
           </CardContent>

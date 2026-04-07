@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useParams } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import {
   Inbox,
@@ -35,6 +36,11 @@ type WidgetType =
   | "todays-schedule"       // Renamed from upcoming-appointments
   | "team-load"             // Optional - renamed from team-workload-overview
   | "outreach-communications" // Optional - for announcements
+  | "pending-requests"      // NEW: Appointment + supply requests
+  | "recent-activity"       // NEW: Last 5 actions
+  | "animals-without-updates" // NEW: Animals needing log entries
+  | "reimbursements-pending" // NEW: Pending reimbursement requests
+  | "foster-checkins-needed" // NEW: Fosters needing check-ins
 
 type Widget = {
   id: string
@@ -80,6 +86,20 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       defaultSpan: 12,
       isDefault: false,
     },
+    {
+      id: "pending-requests",
+      name: "Pending Requests",
+      description: "Appointment + supply requests waiting for your response",
+      defaultSpan: 12,
+      isDefault: false,
+    },
+    {
+      id: "recent-activity",
+      name: "Recent Activity",
+      description: "What happened in the last 24 hours",
+      defaultSpan: 12,
+      isDefault: false,
+    },
   ],
   "Advanced Tiles": [
     {
@@ -93,6 +113,27 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       id: "outreach-communications",
       name: "Outreach & Communications",
       description: "Foster announcements and adoption pushes",
+      defaultSpan: 12,
+      isDefault: false,
+    },
+    {
+      id: "animals-without-updates",
+      name: "Animals Without Updates",
+      description: "Animals that haven't had a log entry in 3+ days",
+      defaultSpan: 12,
+      isDefault: false,
+    },
+    {
+      id: "reimbursements-pending",
+      name: "Reimbursements Pending",
+      description: "Foster reimbursement requests waiting for approval",
+      defaultSpan: 12,
+      isDefault: false,
+    },
+    {
+      id: "foster-checkins-needed",
+      name: "Foster Check-ins Needed",
+      description: "Fosters who haven't logged an update recently",
       defaultSpan: 12,
       isDefault: false,
     },
@@ -117,18 +158,26 @@ export default function OrgAdminDashboard() {
 function OrgAdminDashboardContent() {
   const params = useParams()
   const orgId = params.orgId as string
+  const { toast } = useToast()
+  const newTileRef = useRef<HTMLDivElement | null>(null)
 
   const [isCustomizing, setIsCustomizing] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [dashboardConfig, setDashboardConfig] = useState<DashboardConfig | null>(null)
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null)
   const [hoveredWidget, setHoveredWidget] = useState<string | null>(null)
+  const [highlightedWidgetId, setHighlightedWidgetId] = useState<string | null>(null)
 
   const [dogs, setDogs] = useState<any[]>([])
   const [fosters, setFosters] = useState<any[]>([])
   const [helpRequests, setHelpRequests] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
   const [conversations, setConversations] = useState<any[]>([])
+  const [appointmentRequests, setAppointmentRequests] = useState<any[]>([])
+  const [supplyRequests, setSupplyRequests] = useState<any[]>([])
+  const [recentActivity, setRecentActivity] = useState<any[]>([])
+  const [reimbursements, setReimbursements] = useState<any[]>([])
+  const [dailyLogs, setDailyLogs] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
 
@@ -207,20 +256,26 @@ function OrgAdminDashboardContent() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [dogsRes, fostersRes, requestsRes, appointmentsRes, conversationsRes] = await Promise.all([
+        const [dogsRes, fostersRes, requestsRes, appointmentsRes, conversationsRes, appointmentReqRes, reimbursementsRes, dailyLogsRes] = await Promise.all([
           fetch(`/api/admin/dogs?orgId=${orgId}`),
           fetch(`/api/admin/fosters?orgId=${orgId}`),
           fetch(`/api/admin/help-requests?orgId=${orgId}`),
           fetch(`/api/admin/appointments?orgId=${orgId}`),
           fetch(`/api/admin/conversations?orgId=${orgId}`),
+          fetch(`/api/admin/appointment-requests?orgId=${orgId}`),
+          fetch(`/api/admin/reimbursements?orgId=${orgId}`),
+          fetch(`/api/admin/daily-logs?orgId=${orgId}`),
         ])
 
-        const [dogsData, fostersData, requestsData, appointmentsData, conversationsData] = await Promise.all([
+        const [dogsData, fostersData, requestsData, appointmentsData, conversationsData, appointmentReqData, reimbursementsData, dailyLogsData] = await Promise.all([
           dogsRes.ok ? dogsRes.json() : { dogs: [] },
           fostersRes.ok ? fostersRes.json() : { fosters: [] },
           requestsRes.ok ? requestsRes.json() : { requests: [] },
           appointmentsRes.ok ? appointmentsRes.json() : { appointments: [] },
           conversationsRes.ok ? conversationsRes.json() : { conversations: [] },
+          appointmentReqRes.ok ? appointmentReqRes.json() : { requests: [] },
+          reimbursementsRes.ok ? reimbursementsRes.json() : { reimbursements: [] },
+          dailyLogsRes.ok ? dailyLogsRes.json() : { logs: [] },
         ])
 
         setDogs(dogsData.dogs || [])
@@ -228,6 +283,9 @@ function OrgAdminDashboardContent() {
         setHelpRequests(requestsData.requests || [])
         setAppointments(appointmentsData.appointments || [])
         setConversations(conversationsData.conversations || [])
+        setAppointmentRequests(appointmentReqData.requests || [])
+        setReimbursements(reimbursementsData.reimbursements || [])
+        setDailyLogs(dailyLogsData.logs || [])
 
         const inShelter = dogsData.dogs.filter(d => d.status !== "adopted" && !d.foster_id).length
         const inFoster = dogsData.dogs.filter(d => d.foster_id).length
@@ -308,7 +366,31 @@ function OrgAdminDashboardContent() {
       ...dashboardConfig,
       widgets: [...dashboardConfig.widgets, newWidget],
     })
+    
+    // Close the modal immediately
     setShowAddModal(false)
+    
+    // Enter customize mode so user can reposition
+    setIsCustomizing(true)
+    
+    // Show toast notification with drag icon
+    toast({
+      title: "Tile added",
+      description: "Drag to reposition",
+    })
+    
+    // Highlight the new tile and scroll to it after a brief delay
+    setHighlightedWidgetId(newWidget.id)
+    setTimeout(() => {
+      const element = document.querySelector(`[data-widget-id="${newWidget.id}"]`)
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" })
+      }
+      // Remove highlight after 2 seconds
+      setTimeout(() => {
+        setHighlightedWidgetId(null)
+      }, 2000)
+    }, 100)
   }
 
   const removeWidget = (widgetId: string) => {
@@ -321,10 +403,12 @@ function OrgAdminDashboardContent() {
   }
 
   const handleDragStart = (widgetId: string) => {
+    if (!isCustomizing) return
     setDraggedWidget(widgetId)
   }
 
   const handleDragOver = (e: React.DragEvent, targetWidgetId: string) => {
+    if (!isCustomizing) return
     e.preventDefault()
     if (!draggedWidget || !dashboardConfig || draggedWidget === targetWidgetId) return
 
@@ -341,6 +425,7 @@ function OrgAdminDashboardContent() {
   }
 
   const handleDragEnd = () => {
+    if (!isCustomizing) return
     setDraggedWidget(null)
     saveDashboardConfig()
   }
@@ -441,6 +526,7 @@ function OrgAdminDashboardContent() {
   const renderWidget = (widget: Widget) => {
     const isHovered = hoveredWidget === widget.id
     const isDragging = draggedWidget === widget.id
+    const isHighlighted = highlightedWidgetId === widget.id
 
     const baseClasses = `
       group relative bg-white rounded-xl 
@@ -451,6 +537,7 @@ function OrgAdminDashboardContent() {
       }
       ${isHovered && isCustomizing ? "shadow-lg border-primary-orange/60 scale-[1.01] ring-4 ring-primary-orange/10" : "shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"}
       ${isDragging ? "opacity-40 scale-95" : ""}
+      ${isHighlighted ? "animate-highlight-pulse" : ""}
       col-span-12
     `
 
@@ -968,14 +1055,417 @@ function OrgAdminDashboardContent() {
             </div>
           )
 
+        // ============================================
+        // PENDING REQUESTS - Appointment + Supply Requests
+        // ============================================
+        case "pending-requests":
+          const pendingAppointments = appointmentRequests.filter(r => r.status === "pending").length
+          const pendingSupplies = helpRequests.filter(r => r.category === "supplies" && r.status === "open").length
+          const totalPendingRequests = pendingAppointments + pendingSupplies
+          
+          // Check for items waiting >24 hours
+          const now24 = new Date()
+          const oneDayAgo = new Date(now24.getTime() - 24 * 60 * 60 * 1000)
+          const oldRequests = appointmentRequests.filter(r => r.status === "pending" && new Date(r.created_at) < oneDayAgo).length +
+                             helpRequests.filter(r => r.category === "supplies" && r.status === "open" && new Date(r.created_at) < oneDayAgo).length
+          
+          return (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-primary-bark">Pending Requests</h3>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">Waiting for your response</p>
+                </div>
+                {isCustomizing && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeWidget(widget.id)
+                    }}
+                    className="p-1.5 rounded-md hover:bg-status-error-bg text-primary-bark/40 hover:text-status-error transition-colors"
+                    title="Remove widget"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {totalPendingRequests === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-status-success-bg flex items-center justify-center mx-auto mb-3">
+                    <Check className="w-6 h-6 text-status-success" />
+                  </div>
+                  <p className="text-sm font-semibold text-primary-bark">All caught up</p>
+                  <p className="text-xs text-primary-bark/50 mt-1">No pending requests</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {pendingAppointments > 0 && (
+                    <Link
+                      href={`/org/${orgId}/admin/appointment-requests`}
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                        oldRequests > 0 
+                          ? "bg-status-error-bg border border-status-error-border hover:shadow-md" 
+                          : "bg-primary-orange-light border border-primary-orange/20 hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          oldRequests > 0 ? "bg-status-error/10" : "bg-primary-orange/10"
+                        }`}>
+                          <CalendarIcon className={`w-5 h-5 ${oldRequests > 0 ? "text-status-error" : "text-primary-orange"}`} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-primary-bark">{pendingAppointments}</div>
+                          <div className="text-xs text-primary-bark/60">Appointment Requests</div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-primary-bark/30" />
+                    </Link>
+                  )}
+                  {pendingSupplies > 0 && (
+                    <Link
+                      href={`/org/${orgId}/admin/help-requests?category=supplies`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-primary-orange-light border border-primary-orange/20 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary-orange/10 flex items-center justify-center">
+                          <AlertCircle className="w-5 h-5 text-primary-orange" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-primary-bark">{pendingSupplies}</div>
+                          <div className="text-xs text-primary-bark/60">Supply Requests</div>
+                        </div>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-primary-bark/30" />
+                    </Link>
+                  )}
+                  {oldRequests > 0 && (
+                    <div className="p-3 rounded-lg bg-status-error-bg border border-status-error-border">
+                      <div className="flex items-center gap-2 text-sm text-status-error">
+                        <AlertTriangle className="w-4 h-4" />
+                        <span className="font-medium">{oldRequests} request(s) waiting over 24 hours</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )
+
+        // ============================================
+        // RECENT ACTIVITY - Last 5 actions
+        // ============================================
+        case "recent-activity":
+          // Build activity log from various events (help requests, timeline events, etc)
+          const activityEvents = [
+            ...helpRequests.slice(0, 2).map(r => ({
+              id: r.id,
+              type: "help-request",
+              title: `${r.foster_id ? "Foster" : "System"} submitted ${r.category} request`,
+              timestamp: new Date(r.created_at),
+              link: `/org/${orgId}/admin/help-requests`,
+            })),
+            ...appointments.slice(0, 2).map(a => ({
+              id: a.id,
+              type: "appointment",
+              title: `Appointment scheduled: ${a.title}`,
+              timestamp: new Date(a.created_at),
+              link: `/org/${orgId}/admin/appointments`,
+            })),
+            ...conversations.slice(0, 1).map(c => ({
+              id: c.id,
+              type: "message",
+              title: "New foster message received",
+              timestamp: new Date(c.updated_at),
+              link: `/org/${orgId}/admin/messages`,
+            })),
+          ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()).slice(0, 5)
+          
+          return (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-primary-bark">Recent Activity</h3>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">Last 24 hours</p>
+                </div>
+                {isCustomizing && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeWidget(widget.id)
+                    }}
+                    className="p-1.5 rounded-md hover:bg-status-error-bg text-primary-bark/40 hover:text-status-error transition-colors"
+                    title="Remove widget"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {activityEvents.length === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-neutral-cream flex items-center justify-center mx-auto mb-3">
+                    <Clock className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-primary-bark">No activity yet</p>
+                  <p className="text-xs text-primary-bark/50 mt-1">Check back soon</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {activityEvents.map((event) => (
+                    <Link
+                      key={event.id}
+                      href={event.link}
+                      className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-cream transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-2 h-2 rounded-full bg-primary-orange flex-shrink-0" />
+                        <span className="text-sm text-primary-bark">{event.title}</span>
+                      </div>
+                      <span className="text-xs text-primary-bark/50 flex-shrink-0">
+                        {event.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+
+        // ============================================
+        // ANIMALS WITHOUT UPDATES - 3+ days without log
+        // ============================================
+        case "animals-without-updates":
+          const threeDaysAgoDate = new Date()
+          threeDaysAgoDate.setDate(threeDaysAgoDate.getDate() - 3)
+          const sevenDaysAgoDate = new Date()
+          sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 7)
+          
+          const animalsWithoutLogsMap = new Map()
+          dogs.forEach(dog => {
+            const lastLog = dailyLogs.filter(l => l.dog_id === dog.id).sort((a, b) => 
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            )[0]
+            const lastUpdateDate = lastLog ? new Date(lastLog.date) : new Date(dog.created_at)
+            if (lastUpdateDate < threeDaysAgoDate) {
+              const daysSinceUpdate = Math.floor((new Date().getTime() - lastUpdateDate.getTime()) / (1000 * 60 * 60 * 24))
+              animalsWithoutLogsMap.set(dog.id, { dog, daysSinceUpdate, isUrgent: daysSinceUpdate >= 7 })
+            }
+          })
+          
+          const animalsWithoutLogs = Array.from(animalsWithoutLogsMap.values())
+            .sort((a, b) => b.daysSinceUpdate - a.daysSinceUpdate)
+            .slice(0, 5)
+          
+          return (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-primary-bark">Animals Without Updates</h3>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">No log entry in 3+ days</p>
+                </div>
+                {isCustomizing && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeWidget(widget.id)
+                    }}
+                    className="p-1.5 rounded-md hover:bg-status-error-bg text-primary-bark/40 hover:text-status-error transition-colors"
+                    title="Remove widget"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {animalsWithoutLogs.length === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-status-success-bg flex items-center justify-center mx-auto mb-3">
+                    <Check className="w-6 h-6 text-status-success" />
+                  </div>
+                  <p className="text-sm font-semibold text-primary-bark">All animals up to date</p>
+                  <p className="text-xs text-primary-bark/50 mt-1">Everyone has recent logs</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {animalsWithoutLogs.map((item) => (
+                    <Link
+                      key={item.dog.id}
+                      href={`/org/${orgId}/admin/animals/${item.dog.id}`}
+                      className={`flex items-center justify-between p-3 rounded-lg transition-all ${
+                        item.isUrgent 
+                          ? "bg-status-error-bg border border-status-error-border hover:shadow-md"
+                          : "bg-neutral-cream border border-border-soft hover:bg-neutral-cream/80"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <PawPrint className={`w-4 h-4 ${item.isUrgent ? "text-status-error" : "text-primary-bark/40"}`} />
+                        <span className="text-sm font-medium text-primary-bark">{item.dog.name}</span>
+                      </div>
+                      <span className={`text-xs font-bold ${item.isUrgent ? "text-status-error" : "text-primary-bark/60"}`}>
+                        {item.daysSinceUpdate}d ago
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+
+        // ============================================
+        // REIMBURSEMENTS PENDING - Foster reimbursement requests
+        // ============================================
+        case "reimbursements-pending":
+          const pendingReimbursements = reimbursements.filter(r => r.status === "pending").length
+          const totalPendingAmount = reimbursements
+            .filter(r => r.status === "pending")
+            .reduce((sum, r) => sum + (parseFloat(r.amount) || 0), 0)
+          
+          return (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-primary-bark">Reimbursements Pending</h3>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">Waiting for approval</p>
+                </div>
+                {isCustomizing && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeWidget(widget.id)
+                    }}
+                    className="p-1.5 rounded-md hover:bg-status-error-bg text-primary-bark/40 hover:text-status-error transition-colors"
+                    title="Remove widget"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {pendingReimbursements === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-status-success-bg flex items-center justify-center mx-auto mb-3">
+                    <Check className="w-6 h-6 text-status-success" />
+                  </div>
+                  <p className="text-sm font-semibold text-primary-bark">All paid up</p>
+                  <p className="text-xs text-primary-bark/50 mt-1">No pending reimbursements</p>
+                </div>
+              ) : (
+                <Link
+                  href={`/org/${orgId}/admin/reimbursements`}
+                  className="block p-4 rounded-lg bg-primary-orange-light border border-primary-orange/20 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-primary-orange/10 flex items-center justify-center">
+                        <AlertCircle className="w-5 h-5 text-primary-orange" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-primary-bark">{pendingReimbursements}</div>
+                        <div className="text-xs text-primary-bark/60">Pending Request(s)</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-primary-bark/30" />
+                  </div>
+                  <div className="text-sm font-bold text-primary-bark">
+                    ${totalPendingAmount.toFixed(2)} total
+                  </div>
+                </Link>
+              )}
+            </div>
+          )
+
+        // ============================================
+        // FOSTER CHECK-INS NEEDED - No updates in 5+ days
+        // ============================================
+        case "foster-checkins-needed":
+          const fiveDaysAgoCheckin = new Date()
+          fiveDaysAgoCheckin.setDate(fiveDaysAgoCheckin.getDate() - 5)
+          
+          const fostersNeedingCheckin = fosters.filter(foster => {
+            const lastMessage = conversations.filter(c => c.recipient_id === foster.id || c.team).sort((a, b) =>
+              new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+            )[0]
+            const lastLog = dailyLogs.filter(l => l.foster_id === foster.id).sort((a, b) =>
+              new Date(b.date).getTime() - new Date(a.date).getTime()
+            )[0]
+            
+            const lastUpdate = lastMessage 
+              ? new Date(lastMessage.updated_at)
+              : lastLog
+              ? new Date(lastLog.date)
+              : new Date(foster.created_at || 0)
+            
+            return lastUpdate < fiveDaysAgoCheckin
+          }).slice(0, 5)
+          
+          return (
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-base font-bold text-primary-bark">Foster Check-ins Needed</h3>
+                  <p className="text-xs text-primary-bark/60 mt-0.5">No update in 5+ days</p>
+                </div>
+                {isCustomizing && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeWidget(widget.id)
+                    }}
+                    className="p-1.5 rounded-md hover:bg-status-error-bg text-primary-bark/40 hover:text-status-error transition-colors"
+                    title="Remove widget"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {fostersNeedingCheckin.length === 0 ? (
+                <div className="py-6 text-center">
+                  <div className="w-12 h-12 rounded-full bg-status-success-bg flex items-center justify-center mx-auto mb-3">
+                    <Check className="w-6 h-6 text-status-success" />
+                  </div>
+                  <p className="text-sm font-semibold text-primary-bark">All fosters active</p>
+                  <p className="text-xs text-primary-bark/50 mt-1">Everyone checked in recently</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {fostersNeedingCheckin.map((foster) => (
+                    <div
+                      key={foster.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-neutral-cream border border-border-soft hover:bg-neutral-cream/80 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-primary-bark/40" />
+                        <span className="text-sm font-medium text-primary-bark">{foster.name || foster.email}</span>
+                      </div>
+                      <Link
+                        href={`/org/${orgId}/admin/messages?to=${foster.id}`}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-primary-orange text-white hover:bg-primary-orange/90 transition-colors"
+                      >
+                        Message
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+
         default:
           return null
       }
     }
 
+    // Don't render the wrapper if the widget has no content (e.g. unknown type)
+    const content = widgetContent()
+    if (!content) return null
+
     return (
       <div
         key={widget.id}
+        data-widget-id={widget.id}
         className={baseClasses}
         draggable={isCustomizing}
         onDragStart={() => handleDragStart(widget.id)}
@@ -992,7 +1482,7 @@ function OrgAdminDashboardContent() {
             </div>
           </div>
         )}
-        {widgetContent()}
+        {content}
       </div>
     )
   }

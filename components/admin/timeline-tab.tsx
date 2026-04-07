@@ -87,7 +87,20 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
   }
 
   async function handleAddEvent() {
-    if (!newEvent.title.trim()) return
+    console.log("[v0] handleAddEvent called with:", newEvent)
+    
+    // Visual debug - show alert to confirm handler is called
+    // alert("[v0 Debug] handleAddEvent was called! Title: " + newEvent.title)
+    
+    if (!newEvent.title.trim()) {
+      console.log("[v0] Title is empty, returning early")
+      toast({
+        title: "Title required",
+        description: "Please enter a title for the timeline entry.",
+        variant: "destructive",
+      })
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -113,7 +126,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
         title: newEvent.title,
         description: newEvent.description,
         visible_to_foster: newEvent.visible_to_foster,
-        created_by: user.email || user.id,
+        created_by: user.id,
         event_date: eventDate.toISOString(),
       })
 
@@ -134,7 +147,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
         description: "The entry has been saved successfully.",
       })
     } catch (error: any) {
-      console.error("[v0] Error adding timeline event:", error)
+      console.error("[v0] Error adding timeline event:", error?.message || JSON.stringify(error))
       toast({
         title: "Error",
         description: error?.message || "Failed to add timeline entry. Please try again.",
@@ -205,9 +218,9 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
             <option value="medical">Medical</option>
             <option value="note">Notes</option>
             <option value="milestone">Milestones</option>
-            <option value="foster_assigned">Foster Assigned</option> // Add foster_assigned option
-            <option value="foster_change">Foster Change</option> // Add foster_change option
-            <option value="medical_update">Medical Update</option> // Add medical_update option
+            <option value="foster_assigned">Foster Assigned</option>
+            <option value="foster_change">Foster Change</option>
+            <option value="medical_update">Medical Update</option>
           </select>
         </div>
 
@@ -222,7 +235,13 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
 
       {/* Manual entry composer */}
       {showComposer && (
-        <div className="bg-white border border-[#F7E2BD] rounded-2xl p-4 space-y-4 shadow-sm">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleAddEvent()
+          }}
+          className="bg-white border border-[#F7E2BD] rounded-2xl p-4 space-y-4 shadow-sm"
+        >
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-[#5A4A42] mb-1">Event Type</label>
@@ -239,9 +258,9 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
                 <option value="appointment">Appointment</option>
                 <option value="medical">Medical</option>
                 <option value="milestone">Milestone</option>
-                <option value="foster_assigned">Foster Assigned</option> // Add foster_assigned option
-                <option value="foster_change">Foster Change</option> // Add foster_change option
-                <option value="medical_update">Medical Update</option> // Add medical_update option
+                <option value="foster_assigned">Foster Assigned</option>
+                <option value="foster_change">Foster Change</option>
+                <option value="medical_update">Medical Update</option>
               </select>
             </div>
             <div>
@@ -263,6 +282,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
               onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
               placeholder="Event title..."
               className="w-full border border-[#F7E2BD] rounded-lg px-3 py-2 text-sm"
+              required
             />
           </div>
 
@@ -291,13 +311,14 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
 
           <div className="flex gap-2">
             <button
-              onClick={handleAddEvent}
-              disabled={!newEvent.title.trim() || submitting}
+              type="submit"
+              disabled={submitting}
               className="px-4 py-2 bg-[#D76B1A] text-white rounded-lg hover:bg-[#D76B1A]/90 transition-colors disabled:opacity-50 text-sm font-semibold"
             >
               {submitting ? "Adding..." : "Add Entry"}
             </button>
             <button
+              type="button"
               onClick={() => setShowComposer(false)}
               disabled={submitting}
               className="px-4 py-2 border border-[#5A4A42] text-[#5A4A42] rounded-lg hover:bg-[#F7E2BD]/40 transition-colors text-sm font-semibold disabled:opacity-50"
@@ -305,7 +326,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
               Cancel
             </button>
           </div>
-        </div>
+        </form>
       )}
 
       {/* Timeline */}

@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
-import { ArrowLeft, Calendar, Loader2, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Calendar, Loader2, CheckCircle2, Mail, Clock, CalendarCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
+import { sendAppointmentRequestConfirmationEmail } from "@/lib/email/send"
 
 export default function RequestAppointmentPage() {
   const params = useParams()
@@ -74,6 +75,28 @@ export default function RequestAppointmentPage() {
         throw error
       }
 
+      // Get foster's profile info for the confirmation email
+      const { data: fosterProfile } = await supabase
+        .from("profiles")
+        .select("name, email")
+        .eq("id", user.id)
+        .maybeSingle()
+
+      const fosterName = fosterProfile?.name || user.email || "Foster"
+      const fosterEmail = fosterProfile?.email || user.email || ""
+
+      // Send confirmation email to foster
+      if (fosterEmail) {
+        await sendAppointmentRequestConfirmationEmail(
+          fosterEmail,
+          fosterName.split(" ")[0], // Use first name only
+          formData.appointmentType,
+          formData.preferredDate,
+          formData.preferredTime,
+          formData.reason,
+        )
+      }
+
       setSubmitted(true)
     } catch (error: any) {
       console.error("Failed to submit appointment request:", error)
@@ -87,25 +110,68 @@ export default function RequestAppointmentPage() {
     }
   }
 
-  // Show confirmation screen after successful submission
+  // Show success screen after successful submission
   if (submitted) {
+    const nextSteps = [
+      {
+        icon: Mail,
+        text: "You'll receive an email confirmation shortly",
+      },
+      {
+        icon: Clock,
+        text: "Your rescue will review and approve your request — usually within 24 hours",
+      },
+      {
+        icon: CalendarCheck,
+        text: "Once confirmed, you'll see it in your Appointments tab",
+      },
+    ]
+
     return (
       <div className="min-h-screen bg-background-soft p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
           <Card>
-            <CardContent className="pt-12 pb-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle2 className="w-8 h-8 text-green-600" />
+            <CardContent className="pt-12 pb-10 px-8">
+              {/* Checkmark */}
+              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="w-10 h-10 text-green-600" />
               </div>
-              <h2 className="text-2xl font-bold text-primary-bark mb-3">Request Submitted</h2>
-              <p className="text-text-muted mb-8">
-                Your appointment request has been submitted. Your rescue will be in touch soon.
+
+              {/* Headline & subtext */}
+              <h2 className="text-3xl font-bold text-primary-bark text-center mb-3">Request Submitted!</h2>
+              <p className="text-text-muted text-center leading-relaxed mb-8">
+                Your rescue has been notified and will confirm your appointment soon. Here&apos;s what happens next:
               </p>
-              <Link href={`/org/${orgId}/foster/dashboard`}>
-                <Button className="bg-primary-orange hover:bg-primary-orange/90 text-white">
-                  Back to Dashboard
-                </Button>
-              </Link>
+
+              {/* Next steps */}
+              <div className="space-y-4 mb-10">
+                {nextSteps.map((step, index) => (
+                  <div key={index} className="flex items-start gap-4 p-4 rounded-xl bg-background border border-border">
+                    <div className="w-9 h-9 rounded-lg bg-primary-orange/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <step.icon className="w-5 h-5 text-primary-orange" />
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-sm font-bold text-primary-orange mt-0.5">{index + 1}.</span>
+                      <p className="text-sm text-foreground leading-relaxed">{step.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link href={`/org/${orgId}/foster/appointments`} className="flex-1">
+                  <Button className="w-full bg-primary-orange hover:bg-primary-orange/90 text-white">
+                    <CalendarCheck className="w-4 h-4 mr-2" />
+                    View My Appointments
+                  </Button>
+                </Link>
+                <Link href={`/org/${orgId}/foster/dashboard`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    Back to Dashboard
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>

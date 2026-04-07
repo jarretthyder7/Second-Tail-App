@@ -5,9 +5,16 @@ export type TimelineEventType =
   | "status_change"
   | "foster_assigned"
   | "foster_ended"
+  | "foster_assignment"
+  | "foster_return"
+  | "foster_change"
+  | "appointment"
   | "appointment_scheduled"
   | "appointment_completed"
+  | "medical"
   | "medical_update"
+  | "note"
+  | "milestone"
   | "file_uploaded"
   | "reimbursement_update"
   | "supply_request"
@@ -30,22 +37,28 @@ export interface TimelineEvent {
 }
 
 export async function createTimelineEvent(event: Omit<TimelineEvent, "id" | "created_at" | "updated_at">) {
+  console.log("[v0] createTimelineEvent called with:", event)
   const supabase = createClient()
+
+  const insertData = {
+    animal_id: event.animal_id,
+    type: event.type,
+    title: event.title,
+    description: event.description || "",
+    event_date: event.event_date || new Date().toISOString(),
+    created_by: event.created_by,
+    visible_to_foster: event.visible_to_foster,
+    metadata: event.metadata || {},
+  }
+  console.log("[v0] Inserting timeline event:", insertData)
 
   const { data, error } = await supabase
     .from("timeline_events")
-    .insert({
-      animal_id: event.animal_id,
-      type: event.type,
-      title: event.title,
-      description: event.description || "",
-      event_date: event.event_date || new Date().toISOString(),
-      created_by: event.created_by,
-      visible_to_foster: event.visible_to_foster,
-      metadata: event.metadata || {},
-    })
+    .insert(insertData)
     .select()
     .single()
+
+  console.log("[v0] Insert result - data:", data, "error:", error)
 
   if (error) {
     console.error("[v0] Error creating timeline event:", error)

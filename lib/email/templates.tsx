@@ -265,6 +265,85 @@ export const emailTemplates = {
     `,
   }),
 
+  appointmentDeclined: (
+    fosterName: string,
+    appointmentType: string,
+    requestedDate: string,
+    orgName: string,
+  ) => ({
+    subject: "Update on your appointment request",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #5A4A42;">Update on your appointment request</h1>
+        <p>Hi ${fosterName.split(" ")[0]},</p>
+        <p>Your recent appointment request wasn't able to be scheduled at this time.</p>
+
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #9ca3af;">
+          <p style="margin: 6px 0;"><strong>Type:</strong> ${appointmentType}</p>
+          <p style="margin: 6px 0;"><strong>Requested date:</strong> ${requestedDate}</p>
+        </div>
+
+        <p>Please reach out to your rescue directly if you'd like to find another time, or submit a new request through the app.</p>
+        <p style="margin-top: 30px; color: #666;">— ${orgName}</p>
+      </div>
+    `,
+  }),
+
+  appointmentConfirmed: (
+    fosterName: string,
+    appointmentType: string,
+    confirmedDate: string,
+    confirmedTime: string,
+    notes: string,
+    orgName: string,
+  ) => ({
+    subject: "Your appointment has been confirmed",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #16a34a;">Your appointment has been confirmed ✓</h1>
+        <p>Hi ${fosterName.split(" ")[0]},</p>
+        <p>Good news — your appointment has been confirmed.</p>
+
+        <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
+          <p style="margin: 6px 0;"><strong>Type:</strong> ${appointmentType}</p>
+          <p style="margin: 6px 0;"><strong>Date:</strong> ${confirmedDate}</p>
+          <p style="margin: 6px 0;"><strong>Time:</strong> ${confirmedTime}</p>
+          ${notes ? `<p style="margin: 6px 0;"><strong>Notes from your rescue:</strong> ${notes}</p>` : ""}
+        </div>
+
+        <p>See you then!</p>
+        <p style="margin-top: 30px; color: #666;">— ${orgName}</p>
+      </div>
+    `,
+  }),
+
+  appointmentRequestConfirmation: (
+    fosterName: string,
+    appointmentType: string,
+    preferredDate: string,
+    preferredTime: string,
+    reason: string,
+  ) => ({
+    subject: "We got your appointment request",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #d97706;">We got your appointment request</h1>
+        <p>Hi ${fosterName},</p>
+        <p>Your appointment request has been received. Here's what you submitted:</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d97706;">
+          <p style="margin: 5px 0;"><strong>📋 Type:</strong> ${appointmentType}</p>
+          <p style="margin: 5px 0;"><strong>📅 Preferred date:</strong> ${preferredDate}</p>
+          <p style="margin: 5px 0;"><strong>🕐 Preferred time:</strong> ${preferredTime}</p>
+          <p style="margin: 5px 0;"><strong>📝 Reason:</strong> ${reason}</p>
+        </div>
+        
+        <p>Your rescue will review this and confirm a time with you — usually within 24 hours.</p>
+        <p style="margin-top: 30px; color: #666;">— Second Tail</p>
+      </div>
+    `,
+  }),
+
   fosterInvitation: (orgName: string, inviteCode: string, signUpUrl: string) => ({
     subject: `You've been invited to foster with ${orgName}`,
     html: `

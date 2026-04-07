@@ -308,14 +308,13 @@ export default function AppointmentsPage() {
       return
     }
 
-    // Parse the preferred time (format: "HH:MM") and calculate end time as 1 hour later
-    const timeparts = request.preferred_time.split(":")
-    const startHour = parseInt(timeparts[0], 10)
-    const startMinute = timeparts[1] || "00"
+    // Parse the preferred date and time into a proper Date object to handle midnight correctly
+    const startDateTime = new Date(`${request.preferred_date}T${request.preferred_time}`)
+    // Add 1 hour using getTime() + milliseconds
+    const endDateTime = new Date(startDateTime.getTime() + 3600000)
     
-    // Calculate end time (1 hour later, same minute)
-    const endHour = (startHour + 1) % 24
-    const endTime = `${String(endHour).padStart(2, "0")}:${startMinute}`
+    // Convert back to ISO local string format (YYYY-MM-DDTHH:MM)
+    const endTimeString = endDateTime.toISOString().slice(0, 16)
 
     // Pre-fill the form with the request data
     setFormData({
@@ -323,7 +322,7 @@ export default function AppointmentsPage() {
       description: request.reason || "",
       appointment_type: request.appointment_type,
       start_time: `${request.preferred_date}T${request.preferred_time}`,
-      end_time: `${request.preferred_date}T${endTime}`,
+      end_time: endTimeString,
       dog_id: request.dog_id,
       foster_id: request.foster_id,
       team_id: "",
@@ -387,27 +386,30 @@ export default function AppointmentsPage() {
       // Map the appointment type from the request to a valid appointments table value
       const mappedAppointmentType = mapRequestTypeToAppointmentType(formData.appointment_type)
 
-      // 1. Create the appointment
-      const appointmentRes = await fetch(`/api/admin/appointments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
+      // 1. Create the appointment directly via Supabase client instead of API
+      const { data: newAppointment, error: insertError } = await supabase
+        .from("appointments")
+        .insert({
+          title: formData.title,
+          description: formData.description || null,
           appointment_type: mappedAppointmentType,
+          start_time: formData.start_time,
+          end_time: formData.end_time,
+          location: formData.location || null,
+          items_needed: formData.items_needed ? formData.items_needed.split(",").map((i) => i.trim()) : [],
           organization_id: orgId,
           dog_id: formData.dog_id || null,
           foster_id: formData.foster_id || null,
           team_id: formData.team_id || null,
-          items_needed: formData.items_needed ? formData.items_needed.split(",").map((i) => i.trim()) : [],
-        }),
-      })
+          notes: formData.notes || null,
+        })
+        .select()
 
-      if (!appointmentRes.ok) {
-        const error = await appointmentRes.json()
-        throw new Error(error.message || "Failed to create appointment")
+      if (insertError) {
+        throw new Error(insertError.message || "Failed to create appointment")
       }
 
-      // 2. Update the appointment_requests status
+      // 2. Update the appointment_requests status to "scheduled"
       if (pendingRequestSource) {
         const { error: updateError } = await supabase
           .from("appointment_requests")
@@ -478,7 +480,7 @@ export default function AppointmentsPage() {
       })
       loadData()
     } catch (error: any) {
-      console.error("[v0] Error scheduling appointment:", error)
+      console.error("[v0] Error scheduling appointment:", error?.message || JSON.stringify(error))
       toast({
         title: "Error",
         description: error?.message || "Failed to schedule appointment. Please try again.",

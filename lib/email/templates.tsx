@@ -265,6 +265,33 @@ export const emailTemplates = {
     `,
   }),
 
+  appointmentRequestConfirmation: (
+    fosterName: string,
+    appointmentType: string,
+    preferredDate: string,
+    preferredTime: string,
+    reason: string,
+  ) => ({
+    subject: "We got your appointment request",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #d97706;">We got your appointment request</h1>
+        <p>Hi ${fosterName},</p>
+        <p>Your appointment request has been received. Here's what you submitted:</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d97706;">
+          <p style="margin: 5px 0;"><strong>📋 Type:</strong> ${appointmentType}</p>
+          <p style="margin: 5px 0;"><strong>📅 Preferred date:</strong> ${preferredDate}</p>
+          <p style="margin: 5px 0;"><strong>🕐 Preferred time:</strong> ${preferredTime}</p>
+          <p style="margin: 5px 0;"><strong>📝 Reason:</strong> ${reason}</p>
+        </div>
+        
+        <p>Your rescue will review this and confirm a time with you — usually within 24 hours.</p>
+        <p style="margin-top: 30px; color: #666;">— Second Tail</p>
+      </div>
+    `,
+  }),
+
   fosterInvitation: (orgName: string, inviteCode: string, signUpUrl: string) => ({
     subject: `You've been invited to foster with ${orgName}`,
     html: `

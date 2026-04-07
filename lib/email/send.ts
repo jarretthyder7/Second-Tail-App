@@ -133,3 +133,22 @@ export async function sendSupplyRequestEmail(
   const template = emailTemplates.supplyRequest(rescueName, fosterName, supplies)
   return sendEmail({ to: rescueEmail, ...template })
 }
+
+// Send appointment request confirmation to foster
+export async function sendAppointmentRequestConfirmationEmail(
+  fosterEmail: string,
+  fosterName: string,
+  appointmentType: string,
+  preferredDate: string,
+  preferredTime: string,
+  reason: string,
+) {
+  const template = emailTemplates.appointmentRequestConfirmation(
+    fosterName,
+    appointmentType,
+    preferredDate,
+    preferredTime,
+    reason,
+  )
+  return sendEmail({ to: fosterEmail, ...template })
+}

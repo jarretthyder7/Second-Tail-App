@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
+import { sendAppointmentRequestConfirmationEmail } from "@/lib/email/send"
 
 export default function RequestAppointmentPage() {
   const params = useParams()
@@ -72,6 +73,28 @@ export default function RequestAppointmentPage() {
 
       if (error) {
         throw error
+      }
+
+      // Get foster's profile info for the confirmation email
+      const { data: fosterProfile } = await supabase
+        .from("profiles")
+        .select("name, email")
+        .eq("id", user.id)
+        .maybeSingle()
+
+      const fosterName = fosterProfile?.name || user.email || "Foster"
+      const fosterEmail = fosterProfile?.email || user.email || ""
+
+      // Send confirmation email to foster
+      if (fosterEmail) {
+        await sendAppointmentRequestConfirmationEmail(
+          fosterEmail,
+          fosterName.split(" ")[0], // Use first name only
+          formData.appointmentType,
+          formData.preferredDate,
+          formData.preferredTime,
+          formData.reason,
+        )
       }
 
       setSubmitted(true)

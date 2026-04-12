@@ -174,8 +174,8 @@ export default function Home() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {/* Rescue Card - Now on the left */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 border-amber-200">
+          {/* Rescue Card */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 border-amber-200 flex flex-col">
             <div
               className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
               style={{ backgroundColor: "rgba(90, 74, 66, 0.15)" }}
@@ -183,23 +183,35 @@ export default function Home() {
               <Users className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
             </div>
             <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Rescue Organizations</h3>
-            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed">
+            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed flex-1">
               Streamline foster coordination. Simple tools to manage relationships, track care, and scale without
               burnout.
             </p>
-            <Link
-              href="/for-rescue-organizations"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base sm:text-base"
-              style={{ backgroundColor: "#5a4a42" }}
-            >
-              Learn More
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/for-rescue-organizations"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base"
+                style={{ backgroundColor: "#5a4a42" }}
+              >
+                Learn More
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <button
+                onClick={() => {
+                  setActiveView("rescue")
+                  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+                }}
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-amber-50 transition-colors text-base"
+                style={{ borderColor: "#5a4a42", color: "#5a4a42" }}
+              >
+                Join Waitlist
+              </button>
+            </div>
           </div>
 
-          {/* Foster Card - Now on the right */}
+          {/* Foster Card */}
           <div
-            className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2"
+            className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 flex flex-col"
             style={{ borderColor: "rgba(215, 107, 26, 0.2)" }}
           >
             <div
@@ -209,18 +221,30 @@ export default function Home() {
               <Heart className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
             </div>
             <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Foster Parents</h3>
-            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed">
+            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed flex-1">
               A simple dashboard to collaborate with your rescue organization. Track care, communicate easily, and get
               the support you need.
             </p>
-            <Link
-              href="/for-fosters"
-              className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base sm:text-base"
-              style={{ backgroundColor: "#D76B1A" }}
-            >
-              Learn More
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/for-fosters"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base"
+                style={{ backgroundColor: "#D76B1A" }}
+              >
+                Learn More
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <button
+                onClick={() => {
+                  setActiveView("foster")
+                  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+                }}
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-orange-50 transition-colors text-base"
+                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+              >
+                Join Waitlist
+              </button>
+            </div>
           </div>
         </div>
 
@@ -383,18 +407,40 @@ export default function Home() {
 
       {/* Waitlist Section */}
       <section id="waitlist" className="border-t border-gray-200 bg-gradient-to-br from-orange-50/40 to-amber-50/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="text-center mb-12">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
               Stay Connected
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              Get notified when Second Tail launches in your area. Whether you&apos;re a foster parent or a rescue organization, we&apos;ll keep you in the loop.
+              Get notified when Second Tail launches in your area.
             </p>
+
+            {/* Tab switcher */}
+            <div className="flex items-center justify-center gap-3 mt-6">
+              <button
+                onClick={() => setActiveView("rescue")}
+                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                  activeView === "rescue" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
+              >
+                Rescue Organization
+              </button>
+              <button
+                onClick={() => setActiveView("foster")}
+                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                  activeView === "foster" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
+              >
+                Foster Parent
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            {/* Foster Waitlist Form */}
+          {/* Foster Waitlist Form */}
+          {activeView === "foster" && (
             <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div
@@ -408,7 +454,7 @@ export default function Home() {
                   <p className="text-sm text-gray-600">Get notified when rescues near you join</p>
                 </div>
               </div>
-              
+
               {fosterSubmitted ? (
                 <div className="text-center py-6 space-y-4">
                   <div
@@ -490,8 +536,10 @@ export default function Home() {
                 </form>
               )}
             </div>
+          )}
 
-            {/* Rescue Organization Waitlist Form */}
+          {/* Rescue Organization Waitlist Form */}
+          {activeView === "rescue" && (
             <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div
@@ -505,7 +553,7 @@ export default function Home() {
                   <p className="text-sm text-gray-600">Get early access when we launch</p>
                 </div>
               </div>
-              
+
               {rescueSubmitted ? (
                 <div className="text-center py-6 space-y-4">
                   <div
@@ -599,7 +647,7 @@ export default function Home() {
                 </form>
               )}
             </div>
-          </div>
+          )}
         </div>
       </section>
 

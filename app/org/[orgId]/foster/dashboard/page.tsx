@@ -8,6 +8,7 @@ import { Calendar, AlertCircle, Package, Eye, ChevronRight, Smile, HelpCircle, P
 import { NewMessageModal } from "@/components/foster/new-message-modal"
 import { RequestHelpModal } from "@/components/foster/request-help-modal"
 import { AppointmentRequestModal } from "@/components/foster/appointment-request-modal"
+import { SupplyRequestModal } from "@/components/foster/supply-request-modal"
 
 export default function FosterDashboardPage() {
   const params = useParams()
@@ -20,6 +21,7 @@ export default function FosterDashboardPage() {
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [showSupportModal, setShowSupportModal] = useState(false)
   const [showAppointmentRequest, setShowAppointmentRequest] = useState(false)
+  const [showSupplyRequest, setShowSupplyRequest] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -216,8 +218,8 @@ export default function FosterDashboardPage() {
           </Link>
 
           {/* Request Supplies Button */}
-          <Link
-            href={`/org/${orgId}/foster/request-supplies`}
+          <button
+            onClick={() => setShowSupplyRequest(true)}
             className="bg-card rounded-xl p-4 hover:shadow-md transition group text-left"
           >
             <div className="flex items-start justify-between">
@@ -230,7 +232,7 @@ export default function FosterDashboardPage() {
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
             </div>
-          </Link>
+          </button>
 
           {/* Request Appointment Button */}
           <button
@@ -301,6 +303,9 @@ export default function FosterDashboardPage() {
       )}
       {showAppointmentRequest && (
         <AppointmentRequestModal dog={dog} orgId={orgId} onClose={() => setShowAppointmentRequest(false)} />
+      )}
+      {showSupplyRequest && (
+        <SupplyRequestModal dog={dog} orgId={orgId} onClose={() => setShowSupplyRequest(false)} />
       )}
     </div>
   )

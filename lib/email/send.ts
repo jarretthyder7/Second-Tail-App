@@ -129,8 +129,10 @@ export async function sendSupplyRequestEmail(
   rescueName: string,
   fosterName: string,
   supplies: string,
+  animalName?: string,
+  orgId?: string,
 ) {
-  const template = emailTemplates.supplyRequest(rescueName, fosterName, supplies)
+  const template = emailTemplates.supplyRequest(rescueName, fosterName, supplies, animalName, orgId)
   return sendEmail({ to: rescueEmail, ...template })
 }
 

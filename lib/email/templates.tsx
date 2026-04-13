@@ -402,4 +402,43 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  fosterWaitlist: (name: string) => ({
+    subject: "You're on the Second Tail waitlist 🐾",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FDF6EC; border-radius: 12px; overflow: hidden;">
+        <div style="background-color: #D76B1A; padding: 32px 40px; text-align: center;">
+          <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: -0.5px;">Second Tail</h1>
+          <p style="margin: 8px 0 0; color: #fde8d0; font-size: 14px;">Foster smarter. Save more lives.</p>
+        </div>
+        <div style="padding: 40px;">
+          <p style="font-size: 16px; color: #3d2c1e; margin: 0 0 16px;">Hi ${name},</p>
+          <p style="font-size: 16px; color: #3d2c1e; margin: 0 0 24px; line-height: 1.6;">
+            You're officially on the <strong>Second Tail waitlist</strong>. We'll reach out as soon as a rescue organization near you joins the platform.
+          </p>
+          <div style="background-color: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 24px; margin: 0 0 32px;">
+            <p style="font-size: 15px; color: #7c3d12; font-weight: 600; margin: 0 0 8px;">Know someone who fosters or runs a rescue?</p>
+            <p style="font-size: 14px; color: #9a3412; margin: 0 0 20px; line-height: 1.5;">Help us grow — share Second Tail with someone who would love it.</p>
+            <a href="https://getsecondtail.com/#foster-waitlist"
+               style="display: block; background-color: #D76B1A; color: #ffffff; text-align: center; padding: 13px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; margin-bottom: 12px;">
+              Refer a Friend to Foster
+            </a>
+            <a href="https://getsecondtail.com/sign-up/rescue"
+               style="display: block; background-color: #ffffff; color: #D76B1A; text-align: center; padding: 13px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; border: 2px solid #D76B1A;">
+              Refer a Rescue Org
+            </a>
+          </div>
+          <p style="font-size: 15px; color: #5a3e2b; margin: 0; line-height: 1.6;">
+            Thanks for being part of this,<br/>
+            <strong>The Second Tail Team</strong>
+          </p>
+        </div>
+        <div style="background-color: #f5e6d3; padding: 20px 40px; text-align: center; border-top: 1px solid #e8d5bc;">
+          <p style="font-size: 12px; color: #9a7b62; margin: 0;">
+            &copy; ${new Date().getFullYear()} Second Tail &mdash; <a href="https://getsecondtail.com" style="color: #D76B1A; text-decoration: none;">getsecondtail.com</a>
+          </p>
+        </div>
+      </div>
+    `,
+  }),
 }

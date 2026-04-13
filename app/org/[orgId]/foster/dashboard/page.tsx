@@ -28,12 +28,12 @@ export default function FosterDashboardPage() {
 
       if (authUser) {
         setUser(authUser)
-        console.log("[v0] Auth user ID:", authUser.id)
+        console.log("Auth user ID:", authUser.id)
 
         // Fetch profile
         const { data: profileData } = await supabase.from("profiles").select("*").eq("id", authUser.id).single()
         setProfile(profileData)
-        console.log("[v0] Profile data:", profileData)
+        console.log("Profile data:", profileData)
 
         const { data: dogsData, error: dogsError } = await supabase
           .from("dogs")
@@ -42,13 +42,13 @@ export default function FosterDashboardPage() {
           .eq("status", "fostered")
           .limit(1)
 
-        console.log("[v0] Dogs query - Auth ID:", authUser.id)
-        console.log("[v0] Dogs query result:", dogsData)
-        console.log("[v0] Dogs query error:", dogsError)
+        console.log("Dogs query - Auth ID:", authUser.id)
+        console.log("Dogs query result:", dogsData)
+        console.log("Dogs query error:", dogsError)
 
         if (dogsData && dogsData.length > 0) {
           setDog(dogsData[0])
-          console.log("[v0] Dog loaded successfully:", dogsData[0].name)
+          console.log("Dog loaded successfully:", dogsData[0].name)
 
           const { data: appointmentsData } = await supabase
             .from("appointments")
@@ -60,17 +60,17 @@ export default function FosterDashboardPage() {
 
           if (appointmentsData) {
             setAppointments(appointmentsData)
-            console.log("[v0] Upcoming appointments:", appointmentsData)
+            console.log("Upcoming appointments:", appointmentsData)
           }
         } else {
-          console.log("[v0] No dogs found for foster. Checking all dogs to debug...")
+          console.log("No dogs found for foster. Checking all dogs to debug...")
           const { data: allDogs, error: allDogsError } = await supabase
             .from("dogs")
             .select("*")
             .eq("foster_id", authUser.id)
 
-          console.log("[v0] All dogs for this foster:", allDogs)
-          console.log("[v0] Error:", allDogsError)
+          console.log("All dogs for this foster:", allDogs)
+          console.log("Error:", allDogsError)
         }
       }
       setIsLoading(false)

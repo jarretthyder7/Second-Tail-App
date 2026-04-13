@@ -53,16 +53,25 @@ export async function POST(request: NextRequest) {
         .eq("id", orgId)
         .single()
 
+      // Look up dog name if dogId is provided
+      let dogName: string | undefined
+      if (dogId) {
+        const { data: dog } = await supabase.from("dogs").select("name").eq("id", dogId).single()
+        dogName = dog?.name
+      }
+
       if (org?.email && profile?.name) {
         await sendSupplyRequestEmail(
           org.email,
           org.name,
           profile.name,
-          itemName
+          itemName,
+          dogName,
+          orgId
         )
       }
     } catch (emailError) {
-      console.warn("[v0] Failed to send supply request email:", emailError)
+      console.warn("Failed to send supply request email:", emailError)
     }
 
     return NextResponse.json({ success: true, id: newId })

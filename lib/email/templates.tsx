@@ -145,15 +145,20 @@ export const emailTemplates = {
     `,
   }),
 
-  supplyRequest: (rescueName: string, fosterName: string, supplies: string) => ({
-    subject: `${fosterName} has requested supplies`,
+  supplyRequest: (rescueName: string, fosterName: string, supplies: string, animalName?: string, orgId?: string) => ({
+    subject: `${fosterName} has requested supplies${animalName ? ` for ${animalName}` : ""}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #92400e;">Supply Request from Foster</h1>
         <p>Hi ${rescueName},</p>
-        <p><strong>${fosterName}</strong> has requested supplies:</p>
+        <p><strong>${fosterName}</strong> has requested supplies${animalName ? ` for <strong>${animalName}</strong>` : ""}:</p>
         <p style="background-color: #f5f5f5; padding: 15px; border-radius: 8px;">${supplies}</p>
         <p>Visit your admin dashboard to review and respond.</p>
+        ${orgId ? `
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://getsecondtail.com/org/${orgId}/admin/supply-requests" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">Review Request</a>
+        </div>
+        ` : ""}
       </div>
     `,
   }),

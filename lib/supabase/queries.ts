@@ -13,7 +13,7 @@ export async function fetchDogsForOrg(orgId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching dogs:", error)
+    console.error("Error fetching dogs:", error)
     return []
   }
 
@@ -34,7 +34,7 @@ export async function getDogById(dogId: string) {
     .single()
 
   if (error) {
-    console.error("[v0] Error fetching dog:", error)
+    console.error("Error fetching dog:", error)
     return null
   }
 
@@ -63,7 +63,7 @@ export async function createDog(orgId: string, dogData: any) {
     .single()
 
   if (error) {
-    console.error("[v0] Error creating dog:", error)
+    console.error("Error creating dog:", error)
     throw error
   }
 
@@ -92,7 +92,7 @@ export async function updateDog(dogId: string, updates: any) {
     .single()
 
   if (error) {
-    console.error("[v0] Error updating dog:", error)
+    console.error("Error updating dog:", error)
     throw error
   }
 
@@ -110,7 +110,7 @@ export async function fetchLogsForDog(dogId: string) {
     .order("date", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching logs:", error)
+    console.error("Error fetching logs:", error)
     return []
   }
 
@@ -147,7 +147,7 @@ export async function fetchCarePlanForDog(dogId: string) {
   const { data, error } = await supabase.from("care_plans").select("*").eq("dog_id", dogId).maybeSingle()
 
   if (error) {
-    console.error("[v0] Error fetching care plan:", error)
+    
     return null
   }
 
@@ -211,7 +211,7 @@ export async function fetchConversationsForDog(dogId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching conversations:", error)
+    console.error("Error fetching conversations:", error)
     return []
   }
 
@@ -228,7 +228,7 @@ export async function fetchMessagesForConversation(conversationId: string) {
     .order("created_at", { ascending: true })
 
   if (error) {
-    console.error("[v0] Error fetching messages:", error)
+    console.error("Error fetching messages:", error)
     return []
   }
 
@@ -249,7 +249,7 @@ export async function sendMessage(conversationId: string, senderId: string, cont
     .single()
 
   if (error) {
-    console.error("[v0] Error sending message:", error)
+    console.error("Error sending message:", error)
     throw error
   }
 
@@ -269,7 +269,7 @@ export async function createConversation(dogId: string, orgId: string) {
     .single()
 
   if (error) {
-    console.error("[v0] Error creating conversation:", error)
+    console.error("Error creating conversation:", error)
     throw error
   }
 
@@ -292,7 +292,7 @@ export async function fetchHelpRequests(orgId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching help requests:", error)
+    console.error("Error fetching help requests:", error)
     return []
   }
 
@@ -317,7 +317,7 @@ export async function submitHelpRequest(helpRequestData: any) {
     .single()
 
   if (error) {
-    console.error("[v0] Error submitting help request:", error)
+    console.error("Error submitting help request:", error)
     throw error
   }
 
@@ -339,7 +339,7 @@ export async function updateHelpRequest(requestId: string, updates: any) {
     .single()
 
   if (error) {
-    console.error("[v0] Error updating help request:", error)
+    console.error("Error updating help request:", error)
     throw error
   }
 
@@ -353,7 +353,7 @@ export async function fetchOrganizationById(orgId: string) {
   const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).single()
 
   if (error) {
-    console.error("[v0] Error fetching organization:", error)
+    console.error("Error fetching organization:", error)
     return null
   }
 
@@ -380,7 +380,7 @@ export async function updateOrganization(orgId: string, updates: any) {
     .single()
 
   if (error) {
-    console.error("[v0] Error updating organization:", error)
+    console.error("Error updating organization:", error)
     throw error
   }
 
@@ -399,7 +399,7 @@ export async function fetchFostersForOrg(orgId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching fosters:", error)
+    console.error("Error fetching fosters:", error)
     return []
   }
 
@@ -420,7 +420,7 @@ export async function assignFosterToOrg(fosterId: string, orgId: string) {
     .single()
 
   if (error) {
-    console.error("[v0] Error assigning foster:", error)
+    console.error("Error assigning foster:", error)
     throw error
   }
 
@@ -438,7 +438,7 @@ export async function fetchUnassignedFosters() {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching unassigned fosters:", error)
+    console.error("Error fetching unassigned fosters:", error)
     return []
   }
 
@@ -457,7 +457,7 @@ export async function fetchInvitationsForEmail(email: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching invitations:", error)
+    console.error("Error fetching invitations:", error)
     return []
   }
 
@@ -505,7 +505,7 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
         .single()
 
       if (error) {
-        console.error("[v0] Error updating invitation:", error)
+        console.error("Error updating invitation:", error)
         throw error
       }
 
@@ -528,7 +528,7 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
     .single()
 
   if (error) {
-    console.error("[v0] Error creating invitation:", error)
+    console.error("Error creating invitation:", error)
     throw error
   }
 
@@ -538,7 +538,7 @@ export async function createInvitation(orgId: string, email: string, invitedBy: 
 export async function acceptInvitation(invitationId: string, profileId: string, orgId: string) {
   const supabase = await createClient()
 
-  console.log("[v0] Accepting invitation:", { invitationId, profileId, orgId })
+  console.log("Accepting invitation:", { invitationId, profileId, orgId })
 
   const { error: inviteError } = await supabase
     .from("invitations")
@@ -549,7 +549,7 @@ export async function acceptInvitation(invitationId: string, profileId: string, 
     .eq("id", invitationId)
 
   if (inviteError) {
-    console.error("[v0] Error updating invitation:", inviteError)
+    console.error("Error updating invitation:", inviteError)
     throw inviteError
   }
 
@@ -565,11 +565,11 @@ export async function acceptInvitation(invitationId: string, profileId: string, 
     .single()
 
   if (profileError) {
-    console.error("[v0] Error assigning foster to org:", profileError)
+    console.error("Error assigning foster to org:", profileError)
     throw profileError
   }
 
-  console.log("[v0] Successfully accepted invitation and updated profile:", data)
+  console.log("Successfully accepted invitation and updated profile:", data)
 
   return data
 }
@@ -586,7 +586,7 @@ export async function declineInvitation(invitationId: string) {
     .eq("id", invitationId)
 
   if (error) {
-    console.error("[v0] Error declining invitation:", error)
+    console.error("Error declining invitation:", error)
     throw error
   }
 }
@@ -602,7 +602,7 @@ export async function fetchPendingInvitations(orgId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching pending invitations:", error)
+    console.error("Error fetching pending invitations:", error)
     return []
   }
 
@@ -615,7 +615,7 @@ export async function cancelInvitation(invitationId: string) {
   const { error } = await supabase.from("invitations").delete().eq("id", invitationId)
 
   if (error) {
-    console.error("[v0] Error canceling invitation:", error)
+    console.error("Error canceling invitation:", error)
     throw error
   }
 }
@@ -635,7 +635,7 @@ export async function cancelFosterConnection(profileId: string) {
     .single()
 
   if (error) {
-    console.error("[v0] Error canceling foster connection:", error)
+    console.error("Error canceling foster connection:", error)
     throw error
   }
 
@@ -689,7 +689,7 @@ export async function updateFosterProfile(profileId: string, updates: any) {
     .single()
 
   if (error) {
-    console.error("[v0] Error updating foster profile:", error)
+    console.error("Error updating foster profile:", error)
     throw error
   }
 
@@ -712,7 +712,7 @@ export async function createReferral(referrerId: string, referredEmail: string, 
     .single()
 
   if (error) {
-    console.error("[v0] Error creating referral:", error)
+    console.error("Error creating referral:", error)
     throw error
   }
 
@@ -735,7 +735,7 @@ export async function completeReferral(referralId: string, referredId: string) {
     .single()
 
   if (error) {
-    console.error("[v0] Error completing referral:", error)
+    console.error("Error completing referral:", error)
     throw error
   }
 
@@ -752,7 +752,7 @@ export async function fetchReferralsForFoster(fosterId: string) {
     .order("created_at", { ascending: false })
 
   if (error) {
-    console.error("[v0] Error fetching referrals:", error)
+    console.error("Error fetching referrals:", error)
     return []
   }
 

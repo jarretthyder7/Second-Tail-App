@@ -41,7 +41,7 @@ export function applyOrgBranding(branding: OrgBranding) {
     root.style.setProperty("--brand-logo-url", `url('${branding.logo_url}')`)
   }
 
-  console.log("[v0] Branding applied:", {
+  console.log("Branding applied:", {
     primary: branding.primary_color,
     accent: branding.accent_color,
   })

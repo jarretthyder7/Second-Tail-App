@@ -78,7 +78,7 @@ function OrgSettingsContent() {
       const { data, error } = await supabase.from("organizations").select("*").eq("id", orgId).single()
 
       if (error) {
-        console.error("[v0] Error loading organization:", error)
+        console.error("Error loading organization:", error)
         setError("Failed to load organization")
         return
       }
@@ -112,7 +112,7 @@ function OrgSettingsContent() {
     setError(null)
     setSuccessMessage(null)
 
-    console.log("[v0] Attempting to save organization:", {
+    console.log("Attempting to save organization:", {
       orgId,
       name: org.name,
       email: org.email,
@@ -137,13 +137,13 @@ function OrgSettingsContent() {
       .select()
 
     if (error) {
-      console.error("[v0] Error saving organization:", error)
+      console.error("Error saving organization:", error)
       setError(`Failed to save changes: ${error.message}`)
       setIsSaving(false)
       return
     }
 
-    console.log("[v0] Organization saved successfully:", data)
+    console.log("Organization saved successfully:", data)
     setSuccessMessage("Changes saved successfully!")
 
     try {
@@ -158,7 +158,7 @@ function OrgSettingsContent() {
       })
       window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "org_profile" } }))
     } catch (error) {
-      console.error("[v0] Error marking setup step complete:", error)
+      console.error("Error marking setup step complete:", error)
     }
 
     setIsSaving(false)
@@ -194,7 +194,7 @@ function OrgSettingsContent() {
         setTicketSubmitted(false)
       }, 2000)
     } catch (error) {
-      console.error("[v0] Error submitting ticket:", error)
+      console.error("Error submitting ticket:", error)
       alert("Failed to submit support ticket. Please try again.")
     } finally {
       setSubmittingTicket(false)
@@ -250,7 +250,7 @@ function OrgSettingsContent() {
 
       setSuccessMessage("Logo uploaded successfully! Click Save Branding to confirm.")
     } catch (err) {
-      console.error("[v0] Error uploading logo:", err)
+      console.error("Error uploading logo:", err)
       setError("Failed to upload logo. Please try again.")
     } finally {
       setIsUploadingLogo(false)
@@ -308,7 +308,7 @@ function OrgSettingsContent() {
 
     if (error) {
       setError("Failed to pause organization")
-      console.error("[v0] Error pausing organization:", error)
+      console.error("Error pausing organization:", error)
     } else {
       // Send email notification to all org admins
       try {
@@ -325,7 +325,7 @@ function OrgSettingsContent() {
           }),
         })
       } catch (err) {
-        console.error("[v0] Error sending pause notification email:", err)
+        console.error("Error sending pause notification email:", err)
       }
 
       setSuccessMessage(`Organization paused until ${pauseUntil.toDateString()}. Admin notifications sent.`)
@@ -357,7 +357,7 @@ function OrgSettingsContent() {
 
     if (error) {
       setError("Failed to close organization")
-      console.error("[v0] Error closing organization:", error)
+      console.error("Error closing organization:", error)
     } else {
       // Send email notification to all org admins
       try {
@@ -372,7 +372,7 @@ function OrgSettingsContent() {
           }),
         })
       } catch (err) {
-        console.error("[v0] Error sending close notification email:", err)
+        console.error("Error sending close notification email:", err)
       }
 
       setSuccessMessage("Organization closed. All notifications have been sent. Redirecting...")

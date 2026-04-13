@@ -13,7 +13,7 @@ export function useOrgBranding(orgId: string | null) {
     // Check cache first
     const cached = getCachedBranding(id)
     if (cached) {
-      console.log("[v0] Using cached branding for org:", id)
+      console.log("Using cached branding for org:", id)
       setBranding(cached)
       applyOrgBranding(cached)
       setLoading(false)
@@ -29,7 +29,7 @@ export function useOrgBranding(orgId: string | null) {
         .single()
 
       if (error) {
-        console.error("[v0] Error fetching org branding:", error)
+        console.error("Error fetching org branding:", error)
         setError(error.message)
         setLoading(false)
         return
@@ -49,12 +49,12 @@ export function useOrgBranding(orgId: string | null) {
         setBranding(orgBranding)
         applyOrgBranding(orgBranding)
 
-        console.log("[v0] Loaded and cached branding for org:", id)
+        console.log("Loaded and cached branding for org:", id)
       }
 
       setLoading(false)
     } catch (err) {
-      console.error("[v0] Exception fetching branding:", err)
+      console.error("Exception fetching branding:", err)
       setError("Failed to load branding")
       setLoading(false)
     }

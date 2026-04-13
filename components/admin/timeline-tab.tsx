@@ -74,26 +74,26 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
       const { data, error } = await query
 
       if (error) {
-        console.error("[v0] Error fetching timeline events:", error)
+        console.error("Error fetching timeline events:", error)
         throw error
       }
-      console.log("[v0] Loaded timeline events:", data?.length || 0)
+      console.log("Loaded timeline events:", data?.length || 0)
       setEvents(data || [])
     } catch (error) {
-      console.error("[v0] Error fetching timeline events:", error)
+      console.error("Error fetching timeline events:", error)
     } finally {
       setLoading(false)
     }
   }
 
   async function handleAddEvent() {
-    console.log("[v0] handleAddEvent called with:", newEvent)
+    console.log("handleAddEvent called with:", newEvent)
     
     // Visual debug - show alert to confirm handler is called
     // alert("[v0 Debug] handleAddEvent was called! Title: " + newEvent.title)
     
     if (!newEvent.title.trim()) {
-      console.log("[v0] Title is empty, returning early")
+      console.log("Title is empty, returning early")
       toast({
         title: "Title required",
         description: "Please enter a title for the timeline entry.",
@@ -147,7 +147,7 @@ export default function TimelineTab({ dogId, orgId }: TimelineTabProps) {
         description: "The entry has been saved successfully.",
       })
     } catch (error: any) {
-      console.error("[v0] Error adding timeline event:", error?.message || JSON.stringify(error))
+      console.error("Error adding timeline event:", error?.message || JSON.stringify(error))
       toast({
         title: "Error",
         description: error?.message || "Failed to add timeline entry. Please try again.",

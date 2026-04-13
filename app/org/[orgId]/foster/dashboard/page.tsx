@@ -7,7 +7,6 @@ import Link from "next/link"
 import { Calendar, AlertCircle, Package, Eye, ChevronRight, Smile, HelpCircle, Plus } from "lucide-react"
 import { NewMessageModal } from "@/components/foster/new-message-modal"
 import { RequestHelpModal } from "@/components/foster/request-help-modal"
-import { AppointmentRequestModal } from "@/components/foster/appointment-request-modal"
 
 export default function FosterDashboardPage() {
   const params = useParams()
@@ -19,7 +18,6 @@ export default function FosterDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [showSupportModal, setShowSupportModal] = useState(false)
-  const [showAppointmentRequest, setShowAppointmentRequest] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -217,7 +215,7 @@ export default function FosterDashboardPage() {
 
           {/* Request Supplies Button */}
           <Link
-            href={`/org/${orgId}/foster/request-supplies`}
+            href={`/org/${orgId}/foster/request-supplies?new=true`}
             className="bg-card rounded-xl p-4 hover:shadow-md transition group text-left"
           >
             <div className="flex items-start justify-between">
@@ -233,8 +231,8 @@ export default function FosterDashboardPage() {
           </Link>
 
           {/* Request Appointment Button */}
-          <button
-            onClick={() => setShowAppointmentRequest(true)}
+          <Link
+            href={`/org/${orgId}/foster/appointments?new=true`}
             className="bg-card rounded-xl p-4 hover:shadow-md transition group text-left"
           >
             <div className="flex items-start justify-between">
@@ -247,7 +245,7 @@ export default function FosterDashboardPage() {
               </div>
               <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition" />
             </div>
-          </button>
+          </Link>
 
           {/* Need Help Button */}
           <button
@@ -298,9 +296,6 @@ export default function FosterDashboardPage() {
           dog={dog}
           onClose={() => setShowSupportModal(false)}
         />
-      )}
-      {showAppointmentRequest && (
-        <AppointmentRequestModal dog={dog} orgId={orgId} onClose={() => setShowAppointmentRequest(false)} />
       )}
     </div>
   )

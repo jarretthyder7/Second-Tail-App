@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -34,7 +34,9 @@ const DEFAULT_SUPPLIES = ["Food", "Pee Pads", "Crate", "Toys", "Leash", "Medicat
 
 export default function FosterRequestSuppliesPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const orgId = params.orgId as string
+  const shouldOpenNew = searchParams.get("new") === "true"
   const { toast } = useToast()
 
   const [dogId, setDogId] = useState<string | null>(null)
@@ -44,6 +46,7 @@ export default function FosterRequestSuppliesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [showForm, setShowForm] = useState(false)
+  const [hasAutoOpened, setHasAutoOpened] = useState(false)
 
   // Form state
   const [selectedSupplies, setSelectedSupplies] = useState<string[]>([])
@@ -85,6 +88,14 @@ export default function FosterRequestSuppliesPage() {
     }
     load()
   }, [orgId])
+
+  // Auto-open form if ?new=true is in URL
+  useEffect(() => {
+    if (shouldOpenNew && !hasAutoOpened && !loadingData) {
+      setShowForm(true)
+      setHasAutoOpened(true)
+    }
+  }, [shouldOpenNew, hasAutoOpened, loadingData])
 
   const toggleSupply = (supply: string) => {
     setSelectedSupplies((prev) =>

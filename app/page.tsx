@@ -100,9 +100,9 @@ export default function Home() {
                 Foster Sign-Up
               </a>
               <Link
-                href="/login"
+                href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
                 className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: "#D76B1A" }}
+                style={{ backgroundColor: activeView === "foster" ? "#D76B1A" : "#5a4a42" }}
               >
                 Login
               </Link>
@@ -143,9 +143,9 @@ export default function Home() {
                 Foster Sign-Up
               </a>
               <Link
-                href="/login"
+                href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
                 className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: "#D76B1A" }}
+                style={{ backgroundColor: activeView === "foster" ? "#D76B1A" : "#5a4a42" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Login
@@ -250,7 +250,10 @@ export default function Home() {
 
         <p className="text-center text-sm sm:text-base text-gray-500 pt-6 sm:pt-8">
           Already a member?{" "}
-          <Link href="/login" className="text-gray-900 font-medium hover:underline">
+          <Link
+            href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
+            className="text-gray-900 font-medium hover:underline"
+          >
             Log in
           </Link>
         </p>
@@ -375,7 +378,7 @@ export default function Home() {
                 Second Tail keeps you connected to your rescue team so you're never figuring it out alone.
               </p>
               <Link
-                href="/login"
+                href="/login/foster"
                 className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
                 style={{ backgroundColor: "#D76B1A" }}
               >

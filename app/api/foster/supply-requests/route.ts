@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { sendSupplyRequestEmail } from "@/lib/email/send"
 
 // uses rpc to bypass PostgREST schema cache
 export async function POST(request: NextRequest) {
@@ -52,19 +53,13 @@ export async function POST(request: NextRequest) {
         .eq("id", orgId)
         .single()
 
-      if (org) {
-        const origin = new URL(request.url).origin
-        await fetch(new URL("/api/email/send", origin).href, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "supply-request",
-            rescueEmail: org.email,
-            rescueName: org.name,
-            fosterName: profile.name,
-            supplies: itemName,
-          }),
-        })
+      if (org?.email && profile?.name) {
+        await sendSupplyRequestEmail(
+          org.email,
+          org.name,
+          profile.name,
+          itemName
+        )
       }
     } catch (emailError) {
       console.warn("[v0] Failed to send supply request email:", emailError)

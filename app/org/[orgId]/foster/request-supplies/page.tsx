@@ -236,7 +236,7 @@ export default function FosterRequestSuppliesPage() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <Link
           href={`/org/${orgId}/foster/dashboard`}
           className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-primary-bark mb-4 transition-colors"
@@ -244,27 +244,25 @@ export default function FosterRequestSuppliesPage() {
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </Link>
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary-orange/10 rounded-lg">
-              <Package className="w-6 h-6 text-primary-orange" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-primary-bark">My Supply Requests</h1>
-              <p className="text-sm text-text-muted">Track your requests and submit new ones</p>
-            </div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="p-2 bg-primary-orange/10 rounded-lg shrink-0">
+            <Package className="w-6 h-6 text-primary-orange" />
           </div>
-          <Button
-            onClick={() => setShowForm((v) => !v)}
-            className="bg-primary-orange hover:bg-primary-orange/90 text-white rounded-xl shrink-0"
-          >
-            {showForm ? (
-              <span className="flex items-center gap-2"><X className="w-4 h-4" /> Cancel</span>
-            ) : (
-              <span className="flex items-center gap-2"><Plus className="w-4 h-4" /> New Request</span>
-            )}
-          </Button>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-primary-bark leading-tight">My Supply Requests</h1>
+            <p className="text-sm text-text-muted">Track your requests and submit new ones</p>
+          </div>
         </div>
+        <Button
+          onClick={() => setShowForm((v) => !v)}
+          className="w-full bg-primary-orange hover:bg-primary-orange/90 text-white rounded-xl"
+        >
+          {showForm ? (
+            <span className="flex items-center gap-2 justify-center"><X className="w-4 h-4" /> Cancel New Request</span>
+          ) : (
+            <span className="flex items-center gap-2 justify-center"><Plus className="w-4 h-4" /> New Request</span>
+          )}
+        </Button>
       </div>
 
       {/* New request form — slides in when "New Request" is clicked */}
@@ -375,62 +373,55 @@ export default function FosterRequestSuppliesPage() {
 
       {/* Stats row */}
       {!loadingData && (
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-100 rounded-lg">
-                <Clock className="w-5 h-5 text-amber-600" />
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <Card className="p-3">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="p-1.5 bg-amber-100 rounded-lg">
+                <Clock className="w-4 h-4 text-amber-600" />
               </div>
-              <div>
-                <p className="text-xl font-bold text-primary-bark">{openCount}</p>
-                <p className="text-xs text-text-muted">Open</p>
-              </div>
+              <p className="text-lg font-bold text-primary-bark leading-none">{openCount}</p>
+              <p className="text-xs text-text-muted">Open</p>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Loader2 className="w-5 h-5 text-blue-600" />
+          <Card className="p-3">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <Loader2 className="w-4 h-4 text-blue-600" />
               </div>
-              <div>
-                <p className="text-xl font-bold text-primary-bark">{inProgressCount}</p>
-                <p className="text-xs text-text-muted">Being Sourced</p>
-              </div>
+              <p className="text-lg font-bold text-primary-bark leading-none">{inProgressCount}</p>
+              <p className="text-xs text-text-muted">Sourcing</p>
             </div>
           </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
+          <Card className="p-3">
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="p-1.5 bg-green-100 rounded-lg">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
               </div>
-              <div>
-                <p className="text-xl font-bold text-primary-bark">{resolvedCount}</p>
-                <p className="text-xs text-text-muted">Fulfilled</p>
-              </div>
+              <p className="text-lg font-bold text-primary-bark leading-none">{resolvedCount}</p>
+              <p className="text-xs text-text-muted">Fulfilled</p>
             </div>
           </Card>
         </div>
       )}
 
       {/* Filter tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        {["all", "open", "in_progress", "resolved"].map((s) => (
+      <div className="grid grid-cols-4 gap-1.5 mb-6 bg-neutral-100 p-1 rounded-xl">
+        {[
+          { value: "all", label: "All" },
+          { value: "open", label: "Open" },
+          { value: "in_progress", label: "Sourcing" },
+          { value: "resolved", label: "Done" },
+        ].map((s) => (
           <button
-            key={s}
-            onClick={() => setFilterStatus(s)}
-            className={`px-4 py-2 rounded-lg font-medium transition text-sm ${
-              filterStatus === s
-                ? "bg-primary-orange text-white"
-                : "bg-white text-text-main hover:bg-neutral-100 border border-neutral-200"
+            key={s.value}
+            onClick={() => setFilterStatus(s.value)}
+            className={`py-2 rounded-lg font-medium transition text-xs ${
+              filterStatus === s.value
+                ? "bg-white text-primary-bark shadow-sm"
+                : "text-text-muted hover:text-primary-bark"
             }`}
           >
-            {s === "all"
-              ? "All"
-              : s === "in_progress"
-              ? "Being Sourced"
-              : s === "resolved"
-              ? "Fulfilled"
-              : "Open"}
+            {s.label}
           </button>
         ))}
       </div>
@@ -463,26 +454,32 @@ export default function FosterRequestSuppliesPage() {
       ) : (
         <div className="space-y-4">
           {filteredRequests.map((req) => (
-            <Card key={req.id} className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <h3 className="font-semibold text-primary-bark text-base">{req.title}</h3>
-                    {getStatusBadge(req.status)}
-                    {getUrgencyBadge(req.priority)}
-                  </div>
-                  {req.description && (
-                    <p className="text-sm text-text-muted mb-2 line-clamp-2">{req.description}</p>
-                  )}
-                  <p className="text-xs text-text-muted">
-                    Submitted {new Date(req.created_at).toLocaleDateString()}
-                  </p>
-                </div>
+            <Card key={req.id} className="p-4">
+              {/* Badges row */}
+              <div className="flex items-center gap-2 flex-wrap mb-2">
+                {getStatusBadge(req.status)}
+                {getUrgencyBadge(req.priority)}
+              </div>
+              {/* Title */}
+              <h3 className="font-semibold text-primary-bark text-sm leading-snug mb-1">
+                {req.title.replace(/^Supply Request:\s*/i, "")}
+              </h3>
+              {/* Description */}
+              {req.description && (
+                <p className="text-xs text-text-muted mb-3 line-clamp-2 leading-relaxed">
+                  {req.description}
+                </p>
+              )}
+              {/* Footer row: date + cancel */}
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100">
+                <p className="text-xs text-text-muted">
+                  {new Date(req.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                </p>
                 {req.status === "open" && (
                   <button
                     onClick={() => handleCancel(req.id)}
                     disabled={cancelling === req.id}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {cancelling === req.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />

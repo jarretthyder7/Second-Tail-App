@@ -29,7 +29,7 @@ export default function ForRescueOrganizationsPage() {
                 For Rescue Organizations
               </Link>
               <Link
-                href="/login"
+                href="/login/rescue"
                 className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
               >
@@ -65,7 +65,7 @@ export default function ForRescueOrganizationsPage() {
                 For Rescue Organizations
               </Link>
               <Link
-                href="/login"
+                href="/login/rescue"
                 className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
                 onClick={() => setMobileMenuOpen(false)}

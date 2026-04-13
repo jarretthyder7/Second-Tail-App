@@ -78,11 +78,11 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#4A90A4]/5 via-[#FBF8F4] to-[#FF8B7B]/5 px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
         <Link
-          href="/login"
+          href="/"
           className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-[#5A4A42] hover:text-[#D76B1A] transition"
         >
           <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" />
-          Back to login
+          Back to Home
         </Link>
 
         <div className="space-y-2 md:space-y-3">

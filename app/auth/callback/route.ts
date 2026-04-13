@@ -111,7 +111,7 @@ export async function GET(request: Request) {
       if (!profile) {
         const forwardedHost = request.headers.get("x-forwarded-host")
         const isLocalEnv = process.env.NODE_ENV === "development"
-        const fallback = `/login?message=please-sign-in`
+        const fallback = `/?message=please-sign-in`
         if (isLocalEnv) return NextResponse.redirect(`${origin}${fallback}`)
         if (forwardedHost) return NextResponse.redirect(`https://${forwardedHost}${fallback}`)
         return NextResponse.redirect(`${origin}${fallback}`)

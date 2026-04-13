@@ -204,7 +204,7 @@ function OrgSettingsContent() {
   const handleLogout = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push("/login")
+    router.push("/login/rescue")
   }
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -394,7 +394,7 @@ function OrgSettingsContent() {
     } else {
       setSuccessMessage("Account closed. Redirecting...")
       setTimeout(() => {
-        router.push("/login")
+        router.push("/login/rescue")
       }, 2000)
     }
     setIsSaving(false)

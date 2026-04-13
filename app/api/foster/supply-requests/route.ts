@@ -44,35 +44,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 500 })
     }
 
-    // Send email notification to org admin
+    // Send email notification to rescue org
     try {
       const { data: org } = await supabase
         .from("organizations")
-        .select("name, contact_email")
+        .select("name, email")
         .eq("id", orgId)
         .single()
 
-      const { data: fosterProfile } = await supabase
-        .from("profiles")
-        .select("name")
-        .eq("id", user.id)
-        .single()
-
-      if (org?.contact_email && fosterProfile?.name) {
-        await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/email/send`, {
+      if (org) {
+        const origin = new URL(request.url).origin
+        await fetch(new URL("/api/email/send", origin).href, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "supply-request",
-            rescueEmail: org.contact_email,
+            rescueEmail: org.email,
             rescueName: org.name,
-            fosterName: fosterProfile.name,
+            fosterName: profile.name,
             supplies: itemName,
           }),
         })
       }
     } catch (emailError) {
-      console.error("Email notification failed:", emailError)
+      console.warn("[v0] Failed to send supply request email:", emailError)
     }
 
     return NextResponse.json({ success: true, id: newId })

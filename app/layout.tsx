@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Lora, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -10,6 +10,12 @@ export const metadata: Metadata = {
   title: 'Second Tail Foster Portal',
   description: 'Supporting fosters and rescues in one place',
   generator: 'v0.app',
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({

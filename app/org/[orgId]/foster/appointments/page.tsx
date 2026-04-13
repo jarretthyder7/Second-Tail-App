@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { CalendarIcon, Clock, Dog, MapPin, Package, CheckCircle2, Plus, Hourglass, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -28,7 +28,9 @@ type Appointment = {
 
 export default function FosterAppointmentsPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const orgId = params.orgId as string
+  const shouldOpenNew = searchParams.get("new") === "true"
 
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [pendingRequests, setPendingRequests] = useState<any[]>([])
@@ -36,10 +38,19 @@ export default function FosterAppointmentsPage() {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [dog, setDog] = useState<{ id: string; name: string; breed: string; image_url: string } | null>(null)
+  const [hasAutoOpened, setHasAutoOpened] = useState(false)
 
   useEffect(() => {
     loadData()
   }, [orgId])
+
+  // Auto-open request modal if ?new=true is in URL
+  useEffect(() => {
+    if (shouldOpenNew && dog && !hasAutoOpened && !loading) {
+      setShowRequestModal(true)
+      setHasAutoOpened(true)
+    }
+  }, [shouldOpenNew, dog, hasAutoOpened, loading])
 
   async function loadData() {
     const supabase = createClient()

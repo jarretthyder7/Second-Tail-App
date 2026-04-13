@@ -168,7 +168,7 @@ export async function DELETE(request: Request) {
 
   const { data: existing, error: loadError } = await supabase
     .from("appointments")
-    .select("id, organization_id")
+    .select("id, organization_id, foster_id, dog_id, title, start_time")
     .eq("id", id)
     .maybeSingle()
 
@@ -185,6 +185,43 @@ export async function DELETE(request: Request) {
   if (error) {
     console.error("[v0] Error deleting appointment:", error)
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  // Send cancellation email to foster
+  try {
+    if (existing.foster_id) {
+      const { data: foster } = await supabase
+        .from("profiles")
+        .select("id, name, email")
+        .eq("id", existing.foster_id)
+        .single()
+
+      const { data: dog } = await supabase
+        .from("dogs")
+        .select("id, name")
+        .eq("id", existing.dog_id)
+        .single()
+
+      if (foster && dog) {
+        const appointmentTime = new Date(existing.start_time).toLocaleString()
+        const origin = new URL(request.url).origin
+
+        await fetch(new URL("/api/email/send", origin).href, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "appointment-cancelled",
+            fosterEmail: foster.email,
+            fosterName: foster.name,
+            dogName: dog.name,
+            appointmentTitle: existing.title,
+            appointmentTime: appointmentTime,
+          }),
+        })
+      }
+    }
+  } catch (emailError) {
+    console.warn("[v0] Failed to send appointment cancellation email:", emailError)
   }
 
   return NextResponse.json({ success: true })

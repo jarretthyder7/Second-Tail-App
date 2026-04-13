@@ -5,6 +5,14 @@ import Link from "next/link"
 import { Heart, Users, ArrowRight, Menu, X, CheckCircle2, ChevronDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
+const US_STATES = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+  "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+  "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+  "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+]
+
 export default function Home() {
   const [activeView, setActiveView] = useState<"foster" | "rescue">("rescue")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -22,7 +30,8 @@ export default function Home() {
   }, [])
   const [fosterName, setFosterName] = useState("")
   const [fosterEmail, setFosterEmail] = useState("")
-  const [fosterCityZip, setFosterCityZip] = useState("")
+  const [fosterCity, setFosterCity] = useState("")
+  const [fosterState, setFosterState] = useState("")
   const [fosterAgree, setFosterAgree] = useState(false)
   const [fosterSubmitted, setFosterSubmitted] = useState(false)
   const [fosterLoading, setFosterLoading] = useState(false)
@@ -31,7 +40,8 @@ export default function Home() {
   const [rescueName, setRescueName] = useState("")
   const [rescueOrgName, setRescueOrgName] = useState("")
   const [rescueEmail, setRescueEmail] = useState("")
-  const [rescueCityZip, setRescueCityZip] = useState("")
+  const [rescueCity, setRescueCity] = useState("")
+  const [rescueState, setRescueState] = useState("")
   const [rescueAgree, setRescueAgree] = useState(false)
   const [rescueSubmitted, setRescueSubmitted] = useState(false)
   const [rescueLoading, setRescueLoading] = useState(false)
@@ -47,7 +57,8 @@ export default function Home() {
       const { error } = await supabase.from("waitlist").insert({
         name: fosterName,
         email: fosterEmail,
-        city_zip: fosterCityZip,
+        city: fosterCity,
+        state: fosterState,
         type: "foster",
       })
       if (error) throw error
@@ -75,7 +86,8 @@ export default function Home() {
       const { error } = await supabase.from("waitlist").insert({
         name: rescueName,
         email: rescueEmail,
-        city_zip: rescueCityZip,
+        city: rescueCity,
+        state: rescueState,
         type: "rescue",
         organization_name: rescueOrgName,
       })
@@ -574,17 +586,32 @@ export default function Home() {
                       style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">City / ZIP Code</label>
-                    <input
-                      type="text"
-                      required
-                      value={fosterCityZip}
-                      onChange={(e) => setFosterCityZip(e.target.value)}
-                      placeholder="e.g. Austin, TX or 78701"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">City</label>
+                      <input
+                        type="text"
+                        required
+                        value={fosterCity}
+                        onChange={(e) => setFosterCity(e.target.value)}
+                        placeholder="e.g. Austin"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                        style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">State</label>
+                      <select
+                        required
+                        value={fosterState}
+                        onChange={(e) => setFosterState(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent text-sm bg-white"
+                        style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
+                      >
+                        <option value="">State</option>
+                        {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
                   </div>
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input
@@ -685,17 +712,32 @@ export default function Home() {
                       style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">City / ZIP Code</label>
-                    <input
-                      type="text"
-                      required
-                      value={rescueCityZip}
-                      onChange={(e) => setRescueCityZip(e.target.value)}
-                      placeholder="e.g. Austin, TX or 78701"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">City</label>
+                      <input
+                        type="text"
+                        required
+                        value={rescueCity}
+                        onChange={(e) => setRescueCity(e.target.value)}
+                        placeholder="e.g. Austin"
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
+                        style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">State</label>
+                      <select
+                        required
+                        value={rescueState}
+                        onChange={(e) => setRescueState(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent text-sm bg-white"
+                        style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
+                      >
+                        <option value="">State</option>
+                        {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </div>
                   </div>
                   <label className="flex items-start gap-3 cursor-pointer">
                     <input

@@ -26,7 +26,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       } = await supabase.auth.getUser()
 
       if (userError || !user) {
-        router.push("/login")
+        router.push("/")
         return
       }
 
@@ -37,7 +37,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
         .single()
 
       if (profileError || !profile) {
-        router.push("/login")
+        router.push("/")
         return
       }
 

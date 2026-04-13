@@ -29,7 +29,7 @@ export default function ForFostersPage() {
                 For Rescue Organizations
               </Link>
               <Link
-                href="/login"
+                href="/login/foster"
                 className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
               >
@@ -65,7 +65,7 @@ export default function ForFostersPage() {
                 For Rescue Organizations
               </Link>
               <Link
-                href="/login"
+                href="/login/foster"
                 className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg"
                 style={{ backgroundColor: "#D76B1A" }}
                 onClick={() => setMobileMenuOpen(false)}
@@ -95,7 +95,7 @@ export default function ForFostersPage() {
           <div className="pt-4 sm:pt-6">
             <p className="text-base text-gray-600 mb-4">Foster access is provided by your rescue organization</p>
             <Link
-              href="/login"
+              href="/login/foster"
               className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#D76B1A" }}
             >
@@ -162,7 +162,7 @@ export default function ForFostersPage() {
           Contact a rescue organization in your area. They'll invite you to join Second Tail once you're approved.
         </p>
         <Link
-          href="/login"
+          href="/login/foster"
           className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#D76B1A" }}
         >

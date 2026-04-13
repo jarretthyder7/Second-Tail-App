@@ -47,10 +47,10 @@ export default function AuthCodeErrorPage() {
 
           <div className="flex flex-col gap-3 w-full pt-4">
             <Link
-              href="/login"
+              href="/"
               className="w-full inline-flex items-center justify-center rounded-full bg-primary-orange px-6 py-3 text-sm font-semibold text-white hover:bg-primary-orange/90 transition-all"
             >
-              Try Again
+              Back to Home
             </Link>
             <Link href="/" className="text-sm text-text-secondary hover:text-bark transition">
               Back to Home

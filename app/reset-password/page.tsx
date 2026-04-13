@@ -73,7 +73,7 @@ export default function ResetPasswordPage() {
 
       setSuccess(true)
       setTimeout(() => {
-        router.push("/login")
+        router.push("/")
       }, 2000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
@@ -143,8 +143,8 @@ export default function ResetPasswordPage() {
 
             <p className="text-xs text-center text-[#2E2E2E]/60 pt-2">
               Remember your password?{" "}
-              <Link href="/login" className="text-[#4A90A4] hover:underline font-semibold">
-                Back to login
+              <Link href="/" className="text-[#4A90A4] hover:underline font-semibold">
+                Back to Home
               </Link>
             </p>
           </form>

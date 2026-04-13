@@ -605,7 +605,7 @@ export default function OrgAdminLayout({
                   onClick={async () => {
                     const supabase = createClient()
                     await supabase.auth.signOut()
-                    window.location.href = "/login"
+                    window.location.href = "/login/rescue"
                   }}
                   className="flex items-center gap-3 text-red-600 cursor-pointer px-2 py-2"
                 >

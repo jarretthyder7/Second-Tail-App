@@ -61,7 +61,7 @@ function SuccessContent() {
         </div>
 
         <Link
-          href="/login"
+          href={`/login/${type}`}
           className="inline-flex items-center justify-center rounded-full bg-[#D76B1A] px-6 py-3 text-sm font-semibold text-white hover:bg-[#D76B1A]/90 transition-all hover:shadow-md"
         >
           Return to Login

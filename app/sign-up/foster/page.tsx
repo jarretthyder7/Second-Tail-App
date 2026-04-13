@@ -167,6 +167,21 @@ function FosterSignUpForm() {
         } catch (emailError) {
           console.warn("[v0] Welcome email failed to send:", emailError)
         }
+
+        try {
+          await fetch("/api/email/send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "assigned-rescue",
+              fosterEmail: email,
+              fosterName: name,
+              orgName: invitation.organization?.name,
+            }),
+          })
+        } catch (emailError) {
+          console.warn("[v0] Assigned rescue email failed to send:", emailError)
+        }
       }
 
       router.push(`/auth/sign-up-success?type=foster&org=${invitation.organization?.name || "rescue organization"}`)

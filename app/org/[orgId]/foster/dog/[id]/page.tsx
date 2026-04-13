@@ -441,6 +441,35 @@ function OverviewTab({
         medical_notes: category === "health" ? notes : null,
       })
 
+      // Send medical update email if health notes were added
+      if (category === "health") {
+        try {
+          const { data: org } = await supabase
+            .from("organizations")
+            .select("id, name, email")
+            .eq("id", dog.organization_id)
+            .single()
+
+          if (org) {
+            const origin = window.location.origin
+            await fetch(`${origin}/api/email/send`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "medical-update",
+                fosterEmail: user?.email,
+                fosterName: user?.user_metadata?.name || "Foster",
+                dogName: dog.name,
+                updateType: "health",
+                notes: notes,
+              }),
+            })
+          }
+        } catch (emailError) {
+          console.warn("[v0] Failed to send medical update email:", emailError)
+        }
+      }
+
       setShowSuccess(true)
       setNotes("")
       setTimeout(() => setShowSuccess(false), 3000)

@@ -248,21 +248,7 @@ export default function RescueSignUpPage() {
 
             {/* Social Proof */}
             <div className="pt-8 border-t border-neutral-sand">
-              <p className="text-sm text-text-tertiary mb-4">Trusted by rescue organizations nationwide</p>
-              <div className="flex items-center gap-8">
-                <div>
-                  <div className="text-2xl font-bold text-text-primary">500+</div>
-                  <div className="text-xs text-text-secondary">Fosters connected</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-text-primary">2,000+</div>
-                  <div className="text-xs text-text-secondary">Dogs tracked</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-text-primary">40%</div>
-                  <div className="text-xs text-text-secondary">Time saved</div>
-                </div>
-              </div>
+              <p className="text-sm text-text-tertiary">Trusted by rescue organizations nationwide</p>
             </div>
           </div>
 
@@ -271,10 +257,10 @@ export default function RescueSignUpPage() {
             <div className="bg-white rounded-2xl shadow-xl border border-neutral-sand p-6 sm:p-8 space-y-6">
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "Lora, serif" }}>
-                  Get started for free
+                  Request Early Access
                 </h2>
                 <p className="text-sm text-text-secondary">
-                  No credit card required. Start managing your foster network today.
+                  Currently accepting early access partners.
                 </p>
               </div>
 
@@ -396,7 +382,7 @@ export default function RescueSignUpPage() {
                   disabled={isLoading}
                   className="w-full inline-flex items-center justify-center rounded-xl bg-primary-orange px-6 py-3.5 text-base font-semibold text-white hover:bg-secondary-rust transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? "Creating account..." : "Create your free account"}
+                  {isLoading ? "Creating account..." : "Create Account"}
                 </button>
 
                 <p className="text-xs text-center text-text-tertiary">

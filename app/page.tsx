@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import { Heart, Users, ArrowRight, Menu, X, CheckCircle2, ChevronDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -9,6 +9,17 @@ export default function Home() {
   const [activeView, setActiveView] = useState<"foster" | "rescue">("rescue")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
+  const loginDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (loginDropdownRef.current && !loginDropdownRef.current.contains(e.target as Node)) {
+        setLoginDropdownOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
   const [fosterName, setFosterName] = useState("")
   const [fosterEmail, setFosterEmail] = useState("")
   const [fosterCityZip, setFosterCityZip] = useState("")
@@ -100,10 +111,9 @@ export default function Home() {
               >
                 Foster Sign-Up
               </a>
-              <div className="relative">
+              <div className="relative" ref={loginDropdownRef}>
                 <button
                   onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
-                  onBlur={() => setTimeout(() => setLoginDropdownOpen(false), 150)}
                   className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
                   style={{ backgroundColor: "#D76B1A" }}
                 >

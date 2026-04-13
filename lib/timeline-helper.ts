@@ -37,7 +37,6 @@ export interface TimelineEvent {
 }
 
 export async function createTimelineEvent(event: Omit<TimelineEvent, "id" | "created_at" | "updated_at">) {
-  console.log("[v0] createTimelineEvent called with:", event)
   const supabase = createClient()
 
   const insertData = {
@@ -50,15 +49,12 @@ export async function createTimelineEvent(event: Omit<TimelineEvent, "id" | "cre
     visible_to_foster: event.visible_to_foster,
     metadata: event.metadata || {},
   }
-  console.log("[v0] Inserting timeline event:", insertData)
 
   const { data, error } = await supabase
     .from("timeline_events")
     .insert(insertData)
     .select()
     .single()
-
-  console.log("[v0] Insert result - data:", data, "error:", error)
 
   if (error) {
     console.error("[v0] Error creating timeline event:", error)

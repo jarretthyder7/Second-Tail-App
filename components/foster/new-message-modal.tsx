@@ -34,7 +34,7 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
           setSelectedTeam(teamsData[0].id)
         }
       } catch (err) {
-        console.error("[v0] Failed to load teams:", err)
+        console.error("Failed to load teams:", err)
       } finally {
         setLoadingTeams(false)
       }
@@ -69,7 +69,7 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
         return
       }
 
-      console.log("[v0] Creating conversation with team:", selectedTeam)
+      console.log("Creating conversation with team:", selectedTeam)
 
       // Get foster's first assigned dog to link the conversation
       const { data: fosterDog } = await supabase
@@ -92,7 +92,7 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
         .select()
         .single()
 
-      console.log("[v0] Conversation created:", conversation)
+      console.log("Conversation created:", conversation)
 
       if (convError || !conversation) {
         setError("Failed to create conversation")
@@ -147,14 +147,14 @@ export function NewMessageModal({ onClose, onSuccess }: NewMessageModalProps) {
           })
         }
       } catch (emailError) {
-        console.warn("[v0] Failed to send message email:", emailError)
+        console.warn("Failed to send message email:", emailError)
       }
 
       router.push(`/org/${orgId}/foster/messages?conv=${conversation.id}`)
       onSuccess?.()
       onClose()
     } catch (err) {
-      console.error("[v0] Failed to create message:", err)
+      console.error("Failed to create message:", err)
       setError("Something went wrong")
     } finally {
       setSubmitting(false)

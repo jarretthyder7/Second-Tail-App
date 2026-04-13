@@ -34,7 +34,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
           setSettings(data)
         }
       } catch (error) {
-        console.error("[v0] Failed to fetch help settings:", error)
+        console.error("Failed to fetch help settings:", error)
       } finally {
         setSettingsLoading(false)
       }
@@ -76,7 +76,7 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
     } catch (err: any) {
       setSubmitStatus("error")
       setSubmitError(err.message)
-      console.error("[v0] Error submitting help request:", err)
+      console.error("Error submitting help request:", err)
     } finally {
       setIsSubmitting(false)
     }

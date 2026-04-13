@@ -144,7 +144,7 @@ export default function OrgFosterMessages() {
         .eq("organization_id", orgId)
         .order("name", { ascending: true })
 
-      console.log("[v0] Loaded teams from database:", teamsData)
+      console.log("Loaded teams from database:", teamsData)
 
       // Transform teams data to include member info
       const transformedTeams = (teamsData || []).map((team: any) => ({
@@ -154,12 +154,12 @@ export default function OrgFosterMessages() {
         members: (team.team_members || []).map((tm: any) => tm.profile).filter(Boolean),
       }))
 
-      console.log("[v0] Transformed teams with members:", transformedTeams)
+      console.log("Transformed teams with members:", transformedTeams)
 
       setTeams(transformedTeams)
       setLoading(false)
     } catch (error) {
-      console.error("[v0] Error loading data:", error)
+      console.error("Error loading data:", error)
       setLoading(false)
     }
   }
@@ -169,7 +169,7 @@ export default function OrgFosterMessages() {
     const team = teams.find((t) => t.id === teamId)
     setSelectedTeamMembers(team?.members || [])
     setSelectedRecipient("") // Reset recipient when team changes
-    console.log("[v0] Team selected:", { teamId, teamName: team?.name, memberCount: team?.members?.length })
+    console.log("Team selected:", { teamId, teamName: team?.name, memberCount: team?.members?.length })
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -206,7 +206,7 @@ export default function OrgFosterMessages() {
     setUploading(true)
 
     try {
-      console.log("[v0] Starting message send process:", {
+      console.log("Starting message send process:", {
         userId: user.id,
         orgId,
         dogId: isSingleDog ? dogs[0].id : selectedDog,
@@ -236,7 +236,7 @@ export default function OrgFosterMessages() {
         conversationData.recipient_id = selectedRecipient
       }
 
-      console.log("[v0] Creating conversation with data:", conversationData)
+      console.log("Creating conversation with data:", conversationData)
 
       // Create conversation
       const { data: conversation, error: convError } = await supabase
@@ -246,11 +246,11 @@ export default function OrgFosterMessages() {
         .single()
 
       if (convError) {
-        console.error("[v0] Error creating conversation:", convError)
+        console.error("Error creating conversation:", convError)
         throw convError
       }
 
-      console.log("[v0] Conversation created:", conversation)
+      console.log("Conversation created:", conversation)
 
       // Create first message with attachments
       const messageData = {
@@ -260,16 +260,16 @@ export default function OrgFosterMessages() {
         attachments: uploadedUrls.length > 0 ? uploadedUrls : null,
       }
 
-      console.log("[v0] Creating message with data:", messageData)
+      console.log("Creating message with data:", messageData)
 
       const { data: message, error: msgError } = await supabase.from("messages").insert(messageData).select().single()
 
       if (msgError) {
-        console.error("[v0] Error creating message:", msgError)
+        console.error("Error creating message:", msgError)
         throw msgError
       }
 
-      console.log("[v0] Message created successfully:", message)
+      console.log("Message created successfully:", message)
 
       setSending(false)
       setShowNewMessage(false)
@@ -282,7 +282,7 @@ export default function OrgFosterMessages() {
       // Navigate to new conversation
       router.push(`/org/${orgId}/foster/messages/${conversation.id}`)
     } catch (error) {
-      console.error("[v0] Error sending message:", error)
+      console.error("Error sending message:", error)
       setSending(false)
       setUploading(false)
       alert("Failed to send message. Please try again.")

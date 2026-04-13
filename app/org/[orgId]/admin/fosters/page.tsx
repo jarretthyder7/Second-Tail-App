@@ -41,7 +41,7 @@ export default function AdminFostersPage() {
         const data = await res.json()
         setFostersData(data)
       } catch (error) {
-        console.error("[v0] Error fetching fosters:", error)
+        console.error("Error fetching fosters:", error)
       } finally {
         setIsLoading(false)
       }
@@ -60,7 +60,7 @@ export default function AdminFostersPage() {
       const data = await res.json()
       setFostersData(data)
     } catch (error) {
-      console.error("[v0] Error refreshing fosters:", error)
+      console.error("Error refreshing fosters:", error)
     }
   }
 
@@ -77,7 +77,7 @@ export default function AdminFostersPage() {
 
     try {
       setIsAssigning(true)
-      console.log("[v0] Assigning dog:", selectedDogId, "to foster:", selectedFoster.id)
+      console.log("Assigning dog:", selectedDogId, "to foster:", selectedFoster.id)
 
       const supabase = createClient()
 
@@ -92,7 +92,7 @@ export default function AdminFostersPage() {
 
       if (error) throw error
 
-      console.log("[v0] Dog assigned successfully")
+      console.log("Dog assigned successfully")
 
       const selectedDog = availableDogs.find((d) => d.id === selectedDogId)
       if (selectedDog && selectedFoster.email) {
@@ -130,7 +130,7 @@ export default function AdminFostersPage() {
         console.warn("[v0] Warning: Failed to create journey event:", eventError)
         // Don't fail the assignment if journey event fails to create
       } else {
-        console.log("[v0] Journey event created for dog assignment")
+        console.log("Journey event created for dog assignment")
       }
 
       await mutateFosters()
@@ -139,7 +139,7 @@ export default function AdminFostersPage() {
       setSelectedFoster(null)
       setSelectedDogId("")
     } catch (error) {
-      console.error("[v0] Error assigning dog:", error)
+      console.error("Error assigning dog:", error)
       alert("Failed to assign dog")
     } finally {
       setIsAssigning(false)
@@ -199,13 +199,13 @@ export default function AdminFostersPage() {
         })
         window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "invite_foster" } }))
       } catch (err) {
-        console.error("[v0] Error marking invite_foster setup step:", err)
+        console.error("Error marking invite_foster setup step:", err)
       }
 
       setShowInviteModal(false)
       setInviteEmail("")
     } catch (error: any) {
-      console.error("[v0] Error inviting foster:", error)
+      console.error("Error inviting foster:", error)
       alert(error.message || "Failed to send invitation")
     } finally {
       setIsInviting(false)
@@ -218,7 +218,7 @@ export default function AdminFostersPage() {
 
       await mutateFosters()
     } catch (error) {
-      console.error("[v0] Error canceling invitation:", error)
+      console.error("Error canceling invitation:", error)
       alert("Failed to cancel invitation")
     }
   }

@@ -39,8 +39,7 @@ export function TimelineFeed({ dogId, viewerRole, showComposer = false, onAddIte
         .select("*")
         .eq("dog_id", dogId)
         .order("created_at", { ascending: false })
-
-      console.log("[v0] Loaded timeline logs:", logs?.length || 0)
+      
 
       // Transform logs into timeline items
       const timelineItems: TimelineItem[] = (logs || []).map((log) => ({

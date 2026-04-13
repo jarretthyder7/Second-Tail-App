@@ -13,7 +13,7 @@ export interface EmailOptions {
 
 export async function sendEmail(options: EmailOptions) {
   if (!RESEND_API_KEY) {
-    console.error("[v0] RESEND_API_KEY not configured. Emails will not be sent.")
+    console.error("RESEND_API_KEY not configured. Emails will not be sent.")
     return { success: false, error: "Email service not configured" }
   }
 
@@ -34,15 +34,15 @@ export async function sendEmail(options: EmailOptions) {
 
     if (!response.ok) {
       const error = await response.json()
-      console.error("[v0] Error sending email:", error)
+      console.error("Error sending email:", error)
       return { success: false, error: error.message }
     }
 
     const data = await response.json()
-    console.log("[v0] Email sent successfully:", data.id)
+    console.log("Email sent successfully:", data.id)
     return { success: true, emailId: data.id }
   } catch (error) {
-    console.error("[v0] Failed to send email:", error)
+    console.error("Failed to send email:", error)
     return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
   }
 }

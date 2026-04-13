@@ -12,7 +12,15 @@ export function createClient() {
   }
 
   if (!supabaseClient) {
-    supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+    supabaseClient = createBrowserClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        storageKey: 'second-tail-auth',
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      }
+    })
   }
 
   return supabaseClient

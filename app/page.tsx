@@ -105,7 +105,7 @@ export default function Home() {
                   onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
                   onBlur={() => setTimeout(() => setLoginDropdownOpen(false), 150)}
                   className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                  style={{ backgroundColor: "#5a4a42" }}
+                  style={{ backgroundColor: "#D76B1A" }}
                 >
                   Login
                   <ChevronDown className={`w-4 h-4 transition-transform ${loginDropdownOpen ? "rotate-180" : ""}`} />

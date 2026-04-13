@@ -10,12 +10,19 @@ export const metadata: Metadata = {
   title: 'Second Tail Foster Portal',
   description: 'Supporting fosters and rescues in one place',
   generator: 'v0.app',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Second Tail',
+  },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#D76B1A',
 }
 
 export default function RootLayout({

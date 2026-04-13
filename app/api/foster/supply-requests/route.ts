@@ -75,3 +75,52 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json({ error: "Request ID required" }, { status: 400 })
+    }
+
+    // Verify the request belongs to this foster and is still open
+    const { data: existing, error: loadError } = await supabase
+      .from("help_requests")
+      .select("id, foster_id, status")
+      .eq("id", id)
+      .maybeSingle()
+
+    if (loadError || !existing) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 })
+    }
+
+    if (existing.foster_id !== user.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    if (existing.status !== "open") {
+      return NextResponse.json({ error: "Only open requests can be cancelled" }, { status: 400 })
+    }
+
+    const { error } = await supabase.from("help_requests").delete().eq("id", id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 })
+  }
+}

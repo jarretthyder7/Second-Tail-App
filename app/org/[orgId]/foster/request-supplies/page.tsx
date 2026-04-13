@@ -44,6 +44,7 @@ export default function FosterRequestSuppliesPage() {
   const [requests, setRequests] = useState<SupplyRequest[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [cancelling, setCancelling] = useState<string | null>(null)
   const [filterStatus, setFilterStatus] = useState("all")
   const [showForm, setShowForm] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
@@ -147,6 +148,21 @@ export default function FosterRequestSuppliesPage() {
       toast({ title: "Submission failed", description: err.message, variant: "destructive" })
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleCancel = async (id: string) => {
+    setCancelling(id)
+    try {
+      const res = await fetch(`/api/foster/supply-requests?id=${id}`, { method: "DELETE" })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || "Failed to cancel")
+      setRequests((prev) => prev.filter((r) => r.id !== id))
+      toast({ title: "Request cancelled", description: "Your supply request has been removed." })
+    } catch (err: any) {
+      toast({ title: "Could not cancel request", description: err.message, variant: "destructive" })
+    } finally {
+      setCancelling(null)
     }
   }
 
@@ -462,6 +478,20 @@ export default function FosterRequestSuppliesPage() {
                     Submitted {new Date(req.created_at).toLocaleDateString()}
                   </p>
                 </div>
+                {req.status === "open" && (
+                  <button
+                    onClick={() => handleCancel(req.id)}
+                    disabled={cancelling === req.id}
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-red-600 hover:bg-red-50 border border-red-200 hover:border-red-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cancelling === req.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <X className="w-3 h-3" />
+                    )}
+                    Cancel
+                  </button>
+                )}
               </div>
             </Card>
           ))}

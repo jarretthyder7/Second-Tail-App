@@ -2,12 +2,13 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Heart, Users, ArrowRight, Menu, X, CheckCircle2 } from "lucide-react"
+import { Heart, Users, ArrowRight, Menu, X, CheckCircle2, ChevronDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function Home() {
   const [activeView, setActiveView] = useState<"foster" | "rescue">("rescue")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const [fosterName, setFosterName] = useState("")
   const [fosterEmail, setFosterEmail] = useState("")
   const [fosterCityZip, setFosterCityZip] = useState("")
@@ -99,13 +100,48 @@ export default function Home() {
               >
                 Foster Sign-Up
               </a>
-              <Link
-                href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
-                className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: activeView === "foster" ? "#D76B1A" : "#5a4a42" }}
-              >
-                Login
-              </Link>
+              <div className="relative">
+                <button
+                  onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
+                  onBlur={() => setTimeout(() => setLoginDropdownOpen(false), 150)}
+                  className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                  style={{ backgroundColor: "#5a4a42" }}
+                >
+                  Login
+                  <ChevronDown className={`w-4 h-4 transition-transform ${loginDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+                {loginDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
+                    <Link
+                      href="/login/rescue"
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-amber-50 transition-colors"
+                      onClick={() => setLoginDropdownOpen(false)}
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                        <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">Rescue Org</div>
+                        <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
+                      </div>
+                    </Link>
+                    <div className="h-px bg-gray-100" />
+                    <Link
+                      href="/login/foster"
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-orange-50 transition-colors"
+                      onClick={() => setLoginDropdownOpen(false)}
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                        <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">Foster Parent</div>
+                        <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Mobile Menu Button */}
@@ -142,14 +178,35 @@ export default function Home() {
               >
                 Foster Sign-Up
               </a>
-              <Link
-                href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
-                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: activeView === "foster" ? "#D76B1A" : "#5a4a42" }}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Login
-              </Link>
+              <div className="pt-1 space-y-2">
+                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Login as</p>
+                <Link
+                  href="/login/rescue"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-amber-50 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                    <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Rescue Org</div>
+                    <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
+                  </div>
+                </Link>
+                <Link
+                  href="/login/foster"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                    <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Foster Parent</div>
+                    <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
+                  </div>
+                </Link>
+              </div>
             </div>
           )}
         </div>

@@ -14,6 +14,7 @@ import {
   sendMedicalUpdateEmail,
   sendSupplyRequestEmail,
   sendFosterInvitationEmail,
+  sendFosterWaitlistEmail,
 } from "@/lib/email/send"
 
 function escapeHtml(str: unknown): string {
@@ -32,12 +33,20 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
+    const body = await request.json()
+    const { type, ...data } = body
+
+    // foster-waitlist is a public endpoint — no auth required
+    if (type === "foster-waitlist") {
+      const result = await sendFosterWaitlistEmail(data.email, data.name)
+      return result.success
+        ? NextResponse.json({ success: true, emailId: result.emailId })
+        : NextResponse.json({ success: false, error: result.error }, { status: 500 })
+    }
+
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const body = await request.json()
-    const { type, ...data } = body
 
     let result
 

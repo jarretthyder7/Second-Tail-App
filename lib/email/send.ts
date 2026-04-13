@@ -169,6 +169,11 @@ export async function sendAppointmentDeclinedEmail(
   return sendEmail({ to: fosterEmail, ...template })
 }
 
+export async function sendFosterWaitlistEmail(email: string, name: string) {
+  const template = emailTemplates.fosterWaitlist(name)
+  return sendEmail({ to: email, ...template })
+}
+
 // Send appointment request confirmation to foster
 export async function sendAppointmentRequestConfirmationEmail(
   fosterEmail: string,

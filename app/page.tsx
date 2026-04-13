@@ -51,6 +51,12 @@ export default function Home() {
         type: "foster",
       })
       if (error) throw error
+      // Send waitlist confirmation email (fire and forget)
+      fetch("/api/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "foster-waitlist", email: fosterEmail, name: fosterName }),
+      }).catch(() => {})
       setFosterSubmitted(true)
     } catch {
       setFosterError("Something went wrong. Please try again.")

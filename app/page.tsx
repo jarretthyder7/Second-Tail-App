@@ -148,7 +148,7 @@ export default function Home() {
               <div className="relative" ref={loginDropdownRef}>
                 <button
                   onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
-                  className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                  className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
                   style={{ backgroundColor: "#D76B1A" }}
                 >
                   Login
@@ -226,10 +226,10 @@ export default function Home() {
                 <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Login as</p>
                 <Link
                   href="/login/rescue"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-amber-50 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-amber-50 rounded-full transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
                     <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
                   </div>
                   <div>
@@ -239,10 +239,10 @@ export default function Home() {
                 </Link>
                 <Link
                   href="/login/foster"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 rounded-lg transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-orange-50 rounded-full transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
                     <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
                   </div>
                   <div>
@@ -391,7 +391,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/for-rescue-organizations"
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-full font-semibold hover:opacity-90 transition-colors text-base"
                 style={{ backgroundColor: "#5a4a42" }}
               >
                 Learn More
@@ -402,7 +402,7 @@ export default function Home() {
                   setActiveView("rescue")
                   document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                 }}
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-amber-50 transition-colors text-base"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-amber-50 transition-colors text-base"
                 style={{ borderColor: "#5a4a42", color: "#5a4a42" }}
               >
                 Join Waitlist
@@ -429,7 +429,7 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/for-fosters"
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors text-base"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-full font-semibold hover:opacity-90 transition-colors text-base"
                 style={{ backgroundColor: "#D76B1A" }}
               >
                 Learn More
@@ -440,7 +440,7 @@ export default function Home() {
                   setActiveView("foster")
                   document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                 }}
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-orange-50 transition-colors text-base"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-orange-50 transition-colors text-base"
                 style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
               >
                 Join Waitlist
@@ -468,7 +468,7 @@ export default function Home() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
           <button
             onClick={() => setActiveView("rescue")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-semibold transition-all text-base ${
+            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
               activeView === "rescue" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
             style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
@@ -477,7 +477,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveView("foster")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-semibold transition-all text-base ${
+            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
               activeView === "foster" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
             }`}
             style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
@@ -579,10 +579,10 @@ export default function Home() {
               </p>
               <Link
                 href="/login/foster"
-                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Login to Dashboard
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+              style={{ backgroundColor: "#D76B1A" }}
+            >
+              Login to Dashboard
               </Link>
             </>
           ) : (
@@ -596,8 +596,8 @@ export default function Home() {
               </p>
               <Link
                 href="/sign-up/rescue"
-                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg transition-colors shadow-lg"
-                style={{ backgroundColor: "#5a4a42" }}
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg transition-colors shadow-lg"
+              style={{ backgroundColor: "#5a4a42" }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
@@ -619,7 +619,7 @@ export default function Home() {
           </p>
           <Link
             href="/sign-up/rescue"
-            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
           >
             Request Early Access
           </Link>
@@ -641,7 +641,7 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 mt-6">
               <button
                 onClick={() => setActiveView("rescue")}
-                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
                   activeView === "rescue" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
@@ -650,7 +650,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveView("foster")}
-                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
                   activeView === "foster" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
@@ -764,7 +764,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={!fosterAgree || fosterLoading}
-                    className="w-full px-6 py-3.5 rounded-lg text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                    className="w-full px-6 py-3.5 rounded-full text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                     style={{ backgroundColor: "#D76B1A" }}
                   >
                     {fosterLoading ? "Saving..." : "Notify Me"}
@@ -890,7 +890,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={!rescueAgree || rescueLoading}
-                    className="w-full px-6 py-3.5 rounded-lg text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                    className="w-full px-6 py-3.5 rounded-full text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
                     style={{ backgroundColor: "#5a4a42" }}
                   >
                     {rescueLoading ? "Saving..." : "Get Early Access"}

@@ -30,7 +30,7 @@ export default function ForFostersPage() {
               </Link>
               <Link
                 href="/login/foster"
-                className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                className="text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
               >
                 Login
@@ -66,7 +66,7 @@ export default function ForFostersPage() {
               </Link>
               <Link
                 href="/login/foster"
-                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg"
+                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-full"
                 style={{ backgroundColor: "#D76B1A" }}
                 onClick={() => setMobileMenuOpen(false)}
               >

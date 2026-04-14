@@ -30,7 +30,7 @@ export default function ForRescueOrganizationsPage() {
               </Link>
               <Link
                 href="/login/rescue"
-                className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                className="text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
               >
                 Login
@@ -66,7 +66,7 @@ export default function ForRescueOrganizationsPage() {
               </Link>
               <Link
                 href="/login/rescue"
-                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -199,7 +199,7 @@ export default function ForRescueOrganizationsPage() {
         </h2>
         <Link
           href="/sign-up/rescue"
-          className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#50402B" }}
         >
           Request Early Access

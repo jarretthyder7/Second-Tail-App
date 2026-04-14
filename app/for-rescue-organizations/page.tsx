@@ -30,7 +30,7 @@ export default function ForRescueOrganizationsPage() {
               </Link>
               <Link
                 href="/login/rescue"
-                className="text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                className="text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
               >
                 Login
@@ -66,7 +66,7 @@ export default function ForRescueOrganizationsPage() {
               </Link>
               <Link
                 href="/login/rescue"
-                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-colors"
+                className="block text-center text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
                 style={{ backgroundColor: "#D76B1A" }}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -77,7 +77,7 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </nav>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-[#FDF6EC] rounded-2xl">
         <div className="text-center space-y-4 sm:space-y-6">
           <div
             className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mx-auto"
@@ -85,17 +85,17 @@ export default function ForRescueOrganizationsPage() {
           >
             <Users className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: "#50402B" }} />
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight px-2">
+          <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight px-2">
             Built to support the people doing the hardest work.
           </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto px-2">
+          <p className="text-sm sm:text-base md:text-lg lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto px-2">
             Second Tail gives rescue organizations simple tools to manage fosters, track dog care, and keep everyone
             aligned—without spreadsheets and group texts.
           </p>
           <div className="pt-4 sm:pt-6">
             <Link
               href="/sign-up/rescue"
-              className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+              className="inline-block w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-5 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#50402B" }}
             >
               Request Early Access
@@ -105,33 +105,33 @@ export default function ForRescueOrganizationsPage() {
       </section>
 
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
-          <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <Users className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Foster coordination</h3>
-            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
+            <Users className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Foster coordination</h3>
+            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
               See all your fosters in one place. Track who's caring for which dogs, who's available, and who needs
               support. No more spreadsheet chaos.
             </p>
           </div>
-          <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Communication & updates</h3>
-            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
+            <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Communication & updates</h3>
+            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
               Message fosters one-on-one or send org-wide updates. No more group texts.
             </p>
           </div>
-          <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <Clipboard className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Care tracking</h3>
-            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
+            <Clipboard className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Care tracking</h3>
+            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
               Every vet visit, medication, and daily log in one place. Accessible by your whole team.
             </p>
           </div>
-          <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <Shield className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Collaboration across teams</h3>
-            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
+            <Shield className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Collaboration across teams</h3>
+            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
               Add coordinators, medical staff, and volunteers. Everyone sees what they need to.
             </p>
           </div>
@@ -139,39 +139,39 @@ export default function ForRescueOrganizationsPage() {
       </section>
 
       {/* Features Grid Section */}
-      <section className="bg-white py-12 sm:py-16 lg:py-20">
+      <section className="bg-[#FDF6EC] py-12 sm:py-16 lg:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 lg:mb-12 text-center px-2">
             What&apos;s included
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="flex items-start gap-3 p-4">
-              <Mail className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Foster invitations</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <Mail className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Foster invitations</span>
             </div>
-            <div className="flex items-start gap-3 p-4">
-              <FileUp className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Animal profiles</span>
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <FileUp className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Animal profiles</span>
             </div>
-            <div className="flex items-start gap-3 p-4">
-              <Clock className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Appointment calendar</span>
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Appointment calendar</span>
             </div>
-            <div className="flex items-start gap-3 p-4">
-              <Plus className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Supply request management</span>
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Supply request management</span>
             </div>
-            <div className="flex items-start gap-3 p-4">
-              <DollarSign className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Reimbursement tracking</span>
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Reimbursement tracking</span>
             </div>
-            <div className="flex items-start gap-3 p-4">
-              <MessageCircle className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Team chat</span>
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Team chat</span>
             </div>
-            <div className="flex items-start gap-3 p-4">
-              <FileUp className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Data import from spreadsheets</span>
+            <div className="flex items-start gap-2 p-3 sm:p-4">
+              <FileUp className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Data import from spreadsheets</span>
             </div>
             <div className="flex items-start gap-3 p-4">
               <Users2 className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
@@ -199,16 +199,16 @@ export default function ForRescueOrganizationsPage() {
         </h2>
         <Link
           href="/sign-up/rescue"
-          className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#50402B" }}
         >
           Request Early Access
         </Link>
       </section>
 
-      <footer className="border-t border-gray-200 bg-white py-8 sm:py-12">
+      <footer className="border-t border-gray-200 bg-[#D76B1A] py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs sm:text-sm text-gray-500">
+          <div className="text-center text-xs sm:text-sm text-white/80">
             © 2026 Second Tail. Made with care for rescues and fosters.
           </div>
         </div>

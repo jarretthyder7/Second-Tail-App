@@ -406,9 +406,9 @@ export default function Home() {
                 >
                   1
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Accept your rescue's invite and log in</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Sign up and get started</h3>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Receive an invitation from your rescue organization and create your foster account
+                  Create your foster account directly. No invite required—join and connect with rescues
                 </p>
               </div>
               <div className="text-center px-4">
@@ -418,9 +418,9 @@ export default function Home() {
                 >
                   2
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">View your assigned animal and care plan</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Connect with rescues and receive placements</h3>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  See details about the dog you're fostering, medical history, and care instructions
+                  Browse rescues, express interest, and receive animals to foster
                 </p>
               </div>
               <div className="text-center px-4">
@@ -430,9 +430,9 @@ export default function Home() {
                 >
                   3
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Log updates, request supplies, message your team</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Track care, share updates, request supplies</h3>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Manage everything in one place and stay connected with your rescue organization
+                  Manage everything in one place and communicate seamlessly with your rescue partner
                 </p>
               </div>
             </div>

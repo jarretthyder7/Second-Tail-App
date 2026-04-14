@@ -635,47 +635,6 @@ export default function Home() {
         )}
       </section>
 
-      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 sm:py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
-          {activeView === "foster" ? (
-            <>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2">
-                Foster with confidence and support
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
-                Second Tail keeps you connected to your rescue team so you're never figuring it out alone.
-              </p>
-              <Link
-                href="/login/foster"
-                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Login to Dashboard
-              </Link>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2">
-                Build a foster network that actually scales.
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
-                Second Tail helps rescue organizations coordinate care, reduce admin burden, and focus on what
-                matters—saving more lives.
-              </p>
-              <Link
-                href="/sign-up/rescue"
-                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg transition-colors shadow-lg"
-                style={{ backgroundColor: "#5a4a42" }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              >
-                Register Your Organization
-              </Link>
-            </>
-          )}
-        </div>
-      </section>
-
       {/* CTA Banner Section */}
       <section style={{ backgroundColor: "#D76B1A" }} className="py-16 sm:py-20 lg:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">

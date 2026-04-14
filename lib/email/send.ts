@@ -174,6 +174,18 @@ export async function sendFosterWaitlistEmail(email: string, name: string) {
   return sendEmail({ to: email, ...template })
 }
 
+export async function sendRescueInviteFromFosterEmail(
+  rescueEmail: string,
+  rescueName: string,
+  fosterName: string,
+  fosterCity: string,
+  fosterState: string,
+  customMessage?: string,
+) {
+  const template = emailTemplates.rescueInviteFromFoster(fosterName, fosterCity, fosterState, customMessage)
+  return sendEmail({ to: rescueEmail, ...template })
+}
+
 // Send appointment request confirmation to foster
 export async function sendAppointmentRequestConfirmationEmail(
   fosterEmail: string,

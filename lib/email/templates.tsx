@@ -369,6 +369,30 @@ export const emailTemplates = {
     `,
   }),
 
+  rescueInviteFromFoster: (fosterName: string, fosterCity: string, fosterState: string, customMessage?: string) => ({
+    subject: `${fosterName} thinks your rescue should try Second Tail`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #fdf6ec;">
+        <h1 style="color: #d97706; margin-top: 0;">You're invited to join Second Tail</h1>
+        <p style="color: #5a4a42; font-size: 16px;">
+          <strong>${fosterName}</strong> from <strong>${fosterCity}, ${fosterState}</strong> is a foster parent on Second Tail and wants to connect with your rescue.
+        </p>
+        ${customMessage ? `
+        <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #d97706;">
+          <p style="margin: 0; color: #666; font-size: 14px; font-style: italic;">"${customMessage}"</p>
+        </div>
+        ` : ''}
+        <p style="color: #5a4a42; margin-top: 24px;">
+          Second Tail makes it easy to manage your foster network, coordinate care, and keep everyone connected — all in one place.
+        </p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="https://getsecondtail.com/sign-up/rescue" style="display: inline-block; background-color: #d97706; color: white; padding: 16px 40px; border-radius: 24px; font-weight: bold; font-size: 16px; text-decoration: none;">Register Your Rescue Free</a>
+        </div>
+        <p style="color: #999; font-size: 12px; margin-top: 30px;">Second Tail helps rescue organizations coordinate fosters, track animal care, and focus on what matters — saving lives.</p>
+      </div>
+    `,
+  }),
+
   orgPaused: (orgName: string, pausedBy: string, pausedUntil: string, months: number) => ({
     subject: `${orgName} has been paused for ${months} month${months > 1 ? "s" : ""}`,
     html: `

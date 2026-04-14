@@ -15,6 +15,7 @@ import {
   sendSupplyRequestEmail,
   sendFosterInvitationEmail,
   sendFosterWaitlistEmail,
+  sendRescueInviteFromFosterEmail,
 } from "@/lib/email/send"
 
 function escapeHtml(str: unknown): string {
@@ -99,6 +100,16 @@ export async function POST(request: NextRequest) {
         break
       case "supply-request":
         result = await sendSupplyRequestEmail(data.rescueEmail, data.rescueName, data.fosterName, data.supplies)
+        break
+      case "rescue-invite-from-foster":
+        result = await sendRescueInviteFromFosterEmail(
+          data.rescueEmail,
+          data.rescueName,
+          data.fosterName,
+          data.fosterCity,
+          data.fosterState,
+          data.customMessage
+        )
         break
       case "org-paused":
         result = await sendEmail({

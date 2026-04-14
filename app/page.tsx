@@ -690,11 +690,11 @@ export default function Home() {
                 Second Tail keeps you connected to your rescue team so you're never figuring it out alone.
               </p>
               <Link
-                href="/login/foster"
+                href="/sign-up/foster"
             className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#D76B1A" }}
             >
-              Login to Dashboard
+              Sign Up to Foster
               </Link>
             </>
           ) : (

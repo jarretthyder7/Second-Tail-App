@@ -77,7 +77,7 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </nav>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-[#FDF6EC] rounded-2xl">
         <div className="text-center space-y-4 sm:space-y-6">
           <div
             className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mx-auto"
@@ -139,7 +139,7 @@ export default function ForRescueOrganizationsPage() {
       </section>
 
       {/* Features Grid Section */}
-      <section className="bg-white py-12 sm:py-16 lg:py-20">
+      <section className="bg-[#FDF6EC] py-12 sm:py-16 lg:py-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
             What&apos;s included
@@ -206,9 +206,9 @@ export default function ForRescueOrganizationsPage() {
         </Link>
       </section>
 
-      <footer className="border-t border-gray-200 bg-white py-8 sm:py-12">
+      <footer className="border-t border-gray-700 bg-[#3D2B1F] py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs sm:text-sm text-gray-500">
+          <div className="text-center text-xs sm:text-sm text-gray-400">
             © 2026 Second Tail. Made with care for rescues and fosters.
           </div>
         </div>

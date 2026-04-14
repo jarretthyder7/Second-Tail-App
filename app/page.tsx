@@ -460,7 +460,7 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 bg-[#FDF6EC] rounded-2xl">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
           How Second Tail Works
         </h2>
@@ -902,22 +902,22 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-200 bg-white py-12 sm:py-16">
+      <footer className="border-t border-gray-200 bg-[#3D2B1F] py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
-              <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900 inline-block mb-4">
+              <Link href="/" className="text-xl sm:text-2xl font-bold text-white inline-block mb-4">
                 Second Tail
               </Link>
             </div>
             <div className="flex flex-col sm:flex-row gap-6 md:justify-end">
-              <Link href="/for-rescue-organizations" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/for-rescue-organizations" className="text-gray-300 hover:text-white transition-colors">
                 For Rescues
               </Link>
-              <Link href="/for-fosters" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/for-fosters" className="text-gray-300 hover:text-white transition-colors">
                 For Fosters
               </Link>
-              <Link href="/login/rescue" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/login/rescue" className="text-gray-300 hover:text-white transition-colors">
                 Login
               </Link>
               <button 
@@ -925,18 +925,18 @@ export default function Home() {
                   document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                   setActiveView("foster")
                 }}
-                className="text-gray-600 hover:text-gray-900 transition-colors text-left"
+                className="text-gray-300 hover:text-white transition-colors text-left"
               >
                 Join Waitlist
               </button>
             </div>
           </div>
-          <div className="border-t border-gray-200 pt-8">
+          <div className="border-t border-gray-700 pt-8">
             <div className="flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
-              <a href="mailto:hello@getsecondtail.com" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <a href="mailto:hello@getsecondtail.com" className="text-gray-300 hover:text-white transition-colors">
                 hello@getsecondtail.com
               </a>
-              <p className="text-xs sm:text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-400">
                 © 2026 Second Tail. Made with care for rescues and fosters.
               </p>
             </div>

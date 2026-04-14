@@ -254,7 +254,7 @@ export default function RescueSignUpPage() {
 
           {/* Right side - Sign Up Form */}
           <div className="lg:pt-16">
-            <div className="bg-white rounded-2xl shadow-xl border border-neutral-sand p-6 sm:p-8 space-y-6">
+            <div className="bg-[#FDF6EC] rounded-2xl shadow-xl border border-neutral-sand p-6 sm:p-8 space-y-6">
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "Lora, serif" }}>
                   Create Your Account

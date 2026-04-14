@@ -902,7 +902,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-200 bg-[#3D2B1F] py-12 sm:py-16">
+      <footer className="border-t border-gray-200 bg-[#D76B1A] py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div>
@@ -911,13 +911,13 @@ export default function Home() {
               </Link>
             </div>
             <div className="flex flex-col sm:flex-row gap-6 md:justify-end">
-              <Link href="/for-rescue-organizations" className="text-gray-300 hover:text-white transition-colors">
+              <Link href="/for-rescue-organizations" className="text-white/90 hover:text-white transition-colors">
                 For Rescues
               </Link>
-              <Link href="/for-fosters" className="text-gray-300 hover:text-white transition-colors">
+              <Link href="/for-fosters" className="text-white/90 hover:text-white transition-colors">
                 For Fosters
               </Link>
-              <Link href="/login/rescue" className="text-gray-300 hover:text-white transition-colors">
+              <Link href="/login/rescue" className="text-white/90 hover:text-white transition-colors">
                 Login
               </Link>
               <button 
@@ -925,18 +925,18 @@ export default function Home() {
                   document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                   setActiveView("foster")
                 }}
-                className="text-gray-300 hover:text-white transition-colors text-left"
+                className="text-white/90 hover:text-white transition-colors text-left"
               >
                 Join Waitlist
               </button>
             </div>
           </div>
-          <div className="border-t border-gray-700 pt-8">
+          <div className="border-t border-white/20 pt-8">
             <div className="flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
-              <a href="mailto:hello@getsecondtail.com" className="text-gray-300 hover:text-white transition-colors">
+              <a href="mailto:hello@getsecondtail.com" className="text-white/90 hover:text-white transition-colors">
                 hello@getsecondtail.com
               </a>
-              <p className="text-xs sm:text-sm text-gray-400">
+              <p className="text-xs sm:text-sm text-white/80">
                 © 2026 Second Tail. Made with care for rescues and fosters.
               </p>
             </div>

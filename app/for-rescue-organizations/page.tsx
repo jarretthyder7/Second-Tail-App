@@ -206,9 +206,9 @@ export default function ForRescueOrganizationsPage() {
         </Link>
       </section>
 
-      <footer className="border-t border-gray-700 bg-[#3D2B1F] py-8 sm:py-12">
+      <footer className="border-t border-gray-200 bg-[#D76B1A] py-8 sm:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs sm:text-sm text-gray-400">
+          <div className="text-center text-xs sm:text-sm text-white/80">
             © 2026 Second Tail. Made with care for rescues and fosters.
           </div>
         </div>

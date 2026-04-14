@@ -248,7 +248,7 @@ export default function Home() {
             </h1>
             
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-              The all-in-one platform for rescue organizations to manage fosters, track animals, coordinate appointments, and handle supply requests — all in one place.
+              Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 sm:pt-6">
@@ -295,7 +295,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Foster Management</h3>
               <p className="text-gray-600">
-                Invite fosters, assign animals, track who has what dog
+                Invite fosters by email. Assign them animals. Track who's caring for what dog.
               </p>
             </div>
 
@@ -306,7 +306,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Appointment Scheduling</h3>
               <p className="text-gray-600">
-                Vet visits, check-ins, and drop-offs in one calendar
+                Vet visits, check-ins, drop-offs. One calendar, no more group texts.
               </p>
             </div>
 
@@ -317,7 +317,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Supply Requests</h3>
               <p className="text-gray-600">
-                Fosters request supplies, you approve and track them
+                Fosters request supplies. You approve. Done.
               </p>
             </div>
 
@@ -328,7 +328,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Reimbursements</h3>
               <p className="text-gray-600">
-                Handle foster reimbursement requests without the paperwork
+                Foster paid out of pocket? Handle it without the paperwork.
               </p>
             </div>
 
@@ -339,7 +339,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Team Messaging</h3>
               <p className="text-gray-600">
-                Message fosters directly or chat with your internal team
+                Message individual fosters or your whole team. No more group chat chaos.
               </p>
             </div>
 
@@ -350,7 +350,7 @@ export default function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Emergency Support</h3>
               <p className="text-gray-600">
-                Fosters get emergency contacts and resources when they need them fast
+                Fosters get emergency contacts and resources 24/7 when they need help fast.
               </p>
             </div>
           </div>
@@ -479,7 +479,7 @@ export default function Home() {
               >
                 1
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Accept your rescue's invite</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Accept your rescue's invite and log in</h3>
               <p className="text-gray-600 text-sm sm:text-base">
                 Receive an invitation from your rescue organization and create your foster account
               </p>
@@ -503,7 +503,7 @@ export default function Home() {
               >
                 3
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Request supplies, log updates, message your team</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Log updates, request supplies, message your team</h3>
               <p className="text-gray-600 text-sm sm:text-base">
                 Manage everything in one place and stay connected with your rescue organization
               </p>
@@ -518,7 +518,7 @@ export default function Home() {
               >
                 1
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Create your org and invite your team</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Create your org and invite your team members</h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Register your rescue, add team members, and set up your organization
               </p>
@@ -542,7 +542,7 @@ export default function Home() {
               >
                 3
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Manage everything from your admin dashboard</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Manage everything from your dashboard. Answer requests. Track care.</h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                 Track placements, coordinate appointments, and communicate with your entire foster network
               </p>
@@ -596,7 +596,7 @@ export default function Home() {
       <section style={{ backgroundColor: "#D76B1A" }} className="py-16 sm:py-20 lg:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
-            Built for the rescues doing the most important work.
+            Built by someone who actually fosters.
           </h2>
           <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
             Currently accepting early access partners.
@@ -605,7 +605,7 @@ export default function Home() {
             href="/sign-up/rescue"
             className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
           >
-            Get Early Access
+            Request Early Access
           </Link>
         </div>
       </section>

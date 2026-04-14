@@ -590,23 +590,6 @@ export default function Home() {
               </p>
             </div>
           </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 sm:mt-16">
-            <Link
-              href="/for-rescue-organizations"
-              className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white text-center"
-              style={{ backgroundColor: "#5a4a42" }}
-            >
-              Learn More for Rescues
-            </Link>
-            <Link
-              href="/for-fosters"
-              className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white text-center"
-              style={{ backgroundColor: "#D76B1A" }}
-            >
-              Learn More for Fosters
-            </Link>
-          </div>
         </div>
       </section>
 
@@ -722,13 +705,13 @@ export default function Home() {
                 matters—saving more lives.
               </p>
               <Link
-                href="/sign-up/rescue"
+                href="/for-rescue-organizations"
             className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg transition-colors shadow-lg"
               style={{ backgroundColor: "#5a4a42" }}
                 onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
                 onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
-                Register Your Organization
+                Learn More for Rescues
               </Link>
             </>
           )}
@@ -786,11 +769,11 @@ export default function Home() {
                 </p>
               </div>
               <Link
-                href="/sign-up/foster"
+                href="/for-fosters"
                 className="inline-block w-full sm:w-auto px-8 py-4 text-white rounded-full font-semibold text-base hover:opacity-90 transition-colors text-center"
                 style={{ backgroundColor: "#D76B1A" }}
               >
-                Sign Up to Foster
+                Learn More for Fosters
               </Link>
             </div>
           </div>

@@ -384,7 +384,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setActiveView("rescue")
-                  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                 }}
                 className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-amber-50 transition-colors text-base"
                 style={{ borderColor: "#5a4a42", color: "#5a4a42" }}
@@ -422,7 +422,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setActiveView("foster")
-                  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                 }}
                 className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-orange-50 transition-colors text-base"
                 style={{ borderColor: "#D76B1A", color: "#D76B1A" }}

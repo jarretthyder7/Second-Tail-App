@@ -370,90 +370,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 hidden">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {/* Rescue Card - Hidden */}
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 border-amber-200 flex flex-col">
-            <div
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
-              style={{ backgroundColor: "rgba(90, 74, 66, 0.15)" }}
-            >
-              <Users className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Rescue Organizations</h3>
-            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed flex-1">
-              Streamline foster coordination. Simple tools to manage relationships, track care, and scale without
-              burnout.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/for-rescue-organizations"
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-full font-semibold hover:opacity-90 transition-colors text-base"
-                style={{ backgroundColor: "#5a4a42" }}
-              >
-                Learn More
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-              <button
-                onClick={() => {
-                  setActiveView("rescue")
-                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
-                }}
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-amber-50 transition-colors text-base"
-                style={{ borderColor: "#5a4a42", color: "#5a4a42" }}
-              >
-                Join Waitlist
-              </button>
-            </div>
-          </div>
-
-          {/* Foster Card - Hidden */}
-          <div
-            className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 flex flex-col"
-            style={{ borderColor: "rgba(215, 107, 26, 0.2)" }}
-          >
-            <div
-              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
-              style={{ backgroundColor: "rgba(215, 107, 26, 0.15)" }}
-            >
-              <Heart className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Foster Parents</h3>
-            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed flex-1">
-              A simple dashboard to collaborate with your rescue organization. Track care, communicate easily, and get
-              the support you need.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/for-fosters"
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-full font-semibold hover:opacity-90 transition-colors text-base"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Learn More
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-              <Link
-                href="/sign-up/foster"
-                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-orange-50 transition-colors text-base"
-                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
-              >
-                Sign Up to Foster
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center text-sm sm:text-base text-gray-500 pt-6 sm:pt-8">
-          Already a member?{" "}
-          <Link
-            href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
-            className="text-gray-900 font-medium hover:underline"
-          >
-            Log in
-          </Link>
-        </p>
-      </section>
-
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 bg-[#FDF6EC] rounded-2xl">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
           How Second Tail Works
@@ -559,6 +475,90 @@ export default function Home() {
             </div>
           </div>
         )}
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          {/* Rescue Card - Hidden */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 border-amber-200 flex flex-col">
+            <div
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
+              style={{ backgroundColor: "rgba(90, 74, 66, 0.15)" }}
+            >
+              <Users className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Rescue Organizations</h3>
+            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed flex-1">
+              Streamline foster coordination. Simple tools to manage relationships, track care, and scale without
+              burnout.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/for-rescue-organizations"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-full font-semibold hover:opacity-90 transition-colors text-base"
+                style={{ backgroundColor: "#5a4a42" }}
+              >
+                Learn More
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <button
+                onClick={() => {
+                  setActiveView("rescue")
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
+                }}
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-amber-50 transition-colors text-base"
+                style={{ borderColor: "#5a4a42", color: "#5a4a42" }}
+              >
+                Join Waitlist
+              </button>
+            </div>
+          </div>
+
+          {/* Foster Card - Hidden */}
+          <div
+            className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 flex flex-col"
+            style={{ borderColor: "rgba(215, 107, 26, 0.2)" }}
+          >
+            <div
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
+              style={{ backgroundColor: "rgba(215, 107, 26, 0.15)" }}
+            >
+              <Heart className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
+            </div>
+            <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4">For Foster Parents</h3>
+            <p className="text-gray-700 text-base sm:text-lg mb-5 sm:mb-6 leading-relaxed flex-1">
+              A simple dashboard to collaborate with your rescue organization. Track care, communicate easily, and get
+              the support you need.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/for-fosters"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 text-white rounded-full font-semibold hover:opacity-90 transition-colors text-base"
+                style={{ backgroundColor: "#D76B1A" }}
+              >
+                Learn More
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <Link
+                href="/sign-up/foster"
+                className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-orange-50 transition-colors text-base"
+                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+              >
+                Sign Up to Foster
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center text-sm sm:text-base text-gray-500 pt-6 sm:pt-8">
+          Already a member?{" "}
+          <Link
+            href={activeView === "foster" ? "/login/foster" : "/login/rescue"}
+            className="text-gray-900 font-medium hover:underline"
+          >
+            Log in
+          </Link>
+        </p>
       </section>
 
       <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 sm:py-16 lg:py-20">

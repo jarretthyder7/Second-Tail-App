@@ -54,7 +54,7 @@ export default function FosterDashboard() {
 
         // Get user profile
         const { data: profileData, error: profileError } = await supabase
-          .from('users')
+          .from('profiles')
           .select('*')
           .eq('id', currentUser.id)
           .single()

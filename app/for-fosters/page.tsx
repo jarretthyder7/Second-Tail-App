@@ -89,17 +89,22 @@ export default function ForFostersPage() {
             Collaborate with your rescue organization
           </h1>
           <p className="text-sm sm:text-base md:text-lg lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto px-2">
-            Second Tail is a dashboard used with your rescue organization to communicate, coordinate care, and track
-            updates for the animals you foster.
+            Sign up free, build your foster profile, and connect with rescue organizations in your area.
           </p>
-          <div className="pt-4 sm:pt-6">
-            <p className="text-base text-gray-600 mb-4">Foster access is provided by your rescue organization</p>
+          <div className="pt-4 sm:pt-6 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
-              href="/login/foster"
+              href="/sign-up/foster"
               className="inline-block w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-5 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#D76B1A" }}
             >
-              Login to Your Account
+              Sign Up to Foster
+            </Link>
+            <Link
+              href="/login/foster"
+              className="inline-block w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-5 border-2 rounded-full font-semibold text-sm sm:text-base transition-colors"
+              style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+            >
+              Already a member? Log in
             </Link>
           </div>
         </div>
@@ -167,17 +172,17 @@ export default function ForFostersPage() {
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 text-center">
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 sm:mb-8 px-2">
-          Not connected to a rescue yet?
+          Ready to get started?
         </h2>
         <p className="text-base sm:text-lg text-gray-600 mb-6 px-2">
-          Join our waitlist and we'll notify you when a rescue in your area joins Second Tail.
+          Create your foster profile today and start connecting with rescue organizations in your area.
         </p>
           <Link
-            href="/#foster-waitlist"
+            href="/sign-up/foster"
             className="inline-block w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-5 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
             style={{ backgroundColor: "#D76B1A" }}
           >
-            Join the Foster Waitlist
+            Sign Up to Foster
           </Link>
       </section>
 

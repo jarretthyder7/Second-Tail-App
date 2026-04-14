@@ -435,16 +435,13 @@ export default function Home() {
                 Learn More
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
-              <button
-                onClick={() => {
-                  setActiveView("foster")
-                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
-                }}
+              <Link
+                href="/sign-up/foster"
                 className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-full font-semibold hover:bg-orange-50 transition-colors text-base"
                 style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
               >
-                Join Waitlist
-              </button>
+                Sign Up to Foster
+              </Link>
             </div>
           </div>
         </div>
@@ -626,279 +623,47 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Waitlist Section */}
-      <section id="foster-waitlist" className="border-t border-gray-200 bg-gradient-to-br from-orange-50/40 to-amber-50/40">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
-              Stay Connected
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
-              Get notified when Second Tail launches in your area.
-            </p>
+      {/* Two-Column CTA Section */}
+      <section className="py-16 sm:py-20 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Card - Orange */}
+            <div style={{ backgroundColor: "#D76B1A" }} className="rounded-2xl p-8 sm:p-12 text-white flex flex-col justify-between">
+              <div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                  For Rescue Organizations
+                </h2>
+                <p className="text-lg sm:text-xl text-white/90 mb-8">
+                  Manage your foster network without the chaos.
+                </p>
+              </div>
+              <Link
+                href="/sign-up/rescue"
+                className="inline-block w-full sm:w-auto px-8 py-4 bg-white text-orange-600 rounded-full font-semibold text-base hover:bg-gray-100 transition-colors text-center"
+              >
+                Register Your Rescue
+              </Link>
+            </div>
 
-            {/* Tab switcher */}
-            <div className="flex items-center justify-center gap-3 mt-6">
-              <button
-                onClick={() => setActiveView("rescue")}
-                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
-                  activeView === "rescue" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-                style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
+            {/* Right Card - Cream with Border */}
+            <div style={{ backgroundColor: "#FDF6EC", borderColor: "#D76B1A" }} className="rounded-2xl p-8 sm:p-12 border-2 text-gray-900 flex flex-col justify-between">
+              <div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
+                  For Foster Parents
+                </h2>
+                <p className="text-lg sm:text-xl text-gray-700 mb-8">
+                  Sign up free and connect with rescues in your area.
+                </p>
+              </div>
+              <Link
+                href="/sign-up/foster"
+                className="inline-block w-full sm:w-auto px-8 py-4 text-white rounded-full font-semibold text-base hover:opacity-90 transition-colors text-center"
+                style={{ backgroundColor: "#D76B1A" }}
               >
-                Rescue Organization
-              </button>
-              <button
-                onClick={() => setActiveView("foster")}
-                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
-                  activeView === "foster" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-                style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
-              >
-                Foster Parent
-              </button>
+                Sign Up to Foster
+              </Link>
             </div>
           </div>
-
-          {/* Foster Waitlist Form */}
-          {activeView === "foster" && (
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(215, 107, 26, 0.15)" }}
-                >
-                  <Heart className="w-5 h-5" style={{ color: "#D76B1A" }} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">For Foster Parents</h3>
-                  <p className="text-sm text-gray-600">Get notified when rescues near you join</p>
-                </div>
-              </div>
-
-              {fosterSubmitted ? (
-                <div className="text-center py-6 space-y-4">
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
-                    style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}
-                  >
-                    <CheckCircle2 className="w-7 h-7" style={{ color: "#D76B1A" }} />
-                  </div>
-                  <p className="text-base font-semibold text-gray-900">
-                    {"You're on the list! We'll notify you when rescues near you go live."}
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleFosterWaitlistSubmit} className="space-y-4">
-                  {fosterError && (
-                    <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                      {fosterError}
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Full Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={fosterName}
-                      onChange={(e) => setFosterName(e.target.value)}
-                      placeholder="Your full name"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email</label>
-                    <input
-                      type="email"
-                      required
-                      value={fosterEmail}
-                      onChange={(e) => setFosterEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">City</label>
-                      <input
-                        type="text"
-                        required
-                        value={fosterCity}
-                        onChange={(e) => setFosterCity(e.target.value)}
-                        placeholder="e.g. Austin"
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                        style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">State</label>
-                      <select
-                        required
-                        value={fosterState}
-                        onChange={(e) => setFosterState(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent text-sm bg-white"
-                        style={{ "--tw-ring-color": "rgba(215, 107, 26, 0.4)" } as React.CSSProperties}
-                      >
-                        <option value="">State</option>
-                        {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={fosterAgree}
-                      onChange={(e) => setFosterAgree(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
-                      style={{ accentColor: "#D76B1A" }}
-                    />
-                    <span className="text-sm text-gray-600">
-                      I agree to receive updates from Second Tail.{" "}
-                      <Link href="/privacy" className="font-semibold hover:underline" style={{ color: "#D76B1A" }}>
-                        Privacy Policy
-                      </Link>
-                    </span>
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={!fosterAgree || fosterLoading}
-                    className="w-full px-6 py-3.5 rounded-full text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
-                    style={{ backgroundColor: "#D76B1A" }}
-                  >
-                    {fosterLoading ? "Saving..." : "Notify Me"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
-
-          {/* Rescue Organization Waitlist Form */}
-          {activeView === "rescue" && (
-            <div className="bg-white rounded-2xl border border-amber-100 shadow-sm p-6 sm:p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ backgroundColor: "rgba(90, 74, 66, 0.15)" }}
-                >
-                  <Users className="w-5 h-5" style={{ color: "#5a4a42" }} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">For Rescue Organizations</h3>
-                  <p className="text-sm text-gray-600">Get early access when we launch</p>
-                </div>
-              </div>
-
-              {rescueSubmitted ? (
-                <div className="text-center py-6 space-y-4">
-                  <div
-                    className="w-14 h-14 rounded-full flex items-center justify-center mx-auto"
-                    style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}
-                  >
-                    <CheckCircle2 className="w-7 h-7" style={{ color: "#5a4a42" }} />
-                  </div>
-                  <p className="text-base font-semibold text-gray-900">
-                    {"You're on the list! We'll reach out when we're ready to onboard your organization."}
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleRescueWaitlistSubmit} className="space-y-4">
-                  {rescueError && (
-                    <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-                      {rescueError}
-                    </div>
-                  )}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Your Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={rescueName}
-                      onChange={(e) => setRescueName(e.target.value)}
-                      placeholder="Your full name"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Organization Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={rescueOrgName}
-                      onChange={(e) => setRescueOrgName(e.target.value)}
-                      placeholder="Your rescue organization"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-1.5">Email</label>
-                    <input
-                      type="email"
-                      required
-                      value={rescueEmail}
-                      onChange={(e) => setRescueEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                      style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">City</label>
-                      <input
-                        type="text"
-                        required
-                        value={rescueCity}
-                        onChange={(e) => setRescueCity(e.target.value)}
-                        placeholder="e.g. Austin"
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent text-sm"
-                        style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-800 mb-1.5">State</label>
-                      <select
-                        required
-                        value={rescueState}
-                        onChange={(e) => setRescueState(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent text-sm bg-white"
-                        style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.4)" } as React.CSSProperties}
-                      >
-                        <option value="">State</option>
-                        {US_STATES.map((s) => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <label className="flex items-start gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rescueAgree}
-                      onChange={(e) => setRescueAgree(e.target.checked)}
-                      className="mt-0.5 w-4 h-4 rounded flex-shrink-0"
-                      style={{ accentColor: "#5a4a42" }}
-                    />
-                    <span className="text-sm text-gray-600">
-                      I agree to receive updates from Second Tail.{" "}
-                      <Link href="/privacy" className="font-semibold hover:underline" style={{ color: "#5a4a42" }}>
-                        Privacy Policy
-                      </Link>
-                    </span>
-                  </label>
-                  <button
-                    type="submit"
-                    disabled={!rescueAgree || rescueLoading}
-                    className="w-full px-6 py-3.5 rounded-full text-white font-semibold text-sm transition-opacity disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
-                    style={{ backgroundColor: "#5a4a42" }}
-                  >
-                    {rescueLoading ? "Saving..." : "Get Early Access"}
-                  </button>
-                </form>
-              )}
-            </div>
-          )}
         </div>
       </section>
 
@@ -922,12 +687,11 @@ export default function Home() {
               </Link>
               <button 
                 onClick={() => {
-                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                   setActiveView("foster")
                 }}
                 className="text-white/90 hover:text-white transition-colors text-left"
               >
-                Join Waitlist
+                Sign Up to Foster
               </button>
             </div>
           </div>

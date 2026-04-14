@@ -259,7 +259,7 @@ export default function Home() {
       <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-6xl font-bold text-gray-900 leading-tight">
               Fostering and rescue, made easier for everyone involved.
             </h1>
             
@@ -267,21 +267,21 @@ export default function Home() {
               Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6">
               <Link
                 href="/sign-up/rescue"
-                className="inline-flex items-center justify-center px-8 py-4 text-white rounded-xl font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+                className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
                 style={{ backgroundColor: "#D76B1A" }}
               >
                 Register Your Rescue
-                <ArrowRight className="w-5 h-5 ml-2" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Link>
               <button
                 onClick={() => {
                   document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                   setActiveView("foster")
                 }}
-                className="inline-flex items-center justify-center px-8 py-4 border-2 rounded-xl font-semibold text-base sm:text-lg transition-colors"
+                className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 rounded-full font-semibold text-sm sm:text-base transition-colors"
                 style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
               >
                 Join Foster Waitlist
@@ -295,77 +295,77 @@ export default function Home() {
       <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+            <h2 className="text-xl sm:text-2xl lg:text-5xl font-bold text-gray-900 mb-4">
               Everything you need to manage rescue operations
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">
               Powerful features designed specifically for rescue organizations and foster parents
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Feature 1: Foster Management */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
-                <Briefcase className="w-7 h-7" style={{ color: "#D76B1A" }} />
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <Briefcase className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Foster Management</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Foster Management</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Invite fosters by email. Assign them animals. Track who's caring for what dog.
               </p>
             </div>
 
             {/* Feature 2: Appointment Scheduling */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
-                <Calendar className="w-7 h-7" style={{ color: "#5a4a42" }} />
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                <Calendar className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Appointment Scheduling</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Appointment Scheduling</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Vet visits, check-ins, drop-offs. One calendar, no more group texts.
               </p>
             </div>
 
             {/* Feature 3: Supply Requests */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
-                <Package className="w-7 h-7" style={{ color: "#D76B1A" }} />
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <Package className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Supply Requests</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Supply Requests</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Fosters request supplies. You approve. Done.
               </p>
             </div>
 
             {/* Feature 4: Reimbursements */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
-                <DollarSign className="w-7 h-7" style={{ color: "#5a4a42" }} />
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                <DollarSign className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Reimbursements</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Reimbursements</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Foster paid out of pocket? Handle it without the paperwork.
               </p>
             </div>
 
             {/* Feature 5: Team Messaging */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
-                <MessageCircle className="w-7 h-7" style={{ color: "#D76B1A" }} />
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Team Messaging</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Team Messaging</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Message individual fosters or your whole team. No more group chat chaos.
               </p>
             </div>
 
             {/* Feature 6: Emergency Support */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
-                <AlertCircle className="w-7 h-7" style={{ color: "#5a4a42" }} />
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#5a4a42" }} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Emergency Support</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Emergency Support</h3>
+              <p className="text-sm sm:text-base text-gray-600">
                 Fosters get emergency contacts and resources 24/7 when they need help fast.
               </p>
             </div>

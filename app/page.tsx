@@ -369,7 +369,8 @@ export default function Home() {
         </svg>
       </div>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 bg-[#FDF6EC]">
+      <section className="w-full py-8 sm:py-12 lg:py-16" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
           How Second Tail Works
         </h2>
@@ -437,11 +438,11 @@ export default function Home() {
             </div>
             <div className="text-center mt-10 sm:mt-14">
               <Link
-                href="/for-fosters"
+                href="/sign-up/foster"
                 className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white"
                 style={{ backgroundColor: "#D76B1A" }}
               >
-                Learn More
+                Sign Up to Foster
               </Link>
             </div>
           </>
@@ -496,6 +497,7 @@ export default function Home() {
             </div>
           </>
         )}
+        </div>
       </section>
 
       {/* Decorative divider */}

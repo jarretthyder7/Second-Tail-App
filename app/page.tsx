@@ -276,16 +276,13 @@ export default function Home() {
                 Register Your Rescue
                 <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
               </Link>
-              <button
-                onClick={() => {
-                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
-                  setActiveView("foster")
-                }}
+              <Link
+                href="/sign-up/foster"
                 className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 rounded-full font-semibold text-sm sm:text-base transition-colors"
                 style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
               >
-                Join Foster Waitlist
-              </button>
+                Sign Up to Foster
+              </Link>
             </div>
           </div>
         </div>

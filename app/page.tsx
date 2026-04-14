@@ -331,33 +331,15 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="py-16 sm:py-20 lg:py-28 bg-white">
+      <section className="py-16 sm:py-24 lg:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-6xl font-bold text-gray-900 leading-tight">
               Fostering and rescue, made easier for everyone involved.
             </h1>
-            
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
               Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
             </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6">
-              <Link
-                href="/sign-up/rescue"
-                className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Register Your Rescue
-              </Link>
-              <Link
-                href="/sign-up/foster"
-                className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 rounded-full font-semibold text-sm sm:text-base transition-colors"
-                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
-              >
-                Sign Up to Foster
-              </Link>
-            </div>
           </div>
         </div>
       </section>

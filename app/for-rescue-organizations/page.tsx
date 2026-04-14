@@ -85,7 +85,7 @@ export default function ForRescueOrganizationsPage() {
           >
             <Users className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: "#50402B" }} />
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight px-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight px-2" style={{ color: "#3D2B1F" }}>
             Built to support the people doing the hardest work.
           </h1>
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto px-2">
@@ -95,7 +95,7 @@ export default function ForRescueOrganizationsPage() {
           <div className="pt-4 sm:pt-6">
             <Link
               href="/sign-up/rescue"
-              className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+              className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#50402B" }}
             >
               Request Early Access
@@ -104,8 +104,10 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
+      <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+          <div className="pt-12 sm:pt-16 lg:pt-20">
+            <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
             <Users className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Foster coordination</h3>
@@ -139,9 +141,9 @@ export default function ForRescueOrganizationsPage() {
       </section>
 
       {/* Features Grid Section */}
-      <section className="bg-white py-12 sm:py-16 lg:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
+      <section className="bg-white border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 sm:mb-12 text-center px-2" style={{ color: "#3D2B1F" }}>
             What&apos;s included
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -181,25 +183,27 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </section>
 
-      <section className="bg-white py-12 sm:py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 sm:space-y-6">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 px-2">
-            This saves you time. This reduces chaos.
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed px-2">
-            Your team is stretched thin. Second Tail doesn't add more to your plate—it clears it. Simple tools that help
-            you scale without burnout.
-          </p>
+      <section className="py-12 sm:py-16 lg:py-20" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 sm:space-y-6 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+          <div className="pt-12 sm:pt-16 lg:pt-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold px-2" style={{ color: "#3D2B1F" }}>
+              This saves you time. This reduces chaos.
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed px-2 mt-4">
+              Your team is stretched thin. Second Tail doesn't add more to your plate—it clears it. Simple tools that help
+              you scale without burnout.
+            </p>
+          </div>
         </div>
       </section>
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 text-center space-y-6 sm:space-y-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 px-2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold px-2" style={{ color: "#3D2B1F" }}>
           Ready to streamline your rescue operations?
         </h2>
         <Link
           href="/sign-up/rescue"
-          className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+          className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#50402B" }}
         >
           Request Early Access

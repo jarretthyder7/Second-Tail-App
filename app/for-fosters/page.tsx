@@ -85,7 +85,7 @@ export default function ForFostersPage() {
           >
             <Heart className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: "#D76B1A" }} />
           </div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight px-2">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight px-2" style={{ color: "#3D2B1F" }}>
             Collaborate with your rescue organization
           </h1>
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto px-2">
@@ -96,7 +96,7 @@ export default function ForFostersPage() {
             <p className="text-base text-gray-600 mb-4">Foster access is provided by your rescue organization</p>
             <Link
               href="/login/foster"
-              className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors shadow-lg"
+              className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#D76B1A" }}
             >
               Login to Your Account
@@ -105,11 +105,12 @@ export default function ForFostersPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
-          What you can do with Second Tail
-        </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+      <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-8 sm:mb-12 text-center px-2 pt-12 sm:pt-16 lg:pt-20" style={{ color: "#3D2B1F" }}>
+            What you can do with Second Tail
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
             <Heart className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">View your assigned animal's profile and care plan</h3>
@@ -165,20 +166,22 @@ export default function ForFostersPage() {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 text-center">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 sm:mb-8 px-2">
-          Not connected to a rescue yet?
-        </h2>
-        <p className="text-base sm:text-lg text-gray-600 mb-6 px-2">
-          Join our waitlist and we'll notify you when a rescue in your area joins Second Tail.
-        </p>
-        <Link
-          href="/#foster-waitlist"
-          className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors shadow-lg"
-          style={{ backgroundColor: "#D76B1A" }}
-        >
-          Join the Foster Waitlist
-        </Link>
+      <section className="py-12 sm:py-16 lg:py-20 bg-white border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-12 sm:pt-16 lg:pt-20">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 px-2" style={{ color: "#3D2B1F" }}>
+            Not connected to a rescue yet?
+          </h2>
+          <p className="text-base sm:text-lg text-gray-600 mb-6 px-2">
+            Join our waitlist and we'll notify you when a rescue in your area joins Second Tail.
+          </p>
+          <Link
+            href="/#foster-waitlist"
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold hover:opacity-90 transition-colors shadow-lg"
+            style={{ backgroundColor: "#D76B1A" }}
+          >
+            Join the Foster Waitlist
+          </Link>
+        </div>
       </section>
 
       <footer className="border-t border-gray-200 bg-white py-8 sm:py-12">

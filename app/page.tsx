@@ -258,44 +258,111 @@ export default function Home() {
 
       <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
-              The all-in-one platform for rescue organizations
-            </h1>
-            
-            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-              Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Text Content */}
+            <div className="space-y-6 sm:space-y-8">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight" style={{ color: "#3D2B1F" }}>
+                The all-in-one platform for rescue organizations
+              </h1>
+              
+              <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+                Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
+              </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 sm:pt-6">
-              <Link
-                href="/sign-up/rescue"
-                className="inline-flex items-center justify-center px-8 py-4 text-white rounded-xl font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
-                style={{ backgroundColor: "#D76B1A" }}
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Link
+                  href="/sign-up/rescue"
+                  className="inline-flex items-center justify-center px-8 py-4 text-white font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg rounded-full"
+                  style={{ backgroundColor: "#D76B1A" }}
+                >
+                  Register Your Rescue
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Link>
+                <button
+                  onClick={() => {
+                    document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
+                    setActiveView("foster")
+                  }}
+                  className="inline-flex items-center justify-center px-8 py-4 border-2 font-semibold text-base sm:text-lg transition-colors rounded-full"
+                  style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+                >
+                  Join Foster Waitlist
+                </button>
+              </div>
+            </div>
+
+            {/* Hero Image Placeholder */}
+            <div className="flex items-center justify-center">
+              <svg
+                viewBox="0 0 300 300"
+                className="w-full max-w-sm h-auto"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                Register Your Rescue
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Link>
-              <button
-                onClick={() => {
-                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
-                  setActiveView("foster")
-                }}
-                className="inline-flex items-center justify-center px-8 py-4 border-2 rounded-xl font-semibold text-base sm:text-lg transition-colors"
-                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
-              >
-                Join Foster Waitlist
-              </button>
+                {/* Background circle */}
+                <circle cx="150" cy="150" r="140" fill="#D76B1A" opacity="0.1" />
+                
+                {/* Paw prints pattern */}
+                {/* Center paw pad */}
+                <ellipse cx="150" cy="160" rx="18" ry="24" fill="#D76B1A" opacity="0.6" />
+                
+                {/* Top left toe */}
+                <ellipse cx="120" cy="120" rx="12" ry="18" fill="#D76B1A" opacity="0.5" transform="rotate(-25 120 120)" />
+                
+                {/* Top right toe */}
+                <ellipse cx="180" cy="120" rx="12" ry="18" fill="#D76B1A" opacity="0.5" transform="rotate(25 180 120)" />
+                
+                {/* Bottom left toe */}
+                <ellipse cx="110" cy="145" rx="12" ry="16" fill="#D76B1A" opacity="0.5" transform="rotate(-45 110 145)" />
+                
+                {/* Bottom right toe */}
+                <ellipse cx="190" cy="145" rx="12" ry="16" fill="#D76B1A" opacity="0.5" transform="rotate(45 190 145)" />
+                
+                {/* Decorative paw prints scattered around */}
+                <g opacity="0.3">
+                  {/* Small paw top left */}
+                  <ellipse cx="80" cy="90" rx="8" ry="12" fill="#D76B1A" />
+                  <circle cx="65" cy="80" r="5" fill="#D76B1A" />
+                  <circle cx="95" cy="75" r="5" fill="#D76B1A" />
+                  <circle cx="70" cy="100" r="4" fill="#D76B1A" />
+                  <circle cx="90" cy="105" r="4" fill="#D76B1A" />
+                  
+                  {/* Small paw bottom right */}
+                  <ellipse cx="220" cy="210" rx="8" ry="12" fill="#D76B1A" />
+                  <circle cx="205" cy="200" r="5" fill="#D76B1A" />
+                  <circle cx="235" cy="195" r="5" fill="#D76B1A" />
+                  <circle cx="210" cy="220" r="4" fill="#D76B1A" />
+                  <circle cx="230" cy="225" r="4" fill="#D76B1A" />
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Bar */}
+      <section style={{ backgroundColor: "#D76B1A" }} className="py-8 sm:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 text-center">
+            <div className="text-white">
+              <p className="text-lg sm:text-xl font-semibold">Foster care made simple</p>
+            </div>
+            <div className="hidden md:block h-12 w-px bg-white/20 mx-auto"></div>
+            <div className="text-white">
+              <p className="text-lg sm:text-xl font-semibold">Built for small rescues</p>
+            </div>
+            <div className="hidden md:block h-12 w-px bg-white/20 mx-auto"></div>
+            <div className="text-white">
+              <p className="text-lg sm:text-xl font-semibold">Free during early access</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20 pt-12 sm:pt-16 lg:pt-20">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4" style={{ color: "#3D2B1F" }}>
               Everything you need to manage rescue operations
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -460,31 +527,32 @@ export default function Home() {
         </p>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
-          How Second Tail Works
-        </h2>
+      <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-6 sm:mb-8 px-2" style={{ color: "#3D2B1F" }}>
+            How Second Tail Works
+          </h2>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
-          <button
-            onClick={() => setActiveView("rescue")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-semibold transition-all text-base ${
-              activeView === "rescue" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
-          >
-            For Rescue Organizations
-          </button>
-          <button
-            onClick={() => setActiveView("foster")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-xl sm:rounded-lg font-semibold transition-all text-base ${
-              activeView === "foster" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
-          >
-            For Foster Parents
-          </button>
-        </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
+            <button
+              onClick={() => setActiveView("rescue")}
+              className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
+                activeView === "rescue" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
+            >
+              For Rescue Organizations
+            </button>
+            <button
+              onClick={() => setActiveView("foster")}
+              className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
+                activeView === "foster" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+              style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
+            >
+              For Foster Parents
+            </button>
+          </div>
 
         {activeView === "foster" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
@@ -611,26 +679,45 @@ export default function Home() {
       {/* CTA Banner Section */}
       <section style={{ backgroundColor: "#D76B1A" }} className="py-16 sm:py-20 lg:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
-            Built by someone who actually fosters.
-          </h2>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-            Currently accepting early access partners.
-          </p>
-          <Link
-            href="/sign-up/rescue"
-            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
-          >
-            Request Early Access
-          </Link>
+          {activeView === "foster" ? (
+            <>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight px-2">
+                Foster with confidence and support
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto px-2">
+                Second Tail keeps you connected to your rescue team so you&apos;re never figuring it out alone.
+              </p>
+              <Link
+                href="/login/foster"
+                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-orange-600 bg-white rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                Login to Dashboard
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight px-2">
+                Build a foster network that actually scales.
+              </h2>
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto px-2">
+                Coordinate foster care without the chaos. Everything from one dashboard.
+              </p>
+              <Link
+                href="/login/rescue"
+                className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-orange-600 bg-white rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors shadow-lg"
+              >
+                Login to Dashboard
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
       {/* Waitlist Section */}
-      <section id="foster-waitlist" className="border-t border-gray-200 bg-gradient-to-br from-orange-50/40 to-amber-50/40">
+      <section id="foster-waitlist" className="border-t-4" style={{ backgroundColor: "#FDF6EC", borderTopColor: "#D76B1A" }}>
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
           <div className="text-center mb-8">
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3" style={{ color: "#3D2B1F" }}>
               Stay Connected
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
@@ -641,7 +728,7 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 mt-6">
               <button
                 onClick={() => setActiveView("rescue")}
-                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
                   activeView === "rescue" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
@@ -650,7 +737,7 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setActiveView("foster")}
-                className={`px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
+                className={`px-5 py-2.5 rounded-full font-semibold text-sm transition-all ${
                   activeView === "foster" ? "text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
                 style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}

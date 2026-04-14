@@ -256,7 +256,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
+      <section className="py-16 sm:py-20 lg:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-6xl font-bold text-gray-900 leading-tight">
@@ -287,7 +287,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 bg-[#FDF6EC] rounded-2xl">
+      {/* Curved divider */}
+      <div className="relative h-16 sm:h-24 bg-white">
+        <svg className="absolute bottom-0 w-full h-16 sm:h-24" viewBox="0 0 1440 96" fill="none" preserveAspectRatio="none">
+          <path d="M0 96L1440 96L1440 0C1440 0 1080 96 720 96C360 96 0 0 0 0L0 96Z" fill="#FDF6EC" />
+        </svg>
+      </div>
+
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 bg-[#FDF6EC]">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
           How Second Tail Works
         </h2>
@@ -415,6 +422,19 @@ export default function Home() {
           </>
         )}
       </section>
+
+      {/* Decorative divider */}
+      <div className="max-w-4xl mx-auto px-8 py-8 sm:py-12">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D76B1A]/30 to-transparent"></div>
+          <div className="flex gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#D76B1A" }}></div>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#5a4a42" }}></div>
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#D76B1A" }}></div>
+          </div>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5a4a42]/30 to-transparent"></div>
+        </div>
+      </div>
 
       {/* Features Section */}
       <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>

@@ -20,6 +20,22 @@ export default function Home() {
   const loginDropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Check if we should start on foster view based on URL hash or button click
+    const handleHashChange = () => {
+      if (window.location.hash === "#foster-waitlist") {
+        setActiveView("foster")
+      }
+    }
+    
+    // Check on initial load
+    handleHashChange()
+    
+    // Listen for hash changes
+    window.addEventListener("hashchange", handleHashChange)
+    return () => window.removeEventListener("hashchange", handleHashChange)
+  }, [])
+
+  useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (loginDropdownRef.current && !loginDropdownRef.current.contains(e.target as Node)) {
         setLoginDropdownOpen(false)

@@ -40,10 +40,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect org/admin and org/foster routes — redirect to login if unauthenticated
+  // Protect org and foster routes — redirect to login if unauthenticated
   const isProtectedPath =
     request.nextUrl.pathname.startsWith("/org/") ||
-    request.nextUrl.pathname.startsWith("/foster/dashboard")
+    request.nextUrl.pathname.startsWith("/foster/")
 
   if (isProtectedPath && !user) {
     const url = request.nextUrl.clone()

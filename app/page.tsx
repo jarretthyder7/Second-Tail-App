@@ -331,7 +331,7 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="py-16 sm:py-20 lg:py-28 bg-white">
+      <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
             <h1 className="text-2xl sm:text-3xl lg:text-6xl font-bold text-gray-900 leading-tight">
@@ -363,13 +363,13 @@ export default function Home() {
       </section>
 
       {/* Curved divider */}
-      <div className="relative h-16 sm:h-24 bg-white">
+      <div className="relative h-16 sm:h-24" style={{ backgroundColor: "#FDF6EC" }}>
         <svg className="absolute bottom-0 w-full h-16 sm:h-24" viewBox="0 0 1440 96" fill="none" preserveAspectRatio="none">
-          <path d="M0 96L1440 96L1440 0C1440 0 1080 96 720 96C360 96 0 0 0 0L0 96Z" fill="#FDF6EC" />
+          <path d="M0 96L1440 96L1440 0C1440 0 1080 96 720 96C360 96 0 0 0 0L0 96Z" fill="white" />
         </svg>
       </div>
 
-      <section className="w-full py-8 sm:py-12 lg:py-16" style={{ backgroundColor: "#FDF6EC" }}>
+      <section className="w-full py-8 sm:py-12 lg:py-16 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
           How Second Tail Works
@@ -771,11 +771,11 @@ export default function Home() {
                 </p>
               </div>
               <Link
-                href="/for-fosters"
+                href="/sign-up/foster"
                 className="inline-block w-full sm:w-auto px-8 py-4 text-white rounded-full font-semibold text-base hover:opacity-90 transition-colors text-center"
                 style={{ backgroundColor: "#D76B1A" }}
               >
-                Learn More for Fosters
+                Sign Up for Fosters
               </Link>
             </div>
           </div>

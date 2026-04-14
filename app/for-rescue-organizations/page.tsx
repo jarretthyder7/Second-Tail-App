@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Users, MessageCircle, Clipboard, Shield, Menu, X } from "lucide-react"
+import { Users, MessageCircle, Clipboard, Shield, Menu, X, Mail, Plus, Clock, DollarSign, Users2, FileUp } from "lucide-react"
 
 export default function ForRescueOrganizationsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -98,7 +98,7 @@ export default function ForRescueOrganizationsPage() {
               className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#50402B" }}
             >
-              Register Your Organization
+              Request Early Access
             </Link>
           </div>
         </div>
@@ -118,27 +118,65 @@ export default function ForRescueOrganizationsPage() {
             <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Communication & updates</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              Message fosters directly or send group updates. Keep everyone informed without endless text threads or
-              lost messages. Second Tail ensures timely communication, reducing delays in care and fostering a more
-              responsive team.
+              Message fosters one-on-one or send org-wide updates. No more group texts.
             </p>
           </div>
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
             <Clipboard className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Care tracking</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              Track medical records, appointments, medications, and daily updates. All the information you need to make
-              good decisions, fast. Second Tail's care tracking system is intuitive and easy to use, ensuring that no
-              critical details are missed.
+              Every vet visit, medication, and daily log in one place. Accessible by your whole team.
             </p>
           </div>
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
             <Shield className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#50402B" }} />
             <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Collaboration across teams</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              Add team members, assign roles, and keep everyone aligned. From foster coordinators to medical teams,
-              everyone stays in sync. Second Tail promotes seamless teamwork, enhancing coordination and efficiency.
+              Add coordinators, medical staff, and volunteers. Everyone sees what they need to.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Grid Section */}
+      <section className="bg-white py-12 sm:py-16 lg:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
+            What&apos;s included
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="flex items-start gap-3 p-4">
+              <Mail className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Foster invitations</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <FileUp className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Animal profiles</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <Clock className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Appointment calendar</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <Plus className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Supply request management</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <DollarSign className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Reimbursement tracking</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <MessageCircle className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Team chat</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <FileUp className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Data import from spreadsheets</span>
+            </div>
+            <div className="flex items-start gap-3 p-4">
+              <Users2 className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
+              <span className="text-gray-900 font-semibold">Mobile-friendly foster dashboard</span>
+            </div>
           </div>
         </div>
       </section>
@@ -164,7 +202,7 @@ export default function ForRescueOrganizationsPage() {
           className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#50402B" }}
         >
-          Register Your Organization
+          Request Early Access
         </Link>
       </section>
 

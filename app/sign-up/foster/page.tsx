@@ -1,116 +1,161 @@
 "use client"
 
 import type React from "react"
-import { Suspense, useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useState } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { ArrowLeft, AlertCircle } from "lucide-react"
+import { ArrowLeft, AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
 
-const Heart = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7 7-7Z" />
-  </svg>
-)
+const US_STATES = [
+  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+  "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+  "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+  "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+  "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+  "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+  "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+]
 
 function FosterSignUpForm() {
-  const [invitationCode, setInvitationCode] = useState("")
-  const [invitation, setInvitation] = useState<any>(null)
-  const [isValidating, setIsValidating] = useState(false)
-  const [validationError, setValidationError] = useState("")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [repeatPassword, setRepeatPassword] = useState("")
-  const [phone, setPhone] = useState("")
+  const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  useEffect(() => {
-    const codeFromUrl = searchParams.get("code")
-    if (codeFromUrl) {
-      setInvitationCode(codeFromUrl)
-      validateInvitation(codeFromUrl)
+  // Step 1: Basic Info
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [city, setCity] = useState("")
+  const [state, setState] = useState("")
+
+  // Step 2: About You
+  const [housingType, setHousingType] = useState("")
+  const [ownershipStatus, setOwnershipStatus] = useState("") // Own or Rent
+  const [hasYard, setHasYard] = useState<boolean | null>(null)
+  const [pets, setPets] = useState<string[]>([]) // Dogs, Cats, None, Other
+  const [fosteredBefore, setFosteredBefore] = useState<boolean | null>(null)
+  const [previousDogs, setPreviousDogs] = useState("")
+
+  // Step 3: Availability
+  const [homeAvailability, setHomeAvailability] = useState<boolean | null>(null)
+  const [dogSizes, setDogSizes] = useState<string[]>([]) // Small, Medium, Large, XL
+  const [restrictions, setRestrictions] = useState<string[]>([]) // No other dogs, No cats, No young children, None
+  const [whyFoster, setWhyFoster] = useState("")
+
+  const validateStep1 = () => {
+    if (!fullName.trim()) {
+      setError("Full name is required")
+      return false
     }
-  }, [searchParams])
-
-  const validateInvitation = async (code: string) => {
-    setIsValidating(true)
-    setValidationError("")
-
-    try {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from("invitations")
-        .select("*, organization:organizations!organization_id(id, name)")
-        .eq("code", code)
-        .eq("status", "pending")
-        .maybeSingle()
-
-      if (error) throw error
-
-      if (!data) {
-        setValidationError("Invalid or expired invitation code. Please contact your rescue organization.")
-        setInvitation(null)
-      } else {
-        setInvitation(data)
-        setEmail(data.email || "")
-      }
-    } catch (err) {
-      setValidationError("Failed to validate invitation code. Please try again.")
-      setInvitation(null)
-    } finally {
-      setIsValidating(false)
+    if (!email.trim() || !email.includes("@")) {
+      setError("Valid email is required")
+      return false
     }
-  }
-
-  const handleValidateCode = () => {
-    if (!invitationCode.trim()) {
-      setValidationError("Please enter your invitation code")
-      return
-    }
-    validateInvitation(invitationCode)
-  }
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
-    if (!invitation) {
-      setError("Valid invitation required to create foster account")
-      setIsLoading(false)
-      return
-    }
-
-    if (password !== repeatPassword) {
-      setError("Passwords do not match")
-      setIsLoading(false)
-      return
-    }
-
     if (password.length < 6) {
       setError("Password must be at least 6 characters")
-      setIsLoading(false)
-      return
+      return false
     }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return false
+    }
+    if (!city.trim()) {
+      setError("City is required")
+      return false
+    }
+    if (!state) {
+      setError("State is required")
+      return false
+    }
+    return true
+  }
+
+  const validateStep2 = () => {
+    if (!housingType) {
+      setError("Housing type is required")
+      return false
+    }
+    if (!ownershipStatus) {
+      setError("Please indicate if you own or rent")
+      return false
+    }
+    if (hasYard === null) {
+      setError("Please indicate if you have a yard")
+      return false
+    }
+    if (pets.length === 0) {
+      setError("Please select your current pets")
+      return false
+    }
+    if (fosteredBefore === null) {
+      setError("Please indicate if you've fostered before")
+      return false
+    }
+    if (fosteredBefore && !previousDogs.trim()) {
+      setError("Please enter the number of dogs you've fostered")
+      return false
+    }
+    return true
+  }
+
+  const validateStep3 = () => {
+    if (homeAvailability === null) {
+      setError("Please indicate your home availability")
+      return false
+    }
+    if (dogSizes.length === 0) {
+      setError("Please select at least one dog size")
+      return false
+    }
+    return true
+  }
+
+  const handleNext = () => {
+    setError("")
+    if (step === 1 && validateStep1()) {
+      setStep(2)
+    } else if (step === 2 && validateStep2()) {
+      setStep(3)
+    }
+  }
+
+  const handlePrev = () => {
+    setError("")
+    if (step > 1) {
+      setStep(step - 1)
+    }
+  }
+
+  const togglePetCheckbox = (pet: string) => {
+    setPets(prev =>
+      prev.includes(pet) ? prev.filter(p => p !== pet) : [...prev, pet]
+    )
+  }
+
+  const toggleDogSizeCheckbox = (size: string) => {
+    setDogSizes(prev =>
+      prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]
+    )
+  }
+
+  const toggleRestrictionCheckbox = (restriction: string) => {
+    setRestrictions(prev =>
+      prev.includes(restriction) ? prev.filter(r => r !== restriction) : [...prev, restriction]
+    )
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
 
     try {
       const supabase = createClient()
 
+      // Create auth account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -118,9 +163,8 @@ function FosterSignUpForm() {
           emailRedirectTo:
             process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
           data: {
-            name: name,
+            name: fullName,
             role: "foster",
-            phone: phone,
           },
         },
       })
@@ -128,31 +172,37 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
+        // Create profile
         const { error: profileError } = await supabase.from("profiles").insert({
           id: authData.user.id,
           email: email,
-          name: name,
+          name: fullName,
           role: "foster",
-          organization_id: invitation.organization_id,
+          organization_id: null,
         })
 
         if (profileError) {
-          console.error("[v0] Error creating profile:", profileError)
           throw new Error("Failed to create profile")
         }
 
-        const { error: acceptError } = await supabase
-          .from("invitations")
-          .update({
-            status: "accepted",
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", invitation.id)
+        // Create foster profile with vetting answers
+        const { error: fosterProfileError } = await supabase.from("foster_profiles").insert({
+          user_id: authData.user.id,
+          city,
+          state,
+          housing_type: housingType,
+          has_yard: hasYard,
+          has_pets: pets.length > 0 && !pets.includes("None"),
+          existing_pets_description: pets.join(", "),
+          preferred_dog_sizes: dogSizes,
+          onboarding_completed: false,
+        })
 
-        if (acceptError) {
-          console.error("[v0] Error accepting invitation:", acceptError)
+        if (fosterProfileError) {
+          throw new Error("Failed to create foster profile")
         }
 
+        // Send welcome email
         try {
           await fetch("/api/email/send", {
             method: "POST",
@@ -160,31 +210,15 @@ function FosterSignUpForm() {
             body: JSON.stringify({
               type: "welcome-foster",
               email: email,
-              name: name,
-              orgName: invitation.organization?.name,
+              name: fullName,
             }),
           })
         } catch (emailError) {
           console.warn("[v0] Welcome email failed to send:", emailError)
         }
-
-        try {
-          await fetch("/api/email/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "assigned-rescue",
-              fosterEmail: email,
-              fosterName: name,
-              orgName: invitation.organization?.name,
-            }),
-          })
-        } catch (emailError) {
-          console.warn("[v0] Assigned rescue email failed to send:", emailError)
-        }
       }
 
-      router.push(`/auth/sign-up-success?type=foster&org=${invitation.organization?.name || "rescue organization"}`)
+      router.push("/auth/sign-up-success?type=foster")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)
@@ -211,131 +245,337 @@ function FosterSignUpForm() {
           <div className="bg-card rounded-2xl shadow-lg p-8 space-y-6">
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-bold text-foreground">Join as Foster</h1>
-              <p className="text-muted-foreground">
-                Foster registration is by invitation only. Enter your invitation code from your rescue organization.
+              <p className="text-muted-foreground text-sm">
+                Step {step} of 3 — {step === 1 ? "Basic Information" : step === 2 ? "About You" : "Availability & Preferences"}
               </p>
             </div>
 
-            {!invitation ? (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Invitation Code</label>
-                  <input
-                    type="text"
-                    value={invitationCode}
-                    onChange={(e) => setInvitationCode(e.target.value)}
-                    placeholder="Enter your invitation code"
-                    className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                  />
-                </div>
-
-                {validationError && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex gap-2">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <span>{validationError}</span>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Step 1: Basic Info */}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Full Name *</label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="John Doe"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    />
                   </div>
-                )}
 
-                <button
-                  onClick={handleValidateCode}
-                  disabled={isValidating || !invitationCode.trim()}
-                  className="w-full rounded-lg bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isValidating ? "Validating..." : "Validate Code"}
-                </button>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Email *</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    />
+                  </div>
 
-                <div className="text-center pt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Don't have an invitation code?{" "}
-                    <Link href="/for-fosters" className="text-primary hover:underline font-medium">
-                      Learn more about fostering
-                    </Link>
-                  </p>
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Password *</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Confirm Password *</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter your password"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">City *</label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Los Angeles"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">State *</label>
+                    <select
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    >
+                      <option value="">Select a state</option>
+                      {US_STATES.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+              )}
+
+              {/* Step 2: About You */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Housing Type *</label>
+                    <select
+                      value={housingType}
+                      onChange={(e) => setHousingType(e.target.value)}
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    >
+                      <option value="">Select housing type</option>
+                      <option value="House">House</option>
+                      <option value="Apartment">Apartment</option>
+                      <option value="Condo">Condo</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Do you own or rent? *</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="ownership"
+                          value="Own"
+                          checked={ownershipStatus === "Own"}
+                          onChange={(e) => setOwnershipStatus(e.target.value)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Own</span>
+                      </label>
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="ownership"
+                          value="Rent"
+                          checked={ownershipStatus === "Rent"}
+                          onChange={(e) => setOwnershipStatus(e.target.value)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Rent</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Do you have a yard? *</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="yard"
+                          checked={hasYard === true}
+                          onChange={() => setHasYard(true)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="yard"
+                          checked={hasYard === false}
+                          onChange={() => setHasYard(false)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Current pets at home? *</label>
+                    <div className="space-y-2">
+                      {["Dogs", "Cats", "None", "Other"].map(pet => (
+                        <label key={pet} className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={pets.includes(pet)}
+                            onChange={() => togglePetCheckbox(pet)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-foreground">{pet}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Have you fostered before? *</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="fostered"
+                          checked={fosteredBefore === true}
+                          onChange={() => setFosteredBefore(true)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="fostered"
+                          checked={fosteredBefore === false}
+                          onChange={() => setFosteredBefore(false)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {fosteredBefore && (
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">How many dogs have you fostered?</label>
+                      <input
+                        type="number"
+                        value={previousDogs}
+                        onChange={(e) => setPreviousDogs(e.target.value)}
+                        placeholder="0"
+                        min="0"
+                        className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Availability */}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Are you home most of the day? *</label>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="availability"
+                          checked={homeAvailability === true}
+                          onChange={() => setHomeAvailability(true)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">Yes</span>
+                      </label>
+                      <label className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="availability"
+                          checked={homeAvailability === false}
+                          onChange={() => setHomeAvailability(false)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-foreground">No</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">What size dogs can you foster? *</label>
+                    <div className="space-y-2">
+                      {["Small", "Medium", "Large", "XL"].map(size => (
+                        <label key={size} className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={dogSizes.includes(size)}
+                            onChange={() => toggleDogSizeCheckbox(size)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-foreground">{size}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Any restrictions?</label>
+                    <div className="space-y-2">
+                      {["No other dogs", "No cats", "No young children", "None"].map(restriction => (
+                        <label key={restriction} className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={restrictions.includes(restriction)}
+                            onChange={() => toggleRestrictionCheckbox(restriction)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-foreground">{restriction}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Why do you want to foster? (Optional)</label>
+                    <textarea
+                      value={whyFoster}
+                      onChange={(e) => setWhyFoster(e.target.value)}
+                      placeholder="Tell us why you're interested in fostering..."
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[100px]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex gap-2">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  disabled={step === 1 || isLoading}
+                  className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-base font-semibold text-foreground hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Back
+                </button>
+                {step < 3 ? (
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={isLoading}
+                    className="flex-1 rounded-lg bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex-1 rounded-lg bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isLoading ? "Creating account..." : "Create Account"}
+                  </button>
+                )}
               </div>
-            ) : (
-              <form onSubmit={handleEmailSignUp} className="space-y-4">
-                <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
-                  <p className="text-sm text-foreground">
-                    <strong>Invited by:</strong> {invitation.organization?.name}
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="John Doe"
-                    className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Phone (Optional)</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="(555) 123-4567"
-                    className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 6 characters"
-                    className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-foreground mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    value={repeatPassword}
-                    onChange={(e) => setRepeatPassword(e.target.value)}
-                    placeholder="Re-enter your password"
-                    className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                    required
-                  />
-                </div>
-
-                {error && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex gap-2">
-                    <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                    <span>{error}</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full rounded-lg bg-primary px-6 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? "Creating account..." : "Create Foster Account"}
-                </button>
-              </form>
-            )}
+            </form>
           </div>
         </div>
       </div>

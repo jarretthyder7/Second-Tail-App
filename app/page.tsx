@@ -647,13 +647,13 @@ export default function Home() {
             Built by someone who actually fosters.
           </h2>
           <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-            Currently accepting early access partners.
+            Making fostering easier, one dog at a time.
           </p>
           <Link
-            href="/sign-up/rescue"
+            href="/for-fosters"
             className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
           >
-            Request Early Access
+            Learn More
           </Link>
         </div>
       </section>

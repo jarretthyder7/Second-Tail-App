@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Users, MessageCircle, Clipboard, Shield, Menu, X, Mail, Plus, Clock, DollarSign, Users2, FileUp } from "lucide-react"
+import { Users, MessageCircle, Menu, X, Mail, Plus, Clock, DollarSign, Users2, FileUp, Briefcase, Calendar, Package, AlertCircle } from "lucide-react"
 
 export default function ForRescueOrganizationsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -104,36 +104,77 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <Users className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Foster coordination</h3>
-            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-              See all your fosters in one place. Track who's caring for which dogs, who's available, and who needs
-              support. No more spreadsheet chaos.
+      <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-xl sm:text-2xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Everything you need to manage rescue operations
+            </h2>
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto">
+              Powerful features designed specifically for rescue organizations and foster parents
             </p>
           </div>
-          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Communication & updates</h3>
-            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-              Message fosters one-on-one or send org-wide updates. No more group texts.
-            </p>
-          </div>
-          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <Clipboard className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Care tracking</h3>
-            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-              Every vet visit, medication, and daily log in one place. Accessible by your whole team.
-            </p>
-          </div>
-          <div className="rounded-2xl p-4 sm:p-6 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#50402B" }}>
-            <Shield className="w-6 h-6 sm:w-8 sm:h-8 mb-3 sm:mb-4" style={{ color: "#50402B" }} />
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">Collaboration across teams</h3>
-            <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
-              Add coordinators, medical staff, and volunteers. Everyone sees what they need to.
-            </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-200 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <Briefcase className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Foster Management</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Invite fosters by email. Assign them animals. Track who&apos;s caring for what dog.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-200 border-t-4" style={{ borderTopColor: "#50402B" }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(80, 64, 43, 0.12)" }}>
+                <Calendar className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#50402B" }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Appointment Scheduling</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Vet visits, check-ins, drop-offs. One calendar, no more group texts.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-200 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <Package className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Supply Requests</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Fosters request supplies. You approve. Done.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-200 border-t-4" style={{ borderTopColor: "#50402B" }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(80, 64, 43, 0.12)" }}>
+                <DollarSign className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#50402B" }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Reimbursements</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Foster paid out of pocket? Handle it without the paperwork.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-200 border-t-4" style={{ borderTopColor: "#D76B1A" }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#D76B1A" }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Team Messaging</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Message individual fosters or your whole team. No more group chat chaos.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-200 border-t-4" style={{ borderTopColor: "#50402B" }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-4 sm:mb-6" style={{ backgroundColor: "rgba(80, 64, 43, 0.12)" }}>
+                <AlertCircle className="w-6 h-6 sm:w-7 sm:h-7" style={{ color: "#50402B" }} />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Emergency Support</h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                Fosters get emergency contacts and resources 24/7 when they need help fast.
+              </p>
+            </div>
           </div>
         </div>
       </section>

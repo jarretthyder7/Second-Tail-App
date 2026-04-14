@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Heart, MessageCircle, Calendar, Shield, CheckCircle, Menu, X } from "lucide-react"
+import { Heart, MessageCircle, Calendar, Shield, CheckCircle, Menu, X, FileText, Clock, Package, AlertCircle } from "lucide-react"
 
 export default function ForFostersPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -109,36 +109,47 @@ export default function ForFostersPage() {
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
           What you can do with Second Tail
         </h2>
-        <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
-            <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Easy communication</h3>
+            <Heart className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">View your assigned animal's profile and care plan</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              Message your rescue team directly, get answers fast, and keep everything in one place.
+              See details about the dog you're fostering, medical history, and specific care instructions.
+            </p>
+          </div>
+          <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
+            <FileText className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Log daily updates and notes</h3>
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+              Track progress, note behaviors, and log any concerns. Your rescue team stays informed without having to ask.
+            </p>
+          </div>
+          <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
+            <Package className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Request supplies from your rescue org</h3>
+            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
+              Need food, toys, or medical supplies? Request them directly and track what's on the way.
             </p>
           </div>
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
             <Calendar className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Coordinated care</h3>
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Request and track appointments</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              Track vet appointments, medications, and daily updates. Your rescue team can see what's happening without
-              constant check-ins.
+              Schedule vet visits, check-ins, and pickup appointments. See everything on one calendar.
             </p>
           </div>
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
-            <Shield className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Support when you need it</h3>
+            <MessageCircle className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Message your rescue team directly</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              Have a question at 9pm? Need help with a behavior issue? Your rescue team is just a message away, no guilt
-              required.
+              Have a question at 9pm? Get answers fast without the group chat. Your rescue team is here to help.
             </p>
           </div>
           <div className="rounded-2xl p-6 sm:p-8 border" style={{ backgroundColor: "#F7E2BD", borderColor: "#D76B1A" }}>
-            <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
-            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Guidance throughout</h3>
+            <AlertCircle className="w-8 h-8 sm:w-10 sm:h-10 mb-4" style={{ color: "#D76B1A" }} />
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Access emergency contacts and resources 24/7</h3>
             <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              From your first foster to your tenth, you'll have clear guidance, care plans, and a team backing you every
-              step of the way.
+              Have a health or behavioral emergency? Get immediate access to emergency contacts and critical resources.
             </p>
           </div>
         </div>
@@ -156,17 +167,17 @@ export default function ForFostersPage() {
 
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 text-center">
         <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 sm:mb-8 px-2">
-          Interested in fostering?
+          Not connected to a rescue yet?
         </h2>
         <p className="text-base sm:text-lg text-gray-600 mb-6 px-2">
-          Contact a rescue organization in your area. They'll invite you to join Second Tail once you're approved.
+          Join our waitlist and we'll notify you when a rescue in your area joins Second Tail.
         </p>
         <Link
-          href="/login/foster"
+          href="/#foster-waitlist"
           className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-xl sm:rounded-lg font-semibold hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#D76B1A" }}
         >
-          Already have an account? Log in
+          Join the Foster Waitlist
         </Link>
       </section>
 

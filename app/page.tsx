@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
-import { Heart, Users, ArrowRight, Menu, X, CheckCircle2, ChevronDown } from "lucide-react"
+import { Heart, Users, ArrowRight, Menu, X, CheckCircle2, ChevronDown, Briefcase, Calendar, Package, DollarSign, MessageCircle, AlertCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 const US_STATES = [
@@ -18,6 +18,22 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const loginDropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    // Check if we should start on foster view based on URL hash or button click
+    const handleHashChange = () => {
+      if (window.location.hash === "#foster-waitlist") {
+        setActiveView("foster")
+      }
+    }
+    
+    // Check on initial load
+    handleHashChange()
+    
+    // Listen for hash changes
+    window.addEventListener("hashchange", handleHashChange)
+    return () => window.removeEventListener("hashchange", handleHashChange)
+  }, [])
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -102,7 +118,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      <nav className="border-b border-neutral-200 bg-white sticky top-0 z-50">
+      <nav className="border-b border-neutral-200 bg-white sticky top-0 z-50" style={{ borderBottomColor: "rgba(90, 74, 66, 0.1)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900">
@@ -240,26 +256,126 @@ export default function Home() {
         </div>
       </nav>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-11 lg:pt-16">
-        <div className="text-center max-w-3xl mx-auto space-y-5 sm:space-y-6 lg:space-y-7">
-          <p className="text-xs sm:text-sm font-semibold tracking-wider uppercase text-gray-500 mb-3">
-            Rescue Operations & Foster Coordination
-          </p>
+      <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
+            <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-gray-900 leading-tight">
+              The all-in-one platform for rescue organizations
+            </h1>
+            
+            <p className="text-lg sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
+              Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
+            </p>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.15] tracking-tight max-w-2xl mx-auto px-2">
-            Fostering and rescue, <span className="block sm:inline">made easier for everyone involved.</span>
-          </h1>
-
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed font-normal max-w-2xl mx-auto px-2">
-            Second Tail helps rescue organizations coordinate foster care with simple tools to communicate, track animal
-            care, and support fosters.
-          </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 sm:pt-6">
+              <Link
+                href="/sign-up/rescue"
+                className="inline-flex items-center justify-center px-8 py-4 text-white rounded-xl font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
+                style={{ backgroundColor: "#D76B1A" }}
+              >
+                Register Your Rescue
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Link>
+              <button
+                onClick={() => {
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
+                  setActiveView("foster")
+                }}
+                className="inline-flex items-center justify-center px-8 py-4 border-2 rounded-xl font-semibold text-base sm:text-lg transition-colors"
+                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+              >
+                Join Foster Waitlist
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+      {/* Features Section */}
+      <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+              Everything you need to manage rescue operations
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Powerful features designed specifically for rescue organizations and foster parents
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10">
+            {/* Feature 1: Foster Management */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <Briefcase className="w-7 h-7" style={{ color: "#D76B1A" }} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Foster Management</h3>
+              <p className="text-gray-600">
+                Invite fosters by email. Assign them animals. Track who's caring for what dog.
+              </p>
+            </div>
+
+            {/* Feature 2: Appointment Scheduling */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                <Calendar className="w-7 h-7" style={{ color: "#5a4a42" }} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Appointment Scheduling</h3>
+              <p className="text-gray-600">
+                Vet visits, check-ins, drop-offs. One calendar, no more group texts.
+              </p>
+            </div>
+
+            {/* Feature 3: Supply Requests */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <Package className="w-7 h-7" style={{ color: "#D76B1A" }} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Supply Requests</h3>
+              <p className="text-gray-600">
+                Fosters request supplies. You approve. Done.
+              </p>
+            </div>
+
+            {/* Feature 4: Reimbursements */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                <DollarSign className="w-7 h-7" style={{ color: "#5a4a42" }} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Reimbursements</h3>
+              <p className="text-gray-600">
+                Foster paid out of pocket? Handle it without the paperwork.
+              </p>
+            </div>
+
+            {/* Feature 5: Team Messaging */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                <MessageCircle className="w-7 h-7" style={{ color: "#D76B1A" }} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Team Messaging</h3>
+              <p className="text-gray-600">
+                Message individual fosters or your whole team. No more group chat chaos.
+              </p>
+            </div>
+
+            {/* Feature 6: Emergency Support */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+              <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                <AlertCircle className="w-7 h-7" style={{ color: "#5a4a42" }} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Emergency Support</h3>
+              <p className="text-gray-600">
+                Fosters get emergency contacts and resources 24/7 when they need help fast.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 hidden">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {/* Rescue Card */}
+          {/* Rescue Card - Hidden */}
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 border-amber-200 flex flex-col">
             <div
               className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6"
@@ -284,7 +400,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setActiveView("rescue")
-                  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                 }}
                 className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-amber-50 transition-colors text-base"
                 style={{ borderColor: "#5a4a42", color: "#5a4a42" }}
@@ -294,7 +410,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Foster Card */}
+          {/* Foster Card - Hidden */}
           <div
             className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 hover:shadow-2xl transition-all border-2 flex flex-col"
             style={{ borderColor: "rgba(215, 107, 26, 0.2)" }}
@@ -322,7 +438,7 @@ export default function Home() {
               <button
                 onClick={() => {
                   setActiveView("foster")
-                  document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
                 }}
                 className="inline-flex items-center justify-center px-6 py-3.5 sm:py-3 border-2 rounded-xl sm:rounded-lg font-semibold hover:bg-orange-50 transition-colors text-base"
                 style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
@@ -379,9 +495,9 @@ export default function Home() {
               >
                 1
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Get invited by your rescue</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Accept your rescue's invite and log in</h3>
               <p className="text-gray-600 text-sm sm:text-base">
-                Your rescue organization will send you an invitation link after you're approved to foster with them.
+                Receive an invitation from your rescue organization and create your foster account
               </p>
             </div>
             <div className="text-center px-4">
@@ -391,9 +507,9 @@ export default function Home() {
               >
                 2
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Access your dashboard</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">View your assigned animal and care plan</h3>
               <p className="text-gray-600 text-sm sm:text-base">
-                Log in to see the animals you're fostering, upcoming appointments, and messages from your rescue team.
+                See details about the dog you're fostering, medical history, and care instructions
               </p>
             </div>
             <div className="text-center px-4">
@@ -403,10 +519,9 @@ export default function Home() {
               >
                 3
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Collaborate and coordinate</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Log updates, request supplies, message your team</h3>
               <p className="text-gray-600 text-sm sm:text-base">
-                Track care, communicate with your rescue, and get the guidance you need to help your foster animal
-                thrive.
+                Manage everything in one place and stay connected with your rescue organization
               </p>
             </div>
           </div>
@@ -419,9 +534,9 @@ export default function Home() {
               >
                 1
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Set up your organization</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Create your org and invite your team members</h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                Register your rescue, add team members, and customize your foster management system.
+                Register your rescue, add team members, and set up your organization
               </p>
             </div>
             <div className="text-center px-4">
@@ -431,9 +546,9 @@ export default function Home() {
               >
                 2
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Invite and manage fosters</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Add your animals and invite fosters by email</h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                Onboard foster parents, assign animals, and build a network of trusted caregivers.
+                Onboard your rescue animals and send invitations to foster parents
               </p>
             </div>
             <div className="text-center px-4">
@@ -443,9 +558,9 @@ export default function Home() {
               >
                 3
               </div>
-              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Coordinate care at scale</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Manage everything from your dashboard. Answer requests. Track care.</h3>
               <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                Track health records, schedule appointments, communicate efficiently, and focus on saving more lives.
+                Track placements, coordinate appointments, and communicate with your entire foster network
               </p>
             </div>
           </div>
@@ -493,8 +608,26 @@ export default function Home() {
         </div>
       </section>
 
+      {/* CTA Banner Section */}
+      <section style={{ backgroundColor: "#D76B1A" }} className="py-16 sm:py-20 lg:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
+            Built by someone who actually fosters.
+          </h2>
+          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
+            Currently accepting early access partners.
+          </p>
+          <Link
+            href="/sign-up/rescue"
+            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-xl sm:rounded-lg font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
+          >
+            Request Early Access
+          </Link>
+        </div>
+      </section>
+
       {/* Waitlist Section */}
-      <section id="waitlist" className="border-t border-gray-200 bg-gradient-to-br from-orange-50/40 to-amber-50/40">
+      <section id="foster-waitlist" className="border-t border-gray-200 bg-gradient-to-br from-orange-50/40 to-amber-50/40">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
           <div className="text-center mb-8">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
@@ -769,10 +902,44 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-200 bg-white py-8 sm:py-12">
+      <footer className="border-t border-gray-200 bg-white py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs sm:text-sm text-gray-500">
-            © 2026 Second Tail. Made with care for rescues and fosters.
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900 inline-block mb-4">
+                Second Tail
+              </Link>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-6 md:justify-end">
+              <Link href="/for-rescue-organizations" className="text-gray-600 hover:text-gray-900 transition-colors">
+                For Rescues
+              </Link>
+              <Link href="/for-fosters" className="text-gray-600 hover:text-gray-900 transition-colors">
+                For Fosters
+              </Link>
+              <Link href="/login/rescue" className="text-gray-600 hover:text-gray-900 transition-colors">
+                Login
+              </Link>
+              <button 
+                onClick={() => {
+                  document.getElementById("foster-waitlist")?.scrollIntoView({ behavior: "smooth" })
+                  setActiveView("foster")
+                }}
+                className="text-gray-600 hover:text-gray-900 transition-colors text-left"
+              >
+                Join Waitlist
+              </button>
+            </div>
+          </div>
+          <div className="border-t border-gray-200 pt-8">
+            <div className="flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
+              <a href="mailto:hello@getsecondtail.com" className="text-gray-600 hover:text-gray-900 transition-colors">
+                hello@getsecondtail.com
+              </a>
+              <p className="text-xs sm:text-sm text-gray-500">
+                © 2026 Second Tail. Made with care for rescues and fosters.
+              </p>
+            </div>
           </div>
         </div>
       </footer>

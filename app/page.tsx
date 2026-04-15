@@ -20,7 +20,7 @@ export default function Home() {
   const [signupDropdownOpen, setSignupDropdownOpen] = useState(false)
   const [mobileSignupOpen, setMobileSignupOpen] = useState(false)
   const [mobileLoginOpen, setMobileLoginOpen] = useState(false)
-  const [mobileLearnMoreOpen, setMobileLearnMoreOpen] = useState(false)
+
   const loginDropdownRef = useRef<HTMLDivElement>(null)
   const signupDropdownRef = useRef<HTMLDivElement>(null)
 
@@ -343,39 +343,31 @@ export default function Home() {
               {/* Divider */}
               <div className="h-px bg-gray-100 mx-1" />
 
-              {/* Learn More dropdown */}
+              {/* Learn More section */}
               <div className="px-1">
-                <button
-                  onClick={() => setMobileLearnMoreOpen(!mobileLearnMoreOpen)}
-                  className="flex items-center justify-between w-full px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                >
-                  <span>Learn More</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform text-gray-400 ${mobileLearnMoreOpen ? "rotate-180" : ""}`} />
-                </button>
-                {mobileLearnMoreOpen && (
-                  <div className="mt-1 space-y-0.5">
-                    <Link
-                      href="/for-rescue-organizations"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.1)" }}>
-                        <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
-                      </div>
-                      For Rescue Organizations
-                    </Link>
-                    <Link
-                      href="/for-fosters"
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.1)" }}>
-                        <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
-                      </div>
-                      For Fosters
-                    </Link>
-                  </div>
-                )}
+                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Learn More</p>
+                <div className="space-y-0.5">
+                  <Link
+                    href="/for-rescue-organizations"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.1)" }}>
+                      <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
+                    </div>
+                    For Rescue Organizations
+                  </Link>
+                  <Link
+                    href="/for-fosters"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.1)" }}>
+                      <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
+                    </div>
+                    For Fosters
+                  </Link>
+                </div>
               </div>
 
               <a href="#foster-waitlist" className="hidden" onClick={() => setMobileMenuOpen(false)}>Foster Sign-Up</a>

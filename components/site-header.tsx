@@ -29,14 +29,39 @@ export function SiteHeader() {
 
   return (
     <nav className="border-b border-neutral-200 bg-white sticky top-0 z-50" style={{ borderBottomColor: "rgba(90, 74, 66, 0.1)" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900">
-            Second Tail
+          <Link href="/" className="flex items-center gap-2">
+            {/* Dog logo mark */}
+            <svg width="30" height="30" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              {/* Body */}
+              <ellipse cx="20" cy="24" rx="11" ry="9" fill="#D76B1A" />
+              {/* Head */}
+              <circle cx="20" cy="13" r="7" fill="#D76B1A" />
+              {/* Left ear */}
+              <ellipse cx="13.5" cy="9" rx="3.5" ry="5" fill="#b85a14" transform="rotate(-15 13.5 9)" />
+              {/* Right ear */}
+              <ellipse cx="26.5" cy="9" rx="3.5" ry="5" fill="#b85a14" transform="rotate(15 26.5 9)" />
+              {/* Snout */}
+              <ellipse cx="20" cy="16" rx="3.5" ry="2.5" fill="#f5e0cc" />
+              {/* Nose */}
+              <ellipse cx="20" cy="14.5" rx="1.5" ry="1" fill="#5A4A42" />
+              {/* Left eye */}
+              <circle cx="16.5" cy="11.5" r="1.2" fill="#5A4A42" />
+              {/* Right eye */}
+              <circle cx="23.5" cy="11.5" r="1.2" fill="#5A4A42" />
+              {/* Tail */}
+              <path d="M31 22 Q38 16 35 10" stroke="#D76B1A" strokeWidth="3" strokeLinecap="round" fill="none" />
+              {/* Left front leg */}
+              <rect x="13" y="30" width="4" height="7" rx="2" fill="#D76B1A" />
+              {/* Right front leg */}
+              <rect x="23" y="30" width="4" height="7" rx="2" fill="#D76B1A" />
+            </svg>
+            <span className="text-xl sm:text-2xl font-bold text-gray-900">Second Tail</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6">
             <Link
               href="/for-rescue-organizations"
               className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"

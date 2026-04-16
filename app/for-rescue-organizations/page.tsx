@@ -3,6 +3,7 @@
 import { useState, useRef } from "react"
 import Link from "next/link"
 import { Users, MessageCircle, Menu, X, Mail, Plus, Clock, DollarSign, Users2, FileUp, Briefcase, Calendar, Package, AlertCircle, Heart, ChevronDown } from "lucide-react"
+import { SiteFooter } from "@/components/site-footer"
 
 export default function ForRescueOrganizationsPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -346,13 +347,7 @@ export default function ForRescueOrganizationsPage() {
         </Link>
       </section>
 
-      <footer className="border-t border-gray-200 bg-[#D76B1A] py-8 sm:py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs sm:text-sm text-white/80">
-            © 2026 Second Tail. Made with care for rescues and fosters.
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

@@ -1,7 +1,9 @@
-import { createClient } from "@/lib/supabase/client"
+"use server"
+
+import { createClient } from "@/lib/supabase/server"
 
 export async function rescueLogin(email: string, password: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,

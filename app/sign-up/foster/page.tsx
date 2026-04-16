@@ -108,56 +108,6 @@ function FosterSignUpForm() {
     }
     return true
   }
-    if (!email.trim() || !email.includes("@")) {
-      setError("Valid email is required")
-      return false
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return false
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return false
-    }
-    if (!city.trim()) {
-      setError("City is required")
-      return false
-    }
-    if (!state) {
-      setError("State is required")
-      return false
-    }
-    return true
-  }
-
-  const validateStep2 = () => {
-    if (!livingSituation) {
-      setError("Please select your living situation")
-      return false
-    }
-    if (pets.length === 0) {
-      setError("Please select your current pets")
-      return false
-    }
-    if (!fosterCount) {
-      setError("Please select your fostering experience")
-      return false
-    }
-    return true
-  }
-
-  const validateStep3 = () => {
-    if (!homeAvailability) {
-      setError("Please select your daytime availability")
-      return false
-    }
-    if (dogSizes.length === 0) {
-      setError("Please select at least one dog size")
-      return false
-    }
-    return true
-  }
 
   const handleNext = () => {
     setError("")
@@ -285,23 +235,6 @@ function FosterSignUpForm() {
                 Step {step} of 3 — {step === 1 ? "About Your Home" : step === 2 ? "Availability & Preferences" : "Basic Information"}
               </p>
             </div>
-
-            {step === 1 && (
-              <div className="bg-[#FEF3E8] rounded-lg p-4 space-y-3 border border-[#D76B1A]/10">
-                <p className="text-sm text-foreground leading-relaxed">
-                  We match rescue dogs with caring foster families. Tell us about your home and lifestyle, and we'll connect you with dogs that are a great fit.
-                </p>
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide">What happens next:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1 ml-3 list-disc">
-                    <li>Complete a brief profile (3 steps, ~5 minutes)</li>
-                    <li>Create your account with email verification</li>
-                    <li>Browse available dogs and matches in your dashboard</li>
-                    <li>Connect with rescue organizations</li>
-                  </ul>
-                </div>
-              </div>
-            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Step 1: About Your Home */}

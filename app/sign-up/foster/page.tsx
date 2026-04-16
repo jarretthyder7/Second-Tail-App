@@ -279,12 +279,29 @@ function FosterSignUpForm() {
       <div className="container mx-auto px-4 py-8 sm:py-12 lg:pt-24">
         <div className="max-w-md mx-auto">
           <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-8 space-y-6">
-            <div className="text-center space-y-2">
+            <div>
               <h1 className="text-3xl font-bold text-foreground">Join as Foster</h1>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm mt-2">
                 Step {step} of 3 — {step === 1 ? "About Your Home" : step === 2 ? "Availability & Preferences" : "Basic Information"}
               </p>
             </div>
+
+            {step === 1 && (
+              <div className="bg-[#FEF3E8] rounded-lg p-4 space-y-3 border border-[#D76B1A]/10">
+                <p className="text-sm text-foreground leading-relaxed">
+                  We match rescue dogs with caring foster families. Tell us about your home and lifestyle, and we'll connect you with dogs that are a great fit.
+                </p>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide">What happens next:</p>
+                  <ul className="text-xs text-muted-foreground space-y-1 ml-3 list-disc">
+                    <li>Complete a brief profile (3 steps, ~5 minutes)</li>
+                    <li>Create your account with email verification</li>
+                    <li>Browse available dogs and matches in your dashboard</li>
+                    <li>Connect with rescue organizations</li>
+                  </ul>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Step 1: About Your Home */}
@@ -528,25 +545,26 @@ function FosterSignUpForm() {
                 </div>
               )}
 
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  disabled={step === 1 || isLoading}
-                  className="flex-1 rounded-full border border-input bg-background px-4 py-3 text-base font-semibold text-foreground hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  Back
-                </button>
+              <div className={`flex gap-3 pt-4 ${step === 1 ? "" : ""}`}>
+                {step !== 1 && (
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    disabled={isLoading}
+                    className="flex-1 rounded-full border border-input bg-background px-4 py-3 text-base font-semibold text-foreground hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Back
+                  </button>
+                )}
                 {step < 3 ? (
                   <button
                     type="button"
                     onClick={handleNext}
                     disabled={isLoading}
-                    className="flex-1 rounded-full bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
+                    className={`rounded-full bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px] ${step === 1 ? "w-full" : "flex-1"}`}
                   >
-                    Next
-                    <ChevronRight className="w-4 h-4" />
+                    {step === 1 ? "Get Started" : <>Next <ChevronRight className="w-4 h-4" /></>}
                   </button>
                 ) : (
                   <button

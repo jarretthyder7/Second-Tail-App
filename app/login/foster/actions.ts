@@ -1,9 +1,7 @@
-"use server"
-
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/client"
 
 export async function fosterLogin(email: string, password: string) {
-  const supabase = await createClient()
+  const supabase = createClient()
 
   const { data, error: signInError } = await supabase.auth.signInWithPassword({
     email,

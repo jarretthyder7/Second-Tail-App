@@ -15,9 +15,11 @@ const REQUIRED_ENV_VARS = {
   // Email Configuration
   RESEND_API_KEY: "API key for Resend email service",
   FROM_EMAIL: "Sender email address (should be: noreply@getsecondtail.com)",
-  
-  // Application Configuration
-  NEXT_PUBLIC_BASE_URL: "Base URL for the application (used in email links and redirects)",
+}
+
+// Optional vars that have sensible defaults or are only needed in production
+const OPTIONAL_ENV_VARS = {
+  NEXT_PUBLIC_BASE_URL: "Base URL for the application (defaults to window.location.origin in development)",
 }
 
 /**
@@ -27,13 +29,26 @@ const REQUIRED_ENV_VARS = {
  * @throws {Error} If any required environment variable is missing
  */
 export function validateEnvironmentVariables(): void {
+  const isProduction = process.env.NODE_ENV === "production"
   const missingVars: string[] = []
 
+  // Check required vars in all environments
   for (const [envVar, description] of Object.entries(REQUIRED_ENV_VARS)) {
     const value = process.env[envVar]
     
     if (!value || value.trim() === "") {
       missingVars.push(`${envVar}: ${description}`)
+    }
+  }
+
+  // Check optional vars only in production
+  if (isProduction) {
+    for (const [envVar, description] of Object.entries(OPTIONAL_ENV_VARS)) {
+      const value = process.env[envVar]
+      
+      if (!value || value.trim() === "") {
+        missingVars.push(`${envVar}: ${description} (required in production)`)
+      }
     }
   }
 

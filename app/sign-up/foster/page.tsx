@@ -237,25 +237,6 @@ function FosterSignUpForm() {
             </div>
 
             {step === 1 && (
-              <div className="bg-[#FEF3E8] rounded-lg p-4 space-y-3 border border-[#D76B1A]/10">
-                <p className="text-sm text-foreground leading-relaxed">
-                  We match rescue dogs with caring foster families. Tell us about your home and lifestyle, and we'll connect you with dogs that are a great fit.
-                </p>
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide">What happens next:</p>
-                  <ul className="text-xs text-muted-foreground space-y-1 ml-3 list-disc">
-                    <li>Complete a brief profile (3 steps, ~5 minutes)</li>
-                    <li>Create your account with email verification</li>
-                    <li>Browse available dogs and matches in your dashboard</li>
-                    <li>Connect with rescue organizations</li>
-                  </ul>
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Step 1: About Your Home */}
-              {step === 1 && (
                 <div className="space-y-5">
                   <div className="pb-1">
                     <h2 className="text-lg font-bold text-foreground">About Your Home</h2>

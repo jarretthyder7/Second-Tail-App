@@ -139,6 +139,8 @@ export default function RescueSignUpPage() {
   const [password, setPassword] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
   const [phone, setPhone] = useState("")
+  const [organizationType, setOrganizationType] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -488,8 +490,8 @@ export default function RescueSignUpPage() {
                 <h2 className="text-2xl font-bold text-text-primary" style={{ fontFamily: "Lora, serif" }}>
                   Create Your Account
                 </h2>
-                <p className="text-sm text-text-secondary">
-                  Sign up to get started managing your rescue organization.
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  Connect with foster families, manage placements, track adoptions—all in one place.
                 </p>
               </div>
 
@@ -562,42 +564,73 @@ export default function RescueSignUpPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@rescue.org"
-                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition"
+                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition min-h-[44px]"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-bark mb-2">Phone Number</label>
+                  <label className="block text-sm font-semibold text-bark mb-2">Rescue Organization Type *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["Breed-specific rescue", "All-breeds rescue", "Foster-based network", "Shelter partner", "Other"].map(type => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setOrganizationType(type)}
+                        className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                          organizationType === type
+                            ? "border-primary-orange bg-primary-orange text-white"
+                            : "border-neutral-sand bg-white text-bark hover:border-primary-orange/50"
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-bark mb-2">Phone Number *</label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="(555) 123-4567"
-                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition"
+                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition min-h-[44px]"
+                    required
                   />
+                  <p className="mt-1.5 text-xs text-text-tertiary">We&apos;ll use this if there&apos;s an urgent placement opportunity.</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-bark mb-2">Password *</label>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Minimum 6 characters"
-                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition"
+                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition min-h-[44px]"
                     required
                   />
+                  <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit">
+                    <input
+                      type="checkbox"
+                      checked={showPassword}
+                      onChange={() => setShowPassword(!showPassword)}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-xs text-text-tertiary">Show password</span>
+                  </label>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-bark mb-2">Confirm Password *</label>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     value={repeatPassword}
                     onChange={(e) => setRepeatPassword(e.target.value)}
                     placeholder="Re-enter password"
-                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition"
+                    className="w-full rounded-xl border border-neutral-sand bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition min-h-[44px]"
                     required
                   />
                 </div>

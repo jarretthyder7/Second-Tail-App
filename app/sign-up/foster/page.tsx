@@ -34,19 +34,17 @@ function FosterSignUpForm() {
   const [city, setCity] = useState("")
   const [state, setState] = useState("")
 
-  // Step 2: About You
-  const [housingType, setHousingType] = useState("")
-  const [ownershipStatus, setOwnershipStatus] = useState("") // Own or Rent
-  const [hasYard, setHasYard] = useState<boolean | null>(null)
-  const [pets, setPets] = useState<string[]>([]) // Dogs, Cats, None, Other
-  const [fosteredBefore, setFosteredBefore] = useState<boolean | null>(null)
-  const [previousDogs, setPreviousDogs] = useState("")
+  // Step 2: About Your Home
+  const [livingSituation, setLivingSituation] = useState("")
+  const [pets, setPets] = useState<string[]>([])
+  const [fosterCount, setFosterCount] = useState("")
 
   // Step 3: Availability
-  const [homeAvailability, setHomeAvailability] = useState<boolean | null>(null)
-  const [dogSizes, setDogSizes] = useState<string[]>([]) // Small, Medium, Large, XL
-  const [restrictions, setRestrictions] = useState<string[]>([]) // No other dogs, No cats, No young children, None
+  const [homeAvailability, setHomeAvailability] = useState("")
+  const [dogSizes, setDogSizes] = useState<string[]>([])
+  const [restrictions, setRestrictions] = useState<string[]>([])
   const [whyFoster, setWhyFoster] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const validateStep1 = () => {
     if (!fullName.trim()) {
@@ -77,36 +75,24 @@ function FosterSignUpForm() {
   }
 
   const validateStep2 = () => {
-    if (!housingType) {
-      setError("Housing type is required")
-      return false
-    }
-    if (!ownershipStatus) {
-      setError("Please indicate if you own or rent")
-      return false
-    }
-    if (hasYard === null) {
-      setError("Please indicate if you have a yard")
+    if (!livingSituation) {
+      setError("Please select your living situation")
       return false
     }
     if (pets.length === 0) {
       setError("Please select your current pets")
       return false
     }
-    if (fosteredBefore === null) {
-      setError("Please indicate if you've fostered before")
-      return false
-    }
-    if (fosteredBefore && !previousDogs.trim()) {
-      setError("Please enter the number of dogs you've fostered")
+    if (!fosterCount) {
+      setError("Please select your fostering experience")
       return false
     }
     return true
   }
 
   const validateStep3 = () => {
-    if (homeAvailability === null) {
-      setError("Please indicate your home availability")
+    if (!homeAvailability) {
+      setError("Please select your daytime availability")
       return false
     }
     if (dogSizes.length === 0) {
@@ -193,8 +179,8 @@ function FosterSignUpForm() {
           user_id: authData.user.id,
           city,
           state,
-          housing_type: housingType,
-          has_yard: hasYard,
+          housing_type: livingSituation,
+          has_yard: livingSituation.includes("yard"),
           has_pets: pets.length > 0 && !pets.includes("None"),
           existing_pets_description: pets.join(", "),
           preferred_dog_sizes: dogSizes,
@@ -419,23 +405,32 @@ function FosterSignUpForm() {
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">Password *</label>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="At least 6 characters"
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[44px]"
                       required
                     />
+                    <label className="flex items-center gap-2 mt-2 cursor-pointer w-fit">
+                      <input
+                        type="checkbox"
+                        checked={showPassword}
+                        onChange={() => setShowPassword(!showPassword)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-xs text-muted-foreground">Show password</span>
+                    </label>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">Confirm Password *</label>
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Re-enter your password"
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[44px]"
                       required
                     />
                   </div>
@@ -469,208 +464,146 @@ function FosterSignUpForm() {
                 </div>
               )}
 
-              {/* Step 2: About You */}
+              {/* Step 2: About Your Home */}
               {step === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Housing Type *</label>
-                    <select
-                      value={housingType}
-                      onChange={(e) => setHousingType(e.target.value)}
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                      required
-                    >
-                      <option value="">Select housing type</option>
-                      <option value="House">House</option>
-                      <option value="Apartment">Apartment</option>
-                      <option value="Condo">Condo</option>
-                      <option value="Other">Other</option>
-                    </select>
+                <div className="space-y-5">
+                  <div className="pb-1">
+                    <h2 className="text-lg font-bold text-foreground">About Your Home</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Let&apos;s make sure we match you with the right dog.</p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Do you own or rent? *</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="ownership"
-                          value="Own"
-                          checked={ownershipStatus === "Own"}
-                          onChange={(e) => setOwnershipStatus(e.target.value)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Own</span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="ownership"
-                          value="Rent"
-                          checked={ownershipStatus === "Rent"}
-                          onChange={(e) => setOwnershipStatus(e.target.value)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Rent</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Do you have a yard? *</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="yard"
-                          checked={hasYard === true}
-                          onChange={() => setHasYard(true)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="yard"
-                          checked={hasYard === false}
-                          onChange={() => setHasYard(false)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">No</span>
-                      </label>
+                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your living situation? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Own a house with a yard", "Own a house without a yard", "Rent a house", "Rent an apartment", "Condo", "Other"].map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setLivingSituation(option)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            livingSituation === option
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-3">Current pets at home? *</label>
-                    <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
                       {["Dogs", "Cats", "None", "Other"].map(pet => (
-                        <label key={pet} className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={pets.includes(pet)}
-                            onChange={() => togglePetCheckbox(pet)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm text-foreground">{pet}</span>
-                        </label>
+                        <button
+                          key={pet}
+                          type="button"
+                          onClick={() => togglePetCheckbox(pet)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            pets.includes(pet)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {pet}
+                        </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Have you fostered before? *</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="fostered"
-                          checked={fosteredBefore === true}
-                          onChange={() => setFosteredBefore(true)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="fostered"
-                          checked={fosteredBefore === false}
-                          onChange={() => setFosteredBefore(false)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">No</span>
-                      </label>
+                    <label className="block text-sm font-medium text-foreground mb-3">How many dogs have you fostered before? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["This is my first time", "1-3 dogs", "4-10 dogs", "10+ dogs"].map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setFosterCount(option)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            fosterCount === option
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
                     </div>
                   </div>
-
-                  {fosteredBefore && (
-                    <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">How many dogs have you fostered?</label>
-                      <input
-                        type="number"
-                        value={previousDogs}
-                        onChange={(e) => setPreviousDogs(e.target.value)}
-                        placeholder="0"
-                        min="0"
-                        className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                      />
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* Step 3: Availability */}
+              {/* Step 3: Availability & Preferences */}
               {step === 3 && (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Are you home most of the day? *</label>
-                    <div className="space-y-2">
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="availability"
-                          checked={homeAvailability === true}
-                          onChange={() => setHomeAvailability(true)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">Yes</span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input
-                          type="radio"
-                          name="availability"
-                          checked={homeAvailability === false}
-                          onChange={() => setHomeAvailability(false)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-foreground">No</span>
-                      </label>
+                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your typical daytime availability? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Home most/all day", "Home part-time (afternoons/evenings)", "Work outside home, active evenings", "Limited availability"].map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setHomeAvailability(option)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            homeAvailability === option
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-3">What size dogs can you foster? *</label>
-                    <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
                       {["Small", "Medium", "Large", "XL"].map(size => (
-                        <label key={size} className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={dogSizes.includes(size)}
-                            onChange={() => toggleDogSizeCheckbox(size)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm text-foreground">{size}</span>
-                        </label>
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => toggleDogSizeCheckbox(size)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            dogSizes.includes(size)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {size}
+                        </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Any restrictions?</label>
-                    <div className="space-y-2">
+                    <label className="block text-sm font-medium text-foreground mb-3">Are there any dogs that wouldn&apos;t be a good fit for your home? *</label>
+                    <div className="flex flex-wrap gap-2">
                       {["No other dogs", "No cats", "No young children", "None"].map(restriction => (
-                        <label key={restriction} className="flex items-center gap-3">
-                          <input
-                            type="checkbox"
-                            checked={restrictions.includes(restriction)}
-                            onChange={() => toggleRestrictionCheckbox(restriction)}
-                            className="w-4 h-4"
-                          />
-                          <span className="text-sm text-foreground">{restriction}</span>
-                        </label>
+                        <button
+                          key={restriction}
+                          type="button"
+                          onClick={() => toggleRestrictionCheckbox(restriction)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            restrictions.includes(restriction)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {restriction}
+                        </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Why do you want to foster? (Optional)</label>
+                    <label className="block text-sm font-medium text-foreground mb-2">What draws you to fostering? <span className="font-normal text-muted-foreground">(Optional — helps us tell your story)</span></label>
                     <textarea
                       value={whyFoster}
                       onChange={(e) => setWhyFoster(e.target.value)}
-                      placeholder="Tell us why you're interested in fostering..."
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[100px]"
+                      placeholder="Share what inspired you to foster..."
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[100px] leading-relaxed"
                     />
                   </div>
                 </div>
@@ -688,7 +621,7 @@ function FosterSignUpForm() {
                   type="button"
                   onClick={handlePrev}
                   disabled={step === 1 || isLoading}
-                  className="flex-1 rounded-lg border border-input bg-background px-4 py-3 text-base font-semibold text-foreground hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 rounded-full border border-input bg-background px-4 py-3 text-base font-semibold text-foreground hover:bg-accent transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   Back
@@ -698,7 +631,7 @@ function FosterSignUpForm() {
                     type="button"
                     onClick={handleNext}
                     disabled={isLoading}
-                    className="flex-1 rounded-lg bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 rounded-full bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px]"
                   >
                     Next
                     <ChevronRight className="w-4 h-4" />
@@ -707,7 +640,7 @@ function FosterSignUpForm() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex-1 rounded-lg bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 rounded-full bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
                   >
                     {isLoading ? "Creating account..." : "Create Account"}
                   </button>

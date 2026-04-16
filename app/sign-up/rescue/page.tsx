@@ -116,7 +116,7 @@ export default function RescueSignUpPage() {
         // Don't fail signup if email fails
       }
 
-      router.push("/auth/sign-up-success?type=rescue")
+      router.push(`/auth/sign-up-success?type=rescue&email=${encodeURIComponent(email)}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)

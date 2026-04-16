@@ -10,6 +10,7 @@ import { SiteFooter } from "@/components/site-footer"
 function SuccessContent() {
   const searchParams = useSearchParams()
   const type = searchParams.get("type") || "foster"
+  const email = searchParams.get("email") || ""
   const isRescue = type === "rescue"
 
   return (
@@ -29,9 +30,7 @@ function SuccessContent() {
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-foreground">Check Your Email</h1>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {isRescue
-                ? "We've sent a confirmation link to your rescue organization email. Click it to verify your account and get started."
-                : "We've sent a confirmation link to your email. Click it to verify your account and get started."}
+              We&apos;ve sent a confirmation link to <span className="font-semibold">{email || "your email"}</span>
             </p>
           </div>
 

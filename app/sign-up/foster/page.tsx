@@ -86,8 +86,12 @@ function FosterSignUpForm() {
       setError("Full name is required")
       return false
     }
-    if (!email.trim() || !email.includes("@")) {
-      setError("Valid email is required")
+    if (!email.trim()) {
+      setError("Email address is required")
+      return false
+    }
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Please enter a valid email address (example: john@domain.com)")
       return false
     }
     if (password.length < 6) {
@@ -103,7 +107,7 @@ function FosterSignUpForm() {
       return false
     }
     if (!state) {
-      setError("State is required")
+      setError("Please select a state")
       return false
     }
     return true

@@ -43,14 +43,38 @@ export default function RescueSignUpPage() {
     setIsLoading(true)
     setError("")
 
-    if (password !== repeatPassword) {
-      setError("Passwords do not match")
+    if (!orgName.trim()) {
+      setError("Organization name is required")
+      setIsLoading(false)
+      return
+    }
+
+    if (!adminName.trim()) {
+      setError("Admin name is required")
+      setIsLoading(false)
+      return
+    }
+
+    if (!email.trim()) {
+      setError("Email address is required")
+      setIsLoading(false)
+      return
+    }
+
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Please enter a valid email address (example: admin@organization.com)")
       setIsLoading(false)
       return
     }
 
     if (password.length < 6) {
       setError("Password must be at least 6 characters")
+      setIsLoading(false)
+      return
+    }
+
+    if (password !== repeatPassword) {
+      setError("Passwords do not match")
       setIsLoading(false)
       return
     }

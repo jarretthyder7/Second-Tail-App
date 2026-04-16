@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowRight, CheckCircle2 } from "lucide-react"
+import { ArrowRight, CheckCircle2, Users, Heart } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { createClient } from "@/lib/supabase/client"
 

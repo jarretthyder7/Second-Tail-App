@@ -88,7 +88,7 @@ export default function RescueSignUpPage() {
           }),
         })
       } catch (emailError) {
-        console.warn("[v0] Welcome email failed to send:", emailError)
+        // Welcome email failed to send, but signup was successful
         // Don't fail signup if email fails
       }
 

@@ -1,7 +1,11 @@
 import type { Metadata, Viewport } from 'next'
 import { Lora, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { validateEnvironmentVariables } from '@/lib/env-validation'
 import './globals.css'
+
+// Validate environment variables on startup
+validateEnvironmentVariables()
 
 const lora = Lora({ subsets: ['latin'], weight: ['400', '600', '700'] })
 const geist = Geist({ subsets: ['latin'] })

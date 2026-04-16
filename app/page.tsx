@@ -109,7 +109,15 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <SiteHeader />
 
-      <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
+      <section className="relative py-16 sm:py-20 lg:py-28 overflow-hidden" style={{ backgroundColor: "#FDF6EC" }}>
+        {/* Decorative logo overlay — absolutely positioned, pointer-events-none so it doesn't block clicks */}
+        <div className="absolute inset-x-0 top-0 flex justify-center pointer-events-none select-none" aria-hidden="true">
+          <img
+            src="/logo-dog.png"
+            alt=""
+            className="w-32 h-32 sm:w-44 sm:h-44 lg:w-56 lg:h-56 opacity-10 -translate-y-6 sm:-translate-y-10"
+          />
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
             <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">

@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Heart, Users, Menu, X, ChevronDown } from "lucide-react"
 
-export function SiteHeader() {
+export function SiteHeader({ hideLogo }: { hideLogo?: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const [signupDropdownOpen, setSignupDropdownOpen] = useState(false)
@@ -33,15 +33,17 @@ export function SiteHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
-            <Image 
-              src="/logo-dog.png" 
-              alt="Second Tail logo" 
-              width={32} 
-              height={32}
-              priority
-              unoptimized
-              className="h-8 w-8 sm:h-9 sm:w-9"
-            />
+            {!hideLogo && (
+              <Image 
+                src="/logo-dog.png" 
+                alt="Second Tail logo" 
+                width={32} 
+                height={32}
+                priority
+                unoptimized
+                className="h-8 w-8 sm:h-9 sm:w-9"
+              />
+            )}
             <span className="text-xl sm:text-2xl font-bold text-gray-900">Second Tail</span>
           </Link>
 

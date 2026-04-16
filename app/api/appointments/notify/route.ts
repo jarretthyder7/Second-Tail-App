@@ -97,14 +97,14 @@ export async function POST(request: Request) {
     }
 
     const { data: emailResult, error: emailError } = await resend.emails.send({
-      from: process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>",
+      from: process.env.FROM_EMAIL || "noreply@getsecondtail.com",
       to: foster.email,
       subject: emailData.subject,
       html: emailData.html,
     })
 
     if (emailError) {
-      console.error("[v0] Error sending appointment email:", emailError)
+      console.error("Error sending appointment email:", emailError)
       return Response.json({ error: "Failed to send email" }, { status: 500 })
     }
 
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
 
     return Response.json({ success: true, emailId: emailResult?.id })
   } catch (error) {
-    console.error("[v0] Error in appointment notification:", error)
+    console.error("Error in appointment notification:", error)
     return Response.json({ error: "Internal server error" }, { status: 500 })
   }
 }

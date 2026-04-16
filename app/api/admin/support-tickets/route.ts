@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email to admin
-    const adminEmail = process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>"
+    const adminEmail = process.env.FROM_EMAIL || "noreply@getsecondtail.com"
     const subject_line = `[Support Ticket] ${category} - ${org.name}`
 
     const emailHtml = `
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         html: emailHtml,
       })
     } else {
-      console.warn("[v0] RESEND_API_KEY not configured - support ticket not sent via email")
+      console.warn("RESEND_API_KEY not configured - support ticket not sent via email")
     }
 
     return NextResponse.json({
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
       message: "Support ticket submitted successfully. We'll be in touch soon!",
     })
   } catch (error) {
-    console.error("[v0] Error submitting support ticket:", error)
+    console.error("Error submitting support ticket:", error)
     return NextResponse.json({ error: "Failed to submit support ticket" }, { status: 500 })
   }
 }

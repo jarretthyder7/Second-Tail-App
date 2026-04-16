@@ -229,7 +229,7 @@ function FosterSignUpForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       <div className="w-full border-b border-gray-100 px-4 sm:px-6 py-4 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold" style={{ color: "#5a4a42", fontFamily: "Lora, serif" }}>
           Second Tail
@@ -374,7 +374,7 @@ function FosterSignUpForm() {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-20">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
         <div className="max-w-md mx-auto">
           <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-8 space-y-6">
             <div className="text-center space-y-2">

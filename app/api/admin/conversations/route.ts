@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
       .order("updated_at", { ascending: false })
 
     if (error) {
-      console.error("[v0] Error fetching conversations:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching conversations:', error)
+      return NextResponse.json({ error: "Failed to fetch conversations" }, { status: 500 })
     }
 
     // Process conversations to add metadata for dashboard
@@ -75,7 +75,19 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ conversations: processedConversations })
   } catch (error) {
-    console.error("[v0] API Error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('API Error:', error)
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    
+    if (message.includes('unauthorized') || message.includes('forbidden')) {
+      return NextResponse.json(
+        { error: "You do not have permission to access this resource" },
+        { status: 403 }
+      )
+    }
+    
+    return NextResponse.json(
+      { error: "Failed to process request. Please try again." },
+      { status: 500 }
+    )
   }
 }

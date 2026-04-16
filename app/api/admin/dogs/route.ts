@@ -41,13 +41,25 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("[v0] Error fetching dogs:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching dogs:', error)
+      return NextResponse.json({ error: "Failed to fetch dogs" }, { status: 500 })
     }
 
     return NextResponse.json({ dogs: dogs || [] })
   } catch (error) {
-    console.error("[v0] API Error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('API Error:', error)
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    
+    if (message.includes('unauthorized') || message.includes('forbidden')) {
+      return NextResponse.json(
+        { error: "You do not have permission to access this resource" },
+        { status: 403 }
+      )
+    }
+    
+    return NextResponse.json(
+      { error: "Failed to process request. Please try again." },
+      { status: 500 }
+    )
   }
 }

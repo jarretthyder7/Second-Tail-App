@@ -43,14 +43,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .maybeSingle()
 
     if (error) {
-      console.error("[v0] Database error fetching foster:", error)
+      console.error('Database error fetching foster:', error)
       return NextResponse.json(
-        {
-          error: "Database error",
-          message: error.message,
-          fosterId,
-        },
-        { status: 500 },
+        { error: "Failed to fetch foster details" },
+        { status: 500 }
       )
     }
 
@@ -86,13 +82,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(foster)
   } catch (error) {
-    console.error("[v0] Unexpected error in foster API:", error)
+    console.error('Error in foster API:', error)
+    const message = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      {
-        error: "Server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
+      { error: "Failed to fetch foster details" },
+      { status: 500 }
     )
   }
 }
@@ -146,13 +140,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       .single()
 
     if (error) {
-      console.error("[v0] Error updating foster:", error)
+      console.error('Error updating foster:', error)
       return NextResponse.json(
-        {
-          error: "Database error",
-          message: error.message,
-        },
-        { status: 500 },
+        { error: "Failed to update foster details" },
+        { status: 500 }
       )
     }
 
@@ -168,13 +159,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     return NextResponse.json(updatedFoster)
   } catch (error) {
-    console.error("[v0] Error in foster PATCH handler:", error)
+    console.error('Error in foster PATCH handler:', error)
+    const message = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json(
-      {
-        error: "Server error",
-        message: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
+      { error: "Failed to update foster details" },
+      { status: 500 }
     )
   }
 }

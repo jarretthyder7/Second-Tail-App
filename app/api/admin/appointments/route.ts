@@ -55,8 +55,8 @@ export async function GET(request: Request) {
     .order("start_time", { ascending: true })
 
   if (error) {
-    console.error("[v0] Error fetching appointments:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error fetching appointments:', error)
+    return NextResponse.json({ error: "Failed to fetch appointments" }, { status: 500 })
   }
 
   return NextResponse.json({ appointments: appointments || [] })
@@ -100,8 +100,9 @@ export async function POST(request: Request) {
     .single()
 
   if (error) {
-    console.error("[v0] Error creating appointment:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error creating appointment:', error)
+    const errorMessage = error.message || "Failed to create appointment"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 
   if (appointment.foster_id) {
@@ -132,7 +133,8 @@ export async function POST(request: Request) {
         })
       }
     } catch (emailError) {
-      console.warn("[v0] Failed to send appointment email:", emailError)
+      console.error('Failed to send appointment email:', emailError)
+      // Email failure doesn't block appointment creation
     }
   }
 
@@ -183,8 +185,8 @@ export async function DELETE(request: Request) {
   const { error } = await supabase.from("appointments").delete().eq("id", id)
 
   if (error) {
-    console.error("[v0] Error deleting appointment:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error deleting appointment:', error)
+    return NextResponse.json({ error: "Failed to delete appointment" }, { status: 500 })
   }
 
   // Send cancellation email to foster
@@ -220,9 +222,10 @@ export async function DELETE(request: Request) {
         })
       }
     }
-  } catch (emailError) {
-    console.warn("[v0] Failed to send appointment cancellation email:", emailError)
-  }
+    } catch (emailError) {
+      console.error('Failed to send appointment cancellation email:', emailError)
+      // Email failure doesn't block cancellation
+    }
 
   return NextResponse.json({ success: true })
 }
@@ -276,8 +279,9 @@ export async function PATCH(request: Request) {
     .single()
 
   if (error) {
-    console.error("[v0] Error updating appointment:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Error updating appointment:', error)
+    const errorMessage = error.message || "Failed to update appointment"
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 
   return NextResponse.json({ appointment })

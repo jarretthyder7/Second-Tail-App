@@ -236,7 +236,9 @@ function FosterSignUpForm() {
               </p>
             </div>
 
-            {step === 1 && (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Step 1: About Your Home */}
+              {step === 1 && (
                 <div className="space-y-5">
                   <div className="pb-1">
                     <h2 className="text-lg font-bold text-foreground">About Your Home</h2>

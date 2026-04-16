@@ -25,7 +25,19 @@ function FosterSignUpForm() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  // Step 1: Basic Info
+  // Step 2: About Your Home (displayed as step 1)
+  const [livingSituation, setLivingSituation] = useState("")
+  const [pets, setPets] = useState<string[]>([])
+  const [fosterCount, setFosterCount] = useState("")
+
+  // Step 3: Availability (displayed as step 2)
+  const [homeAvailability, setHomeAvailability] = useState("")
+  const [dogSizes, setDogSizes] = useState<string[]>([])
+  const [restrictions, setRestrictions] = useState<string[]>([])
+  const [whyFoster, setWhyFoster] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+
+  // Step 1: Basic Info (displayed as step 3)
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -33,23 +45,69 @@ function FosterSignUpForm() {
   const [city, setCity] = useState("")
   const [state, setState] = useState("")
 
-  // Step 2: About Your Home
-  const [livingSituation, setLivingSituation] = useState("")
-  const [pets, setPets] = useState<string[]>([])
-  const [fosterCount, setFosterCount] = useState("")
-
-  // Step 3: Availability
-  const [homeAvailability, setHomeAvailability] = useState("")
-  const [dogSizes, setDogSizes] = useState<string[]>([])
-  const [restrictions, setRestrictions] = useState<string[]>([])
-  const [whyFoster, setWhyFoster] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-
   const validateStep1 = () => {
+    if (!livingSituation) {
+      setError("Please select your living situation")
+      return false
+    }
+    if (pets.length === 0) {
+      setError("Please select your current pets")
+      return false
+    }
+    if (!fosterCount) {
+      setError("Please select your fostering experience")
+      return false
+    }
+    return true
+  }
+
+  const validateStep2 = () => {
+    if (!homeAvailability) {
+      setError("Please select your daytime availability")
+      return false
+    }
+    if (dogSizes.length === 0) {
+      setError("Please select at least one dog size")
+      return false
+    }
+    if (restrictions.length === 0) {
+      setError("Please select any breed restrictions")
+      return false
+    }
+    if (!whyFoster.trim()) {
+      setError("Please tell us why you want to foster")
+      return false
+    }
+    return true
+  }
+
+  const validateStep3 = () => {
     if (!fullName.trim()) {
       setError("Full name is required")
       return false
     }
+    if (!email.trim() || !email.includes("@")) {
+      setError("Valid email is required")
+      return false
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return false
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return false
+    }
+    if (!city.trim()) {
+      setError("City is required")
+      return false
+    }
+    if (!state) {
+      setError("State is required")
+      return false
+    }
+    return true
+  }
     if (!email.trim() || !email.includes("@")) {
       setError("Valid email is required")
       return false
@@ -224,13 +282,158 @@ function FosterSignUpForm() {
             <div className="text-center space-y-2">
               <h1 className="text-3xl font-bold text-foreground">Join as Foster</h1>
               <p className="text-muted-foreground text-sm">
-                Step {step} of 3 — {step === 1 ? "Basic Information" : step === 2 ? "About You" : "Availability & Preferences"}
+                Step {step} of 3 — {step === 1 ? "About Your Home" : step === 2 ? "Availability & Preferences" : "Basic Information"}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Step 1: Basic Info */}
+              {/* Step 1: About Your Home */}
               {step === 1 && (
+                <div className="space-y-5">
+                  <div className="pb-1">
+                    <h2 className="text-lg font-bold text-foreground">About Your Home</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Let rescues match you with the right dog.</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your living situation? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Own a house with a yard", "Own a house without a yard", "Rent a house", "Rent an apartment", "Condo", "Other"].map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setLivingSituation(option)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            livingSituation === option
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Current pets at home? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Dogs", "Cats", "None", "Other"].map(pet => (
+                        <button
+                          key={pet}
+                          type="button"
+                          onClick={() => togglePetCheckbox(pet)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            pets.includes(pet)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {pet}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">How many dogs have you fostered before? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["This is my first time", "1-3 dogs", "4-10 dogs", "10+ dogs"].map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setFosterCount(option)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            fosterCount === option
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Availability & Preferences */}
+              {step === 2 && (
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your typical daytime availability? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Home most/all day", "Home part-time (afternoons/evenings)", "Work outside home, active evenings", "Limited availability"].map(option => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setHomeAvailability(option)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            homeAvailability === option
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">What size dogs can you foster? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["Small", "Medium", "Large", "XL"].map(size => (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => toggleDogSizeCheckbox(size)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            dogSizes.includes(size)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-3">Are there any dogs that wouldn&apos;t be a good fit for your home? *</label>
+                    <div className="flex flex-wrap gap-2">
+                      {["No other dogs", "No cats", "No young children", "None"].map(restriction => (
+                        <button
+                          key={restriction}
+                          type="button"
+                          onClick={() => toggleRestrictionCheckbox(restriction)}
+                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
+                            restrictions.includes(restriction)
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-input bg-background text-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {restriction}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">What draws you to fostering? <span className="font-normal text-muted-foreground">(Optional — helps us tell your story)</span></label>
+                    <textarea
+                      value={whyFoster}
+                      onChange={(e) => setWhyFoster(e.target.value)}
+                      placeholder="Share what inspired you to foster..."
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[100px] leading-relaxed"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Basic Info */}
+              {step === 3 && (
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">Full Name *</label>
@@ -314,151 +517,6 @@ function FosterSignUpForm() {
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: About Your Home */}
-              {step === 2 && (
-                <div className="space-y-5">
-                  <div className="pb-1">
-                    <h2 className="text-lg font-bold text-foreground">About Your Home</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">Let rescues match you with the right dog.</p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your living situation? *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["Own a house with a yard", "Own a house without a yard", "Rent a house", "Rent an apartment", "Condo", "Other"].map(option => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setLivingSituation(option)}
-                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            livingSituation === option
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background text-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Current pets at home? *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["Dogs", "Cats", "None", "Other"].map(pet => (
-                        <button
-                          key={pet}
-                          type="button"
-                          onClick={() => togglePetCheckbox(pet)}
-                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            pets.includes(pet)
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background text-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {pet}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">How many dogs have you fostered before? *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["This is my first time", "1-3 dogs", "4-10 dogs", "10+ dogs"].map(option => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setFosterCount(option)}
-                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            fosterCount === option
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background text-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Availability & Preferences */}
-              {step === 3 && (
-                <div className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your typical daytime availability? *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["Home most/all day", "Home part-time (afternoons/evenings)", "Work outside home, active evenings", "Limited availability"].map(option => (
-                        <button
-                          key={option}
-                          type="button"
-                          onClick={() => setHomeAvailability(option)}
-                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            homeAvailability === option
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background text-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">What size dogs can you foster? *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["Small", "Medium", "Large", "XL"].map(size => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => toggleDogSizeCheckbox(size)}
-                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            dogSizes.includes(size)
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background text-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {size}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Are there any dogs that wouldn&apos;t be a good fit for your home? *</label>
-                    <div className="flex flex-wrap gap-2">
-                      {["No other dogs", "No cats", "No young children", "None"].map(restriction => (
-                        <button
-                          key={restriction}
-                          type="button"
-                          onClick={() => toggleRestrictionCheckbox(restriction)}
-                          className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            restrictions.includes(restriction)
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : "border-input bg-background text-foreground hover:border-primary/50"
-                          }`}
-                        >
-                          {restriction}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">What draws you to fostering? <span className="font-normal text-muted-foreground">(Optional — helps us tell your story)</span></label>
-                    <textarea
-                      value={whyFoster}
-                      onChange={(e) => setWhyFoster(e.target.value)}
-                      placeholder="Share what inspired you to foster..."
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition min-h-[100px] leading-relaxed"
-                    />
                   </div>
                 </div>
               )}

@@ -202,11 +202,11 @@ function FosterSignUpForm() {
             }),
           })
         } catch (emailError) {
-          console.warn("[v0] Welcome email failed to send:", emailError)
+          // Welcome email failed to send, but signup was successful
         }
       }
 
-      router.push("/foster/dashboard")
+      router.push("/auth/sign-up-success?type=foster")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)

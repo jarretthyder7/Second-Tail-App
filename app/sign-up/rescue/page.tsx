@@ -5,7 +5,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { useState } from "react"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg

@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 
 export const metadata = {
   title: "Terms of Service — Second Tail",
@@ -7,18 +9,8 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <nav className="border-b border-neutral-200 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold text-gray-900">
-            Second Tail
-          </Link>
-          <Link href="/" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-            ← Back to home
-          </Link>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-white flex flex-col">
+      <SiteHeader />
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="space-y-8">
@@ -126,6 +118,7 @@ export default function TermsPage() {
           </Link>
         </div>
       </main>
+      <SiteFooter />
     </div>
   )
 }

@@ -6,24 +6,9 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
-
-const Lock = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    {...props}
-  >
-    <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
-    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-  </svg>
-)
+import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
+import { Lock } from "lucide-react"
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState("")
@@ -82,8 +67,10 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#4A90A4]/5 via-[#FBF8F4] to-[#FF8B7B]/5 px-4 py-8">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#4A90A4]/5 via-[#FBF8F4] to-[#FF8B7B]/5 flex flex-col">
+      <SiteHeader />
+      <main className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
         <div className="space-y-2 md:space-y-3">
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#4A90A4]/10 flex items-center justify-center mb-3 md:mb-4">
             <Lock className="w-5 h-5 md:w-6 md:h-6 text-[#4A90A4]" />
@@ -150,6 +137,8 @@ export default function ResetPasswordPage() {
           </form>
         )}
       </div>
+      </main>
+      <SiteFooter />
     </div>
   )
 }

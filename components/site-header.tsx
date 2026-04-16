@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Heart, Users, Menu, X, ChevronDown } from "lucide-react"
 
 export function SiteHeader() {
@@ -29,14 +30,23 @@ export function SiteHeader() {
 
   return (
     <nav className="border-b border-neutral-200 bg-white sticky top-0 z-50" style={{ borderBottomColor: "rgba(90, 74, 66, 0.1)" }}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-xl sm:text-2xl font-bold text-gray-900">
-            Second Tail
+          <Link href="/" className="flex items-center gap-2.5">
+            <Image 
+              src="/logo-dog.png" 
+              alt="Second Tail logo" 
+              width={32} 
+              height={32}
+              priority
+              unoptimized
+              className="h-8 w-8 sm:h-9 sm:w-9"
+            />
+            <span className="text-xl sm:text-2xl font-bold text-gray-900">Second Tail</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          <div className="hidden md:flex items-center gap-4 lg:gap-6">
             <Link
               href="/for-rescue-organizations"
               className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"

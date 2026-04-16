@@ -86,8 +86,12 @@ function FosterSignUpForm() {
       setError("Full name is required")
       return false
     }
-    if (!email.trim() || !email.includes("@")) {
-      setError("Valid email is required")
+    if (!email.trim()) {
+      setError("Email address is required")
+      return false
+    }
+    if (!email.includes("@") || !email.includes(".")) {
+      setError("Please enter a valid email address (example: john@domain.com)")
       return false
     }
     if (password.length < 6) {
@@ -103,7 +107,7 @@ function FosterSignUpForm() {
       return false
     }
     if (!state) {
-      setError("State is required")
+      setError("Please select a state")
       return false
     }
     return true
@@ -222,13 +226,13 @@ function FosterSignUpForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/30">
       <SiteHeader />
 
 
-      <div className="container mx-auto px-4 py-8 sm:py-12 lg:pt-24">
-        <div className="max-w-md mx-auto">
-          <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-8 space-y-6">
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        <div className="max-w-lg mx-auto">
+          <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-5 sm:p-8 space-y-5">
             <div>
               <h1 className="text-3xl font-bold text-foreground">Join as Foster</h1>
               <p className="text-muted-foreground text-sm mt-2">

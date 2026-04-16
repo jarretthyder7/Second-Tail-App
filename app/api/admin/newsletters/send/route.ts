@@ -70,8 +70,8 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (insertError) {
-        console.error('[v0] Error scheduling newsletter:', insertError)
-        return NextResponse.json({ error: 'Failed to schedule newsletter' }, { status: 500 })
+        console.error("Error scheduling newsletter:", insertError)
+        return NextResponse.json({ error: "Failed to schedule newsletter" }, { status: 500 })
       }
 
       return NextResponse.json({ 
@@ -103,8 +103,8 @@ export async function POST(request: NextRequest) {
     const { data: fosters, error: fostersError } = await fostersQuery
 
     if (fostersError) {
-      console.error('[v0] Error fetching fosters:', fostersError)
-      return NextResponse.json({ error: 'Failed to fetch fosters' }, { status: 500 })
+      console.error("Error fetching fosters:", fostersError)
+      return NextResponse.json({ error: "Failed to fetch fosters" }, { status: 500 })
     }
 
     if (!fosters || fosters.length === 0) {
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (insertError) {
-      console.error('[v0] Error creating newsletter:', insertError)
-      return NextResponse.json({ error: 'Failed to create newsletter' }, { status: 500 })
+      console.error("Error creating newsletter:", insertError)
+      return NextResponse.json({ error: "Failed to create newsletter" }, { status: 500 })
     }
 
     // Render email template
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     const emailPromises = fosters.map(async (foster) => {
       try {
         const { data, error } = await resend.emails.send({
-          from: process.env.FROM_EMAIL || "Second Tail <onboarding@resend.dev>",
+          from: process.env.FROM_EMAIL || "noreply@getsecondtail.com",
           to: foster.email,
           subject,
           html: emailHtml,
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
 
         return { success: !error, email: foster.email, error }
       } catch (err) {
-        console.error('[v0] Error sending to', foster.email, err)
+        console.error("Error sending to", foster.email, err)
         return { success: false, email: foster.email, error: err }
       }
     })
@@ -195,10 +195,10 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[v0] Newsletter send error:', error)
+    console.error("Newsletter send error:", error)
     return NextResponse.json({ 
-      error: 'Failed to send newsletter',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      error: "Failed to send newsletter",
+      details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 500 })
   }
 }

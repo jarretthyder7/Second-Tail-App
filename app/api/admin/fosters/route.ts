@@ -45,7 +45,7 @@ export async function GET(request: Request) {
       .order("created_at", { ascending: false })
 
     if (fostersError) {
-      console.error("[v0] API Error fetching fosters:", fostersError)
+      console.error('Error fetching fosters:', fostersError)
     }
 
     // Fetch dogs for each foster
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
       .order("name", { ascending: true })
 
     if (pendingError || acceptedError || cancelledError || dogsError) {
-      console.error("[v0] Error fetching data:", { pendingError, acceptedError, cancelledError, dogsError })
+      console.error('Error fetching data:', { pendingError, acceptedError, cancelledError, dogsError })
     }
 
     return NextResponse.json({
@@ -104,7 +104,19 @@ export async function GET(request: Request) {
       availableDogs: availableDogs || [],
     })
   } catch (error) {
-    console.error("[v0] Error in fosters API:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Error in fosters API:', error)
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    
+    if (message.includes('unauthorized') || message.includes('forbidden')) {
+      return NextResponse.json(
+        { error: "You do not have permission to access this resource" },
+        { status: 403 }
+      )
+    }
+    
+    return NextResponse.json(
+      { error: "Failed to process request. Please try again." },
+      { status: 500 }
+    )
   }
 }

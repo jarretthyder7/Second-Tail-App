@@ -64,14 +64,18 @@ export async function PATCH(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error("[v0] Error updating help request:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error updating help request:', error)
+      return NextResponse.json({ error: "Failed to update help request" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, request: data })
   } catch (error) {
-    console.error("[v0] API Error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Error updating help request:', error)
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    return NextResponse.json(
+      { error: "Failed to update help request. Please try again." },
+      { status: 500 }
+    )
   }
 }
 
@@ -114,13 +118,17 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("[v0] Error fetching help requests:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('Error fetching help requests:', error)
+      return NextResponse.json({ error: "Failed to fetch help requests" }, { status: 500 })
     }
 
     return NextResponse.json({ requests: requests || [] })
   } catch (error) {
-    console.error("[v0] API Error:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error('Error in help requests API:', error)
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    return NextResponse.json(
+      { error: "Failed to process request. Please try again." },
+      { status: 500 }
+    )
   }
 }

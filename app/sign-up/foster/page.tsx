@@ -5,7 +5,7 @@ import { Suspense, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { ArrowLeft, AlertCircle, ChevronRight, ChevronLeft, Menu, X, Users, Heart, ChevronDown } from "lucide-react"
+import { AlertCircle, ChevronRight, ChevronLeft, Menu, X, Users, Heart, ChevronDown } from "lucide-react"
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
@@ -230,15 +230,11 @@ function FosterSignUpForm() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="absolute top-0 left-0 right-0 px-4 sm:px-6 py-4 flex justify-between items-center md:relative">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back
+      <div className="w-full border-b border-gray-100 px-4 sm:px-6 py-4 flex justify-between items-center">
+        <Link href="/" className="text-xl font-bold" style={{ color: "#5a4a42", fontFamily: "Lora, serif" }}>
+          Second Tail
         </Link>
-        
+
         <div className="hidden md:block">
           <Link href="/login/foster" className="text-sm text-muted-foreground hover:text-foreground transition">
             Already have an account? <span className="font-semibold text-primary">Log in</span>

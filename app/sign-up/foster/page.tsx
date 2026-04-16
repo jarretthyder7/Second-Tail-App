@@ -5,7 +5,7 @@ import { Suspense, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { AlertCircle, ChevronRight, ChevronLeft, Menu, X, Users, Heart, ChevronDown } from "lucide-react"
+import { ArrowLeft, AlertCircle, ChevronRight, ChevronLeft, Menu, X, Users, Heart, ChevronDown } from "lucide-react"
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
@@ -229,12 +229,16 @@ function FosterSignUpForm() {
   }
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      <div className="w-full border-b border-gray-100 px-4 sm:px-6 py-4 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold" style={{ color: "#5a4a42", fontFamily: "Lora, serif" }}>
-          Second Tail
+    <div className="min-h-screen bg-background">
+      <div className="absolute top-0 left-0 right-0 px-4 sm:px-6 py-4 flex justify-between items-center md:relative">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
         </Link>
-
+        
         <div className="hidden md:block">
           <Link href="/login/foster" className="text-sm text-muted-foreground hover:text-foreground transition">
             Already have an account? <span className="font-semibold text-primary">Log in</span>
@@ -251,7 +255,7 @@ function FosterSignUpForm() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-4 pb-3 border-b border-gray-100 mt-2 space-y-3 px-4 max-h-screen overflow-y-auto">
+        <div className="md:hidden pt-4 pb-3 border-b border-gray-100 mt-2 space-y-3 px-4">
 
           {/* CTA Buttons: Sign Up + Login at the top */}
           <div className="flex flex-col gap-2">
@@ -266,7 +270,7 @@ function FosterSignUpForm() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${mobileSignupOpen ? "rotate-180" : ""}`} />
               </button>
               {mobileSignupOpen && (
-                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <Link
                     href="/sign-up/foster"
                     className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors bg-orange-50"
@@ -309,7 +313,7 @@ function FosterSignUpForm() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${mobileLoginOpen ? "rotate-180" : ""}`} />
               </button>
               {mobileLoginOpen && (
-                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                   <Link
                     href="/login/foster"
                     className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors bg-orange-50"
@@ -374,7 +378,7 @@ function FosterSignUpForm() {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8 sm:py-12">
+      <div className="container mx-auto px-4 py-20">
         <div className="max-w-md mx-auto">
           <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-8 space-y-6">
             <div className="text-center space-y-2">

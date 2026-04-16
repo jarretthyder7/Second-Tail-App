@@ -273,7 +273,7 @@ export default function RescueSignUpPage() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pt-4 pb-3 border-t border-neutral-sand space-y-3 px-4">
+          <div className="md:hidden pt-4 pb-3 border-t border-neutral-sand space-y-3 px-4 max-h-screen overflow-y-auto">
 
             {/* CTA Buttons: Sign Up + Login at the top */}
             <div className="flex flex-col gap-2">
@@ -288,7 +288,7 @@ export default function RescueSignUpPage() {
                   <ChevronDown className={`w-4 h-4 transition-transform ${mobileSignupOpen ? "rotate-180" : ""}`} />
                 </button>
                 {mobileSignupOpen && (
-                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm">
                     <Link
                       href="/sign-up/rescue"
                       className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-amber-50 transition-colors bg-amber-50"
@@ -331,7 +331,7 @@ export default function RescueSignUpPage() {
                   <ChevronDown className={`w-4 h-4 transition-transform ${mobileLoginOpen ? "rotate-180" : ""}`} />
                 </button>
                 {mobileLoginOpen && (
-                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm">
                     <Link
                       href="/login/rescue"
                       className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-amber-50 transition-colors bg-amber-50"

@@ -251,7 +251,7 @@ function FosterSignUpForm() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden pt-4 pb-3 border-b border-gray-100 mt-2 space-y-3 px-4">
+        <div className="md:hidden pt-4 pb-3 border-b border-gray-100 mt-2 space-y-3 px-4 max-h-screen overflow-y-auto">
 
           {/* CTA Buttons: Sign Up + Login at the top */}
           <div className="flex flex-col gap-2">
@@ -266,7 +266,7 @@ function FosterSignUpForm() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${mobileSignupOpen ? "rotate-180" : ""}`} />
               </button>
               {mobileSignupOpen && (
-                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <Link
                     href="/sign-up/foster"
                     className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors bg-orange-50"
@@ -309,7 +309,7 @@ function FosterSignUpForm() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${mobileLoginOpen ? "rotate-180" : ""}`} />
               </button>
               {mobileLoginOpen && (
-                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm">
                   <Link
                     href="/login/foster"
                     className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors bg-orange-50"

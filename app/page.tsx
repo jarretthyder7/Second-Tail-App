@@ -109,11 +109,11 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       <SiteHeader />
 
-      <section className="py-16 sm:py-20 lg:py-28" style={{ backgroundColor: "#FDF6EC" }}>
+      <section className="py-8 sm:py-12 lg:py-16" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
             {/* Dog logo - full color, centered */}
-            <div className="flex justify-center mb-4 sm:mb-6">
+            <div className="flex justify-center mb-2 sm:mb-3">
               <img
                 src="/logo-dog.png"
                 alt="Second Tail"

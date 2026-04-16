@@ -5,7 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Heart, Users, Menu, X, ChevronDown } from "lucide-react"
 
-export function SiteHeader({ hideLogo }: { hideLogo?: boolean }) {
+export function SiteHeader({ hideLogo = false }: { hideLogo?: boolean } = {}) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const [signupDropdownOpen, setSignupDropdownOpen] = useState(false)

@@ -108,56 +108,6 @@ function FosterSignUpForm() {
     }
     return true
   }
-    if (!email.trim() || !email.includes("@")) {
-      setError("Valid email is required")
-      return false
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters")
-      return false
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      return false
-    }
-    if (!city.trim()) {
-      setError("City is required")
-      return false
-    }
-    if (!state) {
-      setError("State is required")
-      return false
-    }
-    return true
-  }
-
-  const validateStep2 = () => {
-    if (!livingSituation) {
-      setError("Please select your living situation")
-      return false
-    }
-    if (pets.length === 0) {
-      setError("Please select your current pets")
-      return false
-    }
-    if (!fosterCount) {
-      setError("Please select your fostering experience")
-      return false
-    }
-    return true
-  }
-
-  const validateStep3 = () => {
-    if (!homeAvailability) {
-      setError("Please select your daytime availability")
-      return false
-    }
-    if (dogSizes.length === 0) {
-      setError("Please select at least one dog size")
-      return false
-    }
-    return true
-  }
 
   const handleNext = () => {
     setError("")

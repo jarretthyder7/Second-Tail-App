@@ -74,7 +74,11 @@ export default function RescueLoginPage() {
       setError(result.error)
       setIsLoading(false)
     } else if (result?.redirectTo) {
-      window.location.href = result.redirectTo
+      console.log("[v0] Login successful, redirecting to:", result.redirectTo)
+      // Small delay to ensure server has set session cookies before redirect
+      setTimeout(() => {
+        window.location.href = result.redirectTo
+      }, 100)
     }
   }
 

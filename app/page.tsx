@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, Users, Heart } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 import { createClient } from "@/lib/supabase/client"
 
 const US_STATES = [
@@ -479,46 +480,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-gray-200 bg-[#D76B1A] py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <Link href="/" className="text-xl sm:text-2xl font-bold text-white inline-block mb-4">
-                Second Tail
-              </Link>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-6 md:justify-end">
-              <Link href="/for-rescue-organizations" className="text-white/90 hover:text-white transition-colors">
-                For Rescues
-              </Link>
-              <Link href="/for-fosters" className="text-white/90 hover:text-white transition-colors">
-                For Fosters
-              </Link>
-              <Link href="/login/rescue" className="text-white/90 hover:text-white transition-colors">
-                Login
-              </Link>
-              <button 
-                onClick={() => {
-                  setActiveView("foster")
-                }}
-                className="text-white/90 hover:text-white transition-colors text-left"
-              >
-                Sign Up to Foster
-              </button>
-            </div>
-          </div>
-          <div className="border-t border-white/20 pt-8">
-            <div className="flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center">
-              <a href="mailto:hello@getsecondtail.com" className="text-white/90 hover:text-white transition-colors">
-                hello@getsecondtail.com
-              </a>
-              <p className="text-xs sm:text-sm text-white/80">
-                © 2026 Second Tail. Made with care for rescues and fosters.
-              </p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   )
 }

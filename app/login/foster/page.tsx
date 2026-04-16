@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
+import { SiteFooter } from "@/components/site-footer"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -75,9 +76,8 @@ export default function FosterLoginPage() {
 
   return (
     <div 
-      className="min-h-screen flex items-center justify-center px-4 py-8 relative overflow-hidden"
+      className="min-h-screen flex flex-col relative overflow-hidden"
       style={{
-        // Modern multi-layer background
         background: `
           radial-gradient(
             circle at 50% 30%,
@@ -99,6 +99,7 @@ export default function FosterLoginPage() {
         backgroundAttachment: 'fixed',
       }}
     >
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
       {/* Subtle noise overlay */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-[0.015]"
@@ -215,6 +216,8 @@ export default function FosterLoginPage() {
           </p>
         </form>
       </div>
+      </div>
+      <SiteFooter />
     </div>
   )
 }

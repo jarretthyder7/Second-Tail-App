@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
+import { SiteFooter } from "@/components/site-footer"
 
 const US_STATES = [
   "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
@@ -499,10 +500,11 @@ function FosterSignUpForm() {
                   </button>
                 )}
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </div>
+      <SiteFooter />
     </div>
   )
 }

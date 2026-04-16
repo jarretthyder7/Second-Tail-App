@@ -564,7 +564,8 @@ function FosterSignUpForm() {
                     disabled={isLoading}
                     className={`rounded-full bg-primary px-4 py-3 text-base font-semibold text-primary-foreground hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 min-h-[44px] ${step === 1 ? "w-full" : "flex-1"}`}
                   >
-                    {step === 1 ? "Get Started" : <>Next <ChevronRight className="w-4 h-4" /></>}
+                    {step === 1 ? "Get Started" : "Next"}
+                    {step !== 1 && <ChevronRight className="w-4 h-4" />}
                   </button>
                 ) : (
                   <button

@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
+import { useState } from "react"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -41,6 +42,97 @@ const Check = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
+const Menu = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <line x1="4" x2="20" y1="6" y2="6" />
+    <line x1="4" x2="20" y1="12" y2="12" />
+    <line x1="4" x2="20" y1="18" y2="18" />
+  </svg>
+)
+
+const X = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </svg>
+)
+
+const Users = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+)
+
+const Heart = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+)
+
+const ChevronDown = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <polyline points="6 9 12 15 18 9"></polyline>
+  </svg>
+)
+
 export default function RescueSignUpPage() {
   const [orgName, setOrgName] = useState("")
   const [adminName, setAdminName] = useState("")
@@ -50,6 +142,9 @@ export default function RescueSignUpPage() {
   const [phone, setPhone] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mobileSignupOpen, setMobileSignupOpen] = useState(false)
+  const [mobileLoginOpen, setMobileLoginOpen] = useState(false)
   const router = useRouter()
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
@@ -161,10 +256,145 @@ export default function RescueSignUpPage() {
           <Link href="/" className="text-xl font-bold text-bark" style={{ fontFamily: "Lora, serif" }}>
             Second Tail
           </Link>
-          <Link href="/login/rescue" className="text-sm font-medium text-bark hover:text-primary-orange transition">
-            Already have an account? <span className="font-semibold">Log in →</span>
-          </Link>
+          
+          <div className="hidden md:block">
+            <Link href="/login/rescue" className="text-sm font-medium text-bark hover:text-primary-orange transition">
+              Already have an account? <span className="font-semibold">Log in →</span>
+            </Link>
+          </div>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden text-bark hover:text-primary-orange transition"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden pt-4 pb-3 border-t border-neutral-sand space-y-3 px-4">
+
+            {/* CTA Buttons: Sign Up + Login at the top */}
+            <div className="flex flex-col gap-2">
+              {/* Sign Up dropdown */}
+              <div>
+                <button
+                  onClick={() => { setMobileSignupOpen(!mobileSignupOpen); setMobileLoginOpen(false) }}
+                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm border-2 transition-colors hover:bg-orange-50"
+                  style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+                >
+                  <span>Sign Up</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileSignupOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileSignupOpen && (
+                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <Link
+                      href="/sign-up/rescue"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-amber-50 transition-colors bg-amber-50"
+                      onClick={() => { setMobileMenuOpen(false); setMobileSignupOpen(false) }}
+                    >
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(80, 64, 43, 0.12)" }}>
+                        <Users className="w-4 h-4" style={{ color: "#50402B" }} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">Rescue Org</div>
+                        <div className="text-xs text-gray-500">Create your account</div>
+                      </div>
+                    </Link>
+                    <div className="h-px bg-gray-100 mx-4" />
+                    <Link
+                      href="/sign-up/foster"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors"
+                      onClick={() => { setMobileMenuOpen(false); setMobileSignupOpen(false) }}
+                    >
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                        <Heart className="w-4 h-4" style={{ color: "#D76B1A" }} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">Foster Parent</div>
+                        <div className="text-xs text-gray-500">Create your account</div>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Login dropdown */}
+              <div>
+                <button
+                  onClick={() => { setMobileLoginOpen(!mobileLoginOpen); setMobileSignupOpen(false) }}
+                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm text-white transition-colors hover:opacity-90"
+                  style={{ backgroundColor: "#D76B1A" }}
+                >
+                  <span>Login</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileLoginOpen ? "rotate-180" : ""}`} />
+                </button>
+                {mobileLoginOpen && (
+                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <Link
+                      href="/login/rescue"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-amber-50 transition-colors bg-amber-50"
+                      onClick={() => { setMobileMenuOpen(false); setMobileLoginOpen(false) }}
+                    >
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(80, 64, 43, 0.12)" }}>
+                        <Users className="w-4 h-4" style={{ color: "#50402B" }} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">Rescue Org</div>
+                        <div className="text-xs text-gray-500">Login to your dashboard</div>
+                      </div>
+                    </Link>
+                    <div className="h-px bg-gray-100 mx-4" />
+                    <Link
+                      href="/login/foster"
+                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors"
+                      onClick={() => { setMobileMenuOpen(false); setMobileLoginOpen(false) }}
+                    >
+                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                        <Heart className="w-4 h-4" style={{ color: "#D76B1A" }} />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">Foster Parent</div>
+                        <div className="text-xs text-gray-500">Login to your dashboard</div>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gray-100" />
+
+            {/* Learn More section */}
+            <div>
+              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Learn More</p>
+              <div className="space-y-0.5">
+                <Link
+                  href="/for-rescue-organizations"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-900 bg-gray-50 rounded-xl transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(80, 64, 43, 0.1)" }}>
+                    <Users className="w-3.5 h-3.5" style={{ color: "#50402B" }} />
+                  </div>
+                  For Rescue Organizations
+                </Link>
+                <Link
+                  href="/for-fosters"
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.1)" }}>
+                    <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
+                  </div>
+                  For Fosters
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">

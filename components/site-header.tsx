@@ -34,11 +34,12 @@ export function SiteHeader() {
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5">
             <Image 
-              src="/logo-dog.svg" 
+              src="/logo-dog.png" 
               alt="Second Tail logo" 
               width={32} 
               height={32}
               priority
+              unoptimized
               className="h-8 w-8 sm:h-9 sm:w-9"
             />
             <span className="text-xl sm:text-2xl font-bold text-gray-900">Second Tail</span>

@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { rescueLogin } from "./actions"
+import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
@@ -135,6 +136,7 @@ export default function RescueLoginPage() {
           filter: 'blur(50px)',
         }}
       />
+      <SiteHeader />
       <div className="flex-1 flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
         <Link

@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
+import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
@@ -99,6 +100,7 @@ export default function FosterLoginPage() {
         backgroundAttachment: 'fixed',
       }}
     >
+      <SiteHeader />
       <div className="flex-1 flex items-center justify-center px-4 py-8">
       {/* Subtle noise overlay */}
       <div 

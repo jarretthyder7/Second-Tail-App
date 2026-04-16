@@ -24,7 +24,7 @@ export async function fosterLogin(email: string, password: string) {
 
   if (profileError || !profile) {
     return {
-      error: `Unable to load user profile: ${profileError?.message ?? "no profile row found"} (code: ${profileError?.code})`,
+      error: "Unable to load user profile. Please try again.",
     }
   }
 

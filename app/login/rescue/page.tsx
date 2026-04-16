@@ -74,7 +74,7 @@ export default function RescueLoginPage() {
       setError(result.error)
       setIsLoading(false)
     } else if (result?.redirectTo) {
-      router.push(result.redirectTo)
+      window.location.href = result.redirectTo
     }
   }
 

@@ -218,7 +218,7 @@ function FosterSignUpForm() {
         }
       }
 
-      router.push("/auth/sign-up-success?type=foster")
+      router.push(`/auth/sign-up-success?type=foster&email=${encodeURIComponent(email)}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)

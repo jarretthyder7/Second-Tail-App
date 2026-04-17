@@ -23,6 +23,9 @@ export function SiteFooter() {
             <Link href="/sign-up/foster" className="text-white/90 hover:text-white transition-colors text-sm">
               Sign Up to Foster
             </Link>
+            <Link href="/sign-up/rescue" className="text-white/90 hover:text-white transition-colors text-sm">
+              Register a Rescue
+            </Link>
           </div>
         </div>
         <div className="border-t border-white/20 pt-8">

@@ -1,14 +1,24 @@
 // Email template functions for different notification types
 
 export const emailTemplates = {
-  welcomeFoster: (name: string, orgName?: string) => ({
-    subject: "Welcome to Second Tail!",
+  welcomeFoster: (name: string, orgName?: string, confirmationUrl?: string) => ({
+    subject: "Confirm your Second Tail account",
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #d97706;">Welcome, ${name}!</h1>
-        <p>Thank you for joining Second Tail and becoming a foster parent.</p>
-        ${orgName ? `<p>You've been connected with <strong>${orgName}</strong> and will receive updates about animals in need of temporary homes.</p>` : "<p>Complete your profile to get matched with rescue organizations near you.</p>"}
-        <p style="margin-top: 30px; color: #666;">Together, we\'re saving lives. 🐾</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://getsecondtail.com/logo-dog.png" alt="Second Tail" width="64" height="64" style="display: inline-block;" />
+        </div>
+        <h1 style="color: #d97706; font-size: 26px; margin-bottom: 8px;">Welcome, ${name}!</h1>
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">Thanks for signing up to foster with Second Tail. To get started, please confirm your email address.</p>
+        ${orgName ? `<p style="color: #374151;">You'll be connected with <strong>${orgName}</strong> once your account is confirmed.</p>` : ""}
+        ${confirmationUrl ? `
+        <div style="text-align: center; margin: 36px 0;">
+          <a href="${confirmationUrl}" style="display: inline-block; background-color: #d97706; color: #ffffff; padding: 16px 40px; border-radius: 999px; font-weight: bold; font-size: 17px; text-decoration: none; letter-spacing: 0.3px;">Confirm My Account</a>
+        </div>
+        <p style="color: #6b7280; font-size: 13px;">Or copy this link into your browser:<br/><a href="${confirmationUrl}" style="color: #d97706; word-break: break-all;">${confirmationUrl}</a></p>
+        ` : ""}
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+        <p style="color: #9ca3af; font-size: 12px; text-align: center;">If you didn't create a Second Tail account, you can safely ignore this email.</p>
       </div>
     `,
   }),

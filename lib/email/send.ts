@@ -48,8 +48,8 @@ export async function sendEmail(options: EmailOptions) {
 }
 
 // Specific email sending functions
-export async function sendWelcomeEmailFoster(email: string, name: string, orgName?: string) {
-  const template = emailTemplates.welcomeFoster(name, orgName)
+export async function sendWelcomeEmailFoster(email: string, name: string, orgName?: string, confirmationUrl?: string) {
+  const template = emailTemplates.welcomeFoster(name, orgName, confirmationUrl)
   return sendEmail({ to: email, ...template })
 }
 

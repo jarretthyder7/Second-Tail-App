@@ -37,9 +37,17 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { type, ...data } = body
 
-    // foster-waitlist is a public endpoint — no auth required
+    // Public endpoints — no auth required
     if (type === "foster-waitlist") {
       const result = await sendFosterWaitlistEmail(data.email, data.name)
+      return result.success
+        ? NextResponse.json({ success: true, emailId: result.emailId })
+        : NextResponse.json({ success: false, error: result.error }, { status: 500 })
+    }
+
+    // welcome-foster is sent at signup before the user is confirmed — no auth required
+    if (type === "welcome-foster") {
+      const result = await sendWelcomeEmailFoster(data.email, data.name, data.orgName, data.confirmationUrl)
       return result.success
         ? NextResponse.json({ success: true, emailId: result.emailId })
         : NextResponse.json({ success: false, error: result.error }, { status: 500 })

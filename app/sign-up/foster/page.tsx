@@ -184,18 +184,25 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
-        try {
-          await fetch("/api/email/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "welcome-foster",
-              email,
-              name: fullName,
-            }),
-          })
-        } catch {
-          // Welcome email failed but signup succeeded
+        // Profile creation + confirmation email are handled together in the API route
+        const profileResponse = await fetch("/api/auth/create-foster-profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: authData.user.id,
+            email,
+            name: fullName,
+            city,
+            state,
+            livingSituation,
+            pets,
+            dogSizes,
+          }),
+        })
+
+        if (!profileResponse.ok) {
+          const data = await profileResponse.json()
+          throw new Error(data.error || "Failed to create profile")
         }
       }
 

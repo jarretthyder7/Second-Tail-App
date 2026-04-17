@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createServiceRoleClient } from "@/lib/supabase/server"
+import { sendWelcomeEmailFoster } from "@/lib/email/send"
 
 export async function POST(request: Request) {
   try {
@@ -10,22 +11,40 @@ export async function POST(request: Request) {
     }
 
     const supabase = createServiceRoleClient()
+    const origin = request.headers.get("origin") || "https://getsecondtail.com"
+    const redirectTo = `${origin}/auth/callback`
 
-    // Resend the signup confirmation email that Supabase already sent
-    // This uses the configured email template in your Supabase project
-    const { error: resendError } = await supabase.auth.resendEnvelope({
+    // Generate a confirmation link using the admin API
+    const { data, error } = await supabase.auth.admin.generateLink({
       type: "signup",
       email,
+      options: { redirectTo },
     })
 
-    if (resendError) {
-      console.log("[v0] Failed to resend confirmation email:", resendError)
-      return NextResponse.json({ error: "Failed to resend email" }, { status: 400 })
+    if (error) {
+      console.error("[v0] Failed to generate confirmation link:", error.message)
+      return NextResponse.json({ error: "Failed to generate confirmation link" }, { status: 400 })
     }
 
-    return NextResponse.json({ success: true, message: "Confirmation email resent" })
+    const confirmationUrl = data?.properties?.action_link
+
+    if (!confirmationUrl) {
+      console.error("[v0] No action link returned from generateLink")
+      return NextResponse.json({ error: "No confirmation URL generated" }, { status: 400 })
+    }
+
+    // Send branded welcome email with confirmation button
+    const { success, error: emailError } = await sendWelcomeEmailFoster(email, name, undefined, confirmationUrl)
+
+    if (!success) {
+      console.error("[v0] Failed to send welcome email:", emailError)
+      return NextResponse.json({ error: "Failed to send confirmation email" }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true, message: "Confirmation email sent" })
   } catch (err) {
-    console.log("[v0] create-foster-profile error:", err)
+    console.error("[v0] create-foster-profile error:", err)
     return NextResponse.json({ error: "Failed to process request" }, { status: 500 })
   }
 }
+

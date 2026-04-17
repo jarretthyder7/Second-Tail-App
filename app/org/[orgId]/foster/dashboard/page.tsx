@@ -7,6 +7,7 @@ import Link from "next/link"
 import { Calendar, AlertCircle, Package, Eye, ChevronRight, Smile, HelpCircle, Plus } from "lucide-react"
 import { NewMessageModal } from "@/components/foster/new-message-modal"
 import { RequestHelpModal } from "@/components/foster/request-help-modal"
+import { InviteFriendsModal } from "@/components/foster/invite-friends-modal"
 
 export default function FosterDashboardPage() {
   const params = useParams()
@@ -18,6 +19,7 @@ export default function FosterDashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showMessageModal, setShowMessageModal] = useState(false)
   const [showSupportModal, setShowSupportModal] = useState(false)
+  const [showInviteModal, setShowInviteModal] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +62,12 @@ export default function FosterDashboardPage() {
     }
 
     fetchData()
+  }, [])
+
+  useEffect(() => {
+    const handleOpenInviteModal = () => setShowInviteModal(true)
+    window.addEventListener("openInviteModal", handleOpenInviteModal)
+    return () => window.removeEventListener("openInviteModal", handleOpenInviteModal)
   }, [])
 
   if (isLoading) {
@@ -280,6 +288,12 @@ export default function FosterDashboardPage() {
           onClose={() => setShowSupportModal(false)}
         />
       )}
+      <InviteFriendsModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        fosterName={profile?.full_name || ""}
+        referralCode=""
+      />
     </div>
   )
 }

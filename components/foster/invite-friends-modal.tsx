@@ -13,7 +13,7 @@ interface InviteFriendsModalProps {
 export function InviteFriendsModal({ isOpen, onClose, fosterName, referralCode }: InviteFriendsModalProps) {
   const [copied, setCopied] = useState(false)
 
-  const referralLink = `${typeof window !== "undefined" ? window.location.origin : ""}/login/foster`
+  const referralLink = `${typeof window !== "undefined" ? window.location.origin : ""}/sign-up/foster`
   const shareMessage = `Hi! I'm fostering with Second Tail and it's an amazing way to help rescue animals. If you're interested in fostering, ask your local rescue about Second Tail! 🐾\n\n${referralLink}`
 
   const handleCopyLink = () => {

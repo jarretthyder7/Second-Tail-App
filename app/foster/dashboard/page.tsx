@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Mail, Copy, Check, LogOut, MapPin, Heart } from 'lucide-react'
 import { toast } from 'sonner'
+import { InviteRescueModal } from '@/app/components/foster/invite-rescue-modal'
 
 interface FosterProfile {
   id: string
@@ -40,6 +41,7 @@ export default function FosterDashboard() {
   const [dogs, setDogs] = useState<Dog[]>([])
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
+  const [showInviteRescueModal, setShowInviteRescueModal] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -185,7 +187,7 @@ export default function FosterDashboard() {
                 Know a rescue that needs better tools? Invite them to Second Tail.
               </p>
               <button
-                onClick={() => toast.info('Invite feature coming soon!')}
+                onClick={() => setShowInviteRescueModal(true)}
                 className="inline-block px-6 py-3 bg-[#D76B1A] text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
               >
                 Send an Invite
@@ -289,6 +291,14 @@ export default function FosterDashboard() {
           )}
         </section>
       </main>
+
+      <InviteRescueModal
+        isOpen={showInviteRescueModal}
+        onClose={() => setShowInviteRescueModal(false)}
+        fosterName={profile?.full_name || ""}
+        fosterCity={fosterProfile?.city || ""}
+        fosterState={fosterProfile?.state || ""}
+      />
 
       {/* Footer */}
       <footer className="border-t border-gray-200 bg-[#D76B1A] py-8 mt-12">

@@ -130,11 +130,11 @@ export default function FosterDashboardPage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-3 pt-2">
-                <div className="bg-secondary rounded-lg p-3">
+                <div className="rounded-lg p-3" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
                   <p className="text-xs text-muted-foreground mb-1">Species & Breed</p>
                   <p className="font-semibold text-sm text-foreground">{dog.breed || "N/A"}</p>
                 </div>
-                <div className="bg-secondary rounded-lg p-3">
+                <div className="rounded-lg p-3" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
                   <p className="text-xs text-muted-foreground mb-1">In Your Care Since</p>
                   <p className="font-semibold text-sm text-foreground">
                     {dog.intake_date
@@ -147,7 +147,8 @@ export default function FosterDashboardPage() {
               {/* View Profile Button */}
               <Link
                 href={`/org/${orgId}/foster/dog/${dog.id}`}
-                className="flex items-center justify-center gap-2 w-full bg-primary text-primary-foreground px-4 py-3 rounded-xl font-medium hover:bg-primary/90 transition"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-medium text-white transition hover:opacity-90"
+                style={{ backgroundColor: "var(--brand-primary, #D76B1A)" }}
               >
                 <Eye className="w-4 h-4" />
                 View Full Profile
@@ -159,7 +160,7 @@ export default function FosterDashboardPage() {
         {appointments.length > 0 && (
           <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6">
             <h2 className="font-bold text-foreground mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+              <Calendar className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
               Upcoming Appointments
             </h2>
             <div className="space-y-3">
@@ -196,8 +197,8 @@ export default function FosterDashboardPage() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/10 transition">
-                  <Smile className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
+                  <Smile className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
                 </div>
                 <h3 className="font-semibold text-sm text-foreground">Add Update</h3>
                 <p className="text-xs text-muted-foreground mt-1">Share photos & notes</p>
@@ -213,8 +214,8 @@ export default function FosterDashboardPage() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/10 transition">
-                  <Package className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
+                  <Package className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
                 </div>
                 <h3 className="font-semibold text-sm text-foreground">Request Supplies</h3>
                 <p className="text-xs text-muted-foreground mt-1">Food, toys, meds</p>
@@ -230,8 +231,8 @@ export default function FosterDashboardPage() {
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/10 transition">
-                  <Plus className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3 transition" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
+                  <Plus className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
                 </div>
                 <h3 className="font-semibold text-sm text-foreground">Request Appointment</h3>
                 <p className="text-xs text-muted-foreground mt-1">Schedule a visit</p>
@@ -265,7 +266,7 @@ export default function FosterDashboardPage() {
             {dog.medical_notes && (
               <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6">
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
-                  <Package className="w-5 h-5 text-primary" />
+                  <Package className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
                   Medical Care
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{dog.medical_notes}</p>
@@ -274,7 +275,7 @@ export default function FosterDashboardPage() {
             {dog.behavior_notes && (
               <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6">
                 <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
-                  <AlertCircle className="w-5 h-5 text-primary" />
+                  <AlertCircle className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
                   Behavior Notes
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{dog.behavior_notes}</p>

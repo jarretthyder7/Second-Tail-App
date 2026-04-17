@@ -173,7 +173,7 @@ export default function OrgFosterLayout({
         body::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <div className="min-h-screen bg-[#FBF8F4] text-gray-900">
+      <div className="min-h-screen text-gray-900" style={{ backgroundColor: "var(--brand-bg, #FBF8F4)" }}>
 
         {/* ── Header ─────────────────────────────── */}
         <div className="sticky top-0 z-50 bg-white shadow-sm">
@@ -190,7 +190,7 @@ export default function OrgFosterLayout({
                     onError={(e) => { e.currentTarget.style.display = "none" }}
                   />
                 ) : (
-                  <h1 className="text-xl font-bold" style={{ color: "#D76B1A" }}>
+                  <h1 className="text-xl font-bold" style={{ color: "var(--brand-primary, #D76B1A)" }}>
                     Second Tail
                   </h1>
                 )}
@@ -225,7 +225,7 @@ export default function OrgFosterLayout({
                             onClick={() => setShowNotificationDropdown(false)}
                             className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition"
                           >
-                            <MessageSquare className="w-5 h-5 flex-shrink-0" style={{ color: "#D76B1A" }} />
+                            <MessageSquare className="w-5 h-5 flex-shrink-0" style={{ color: "var(--brand-primary, #D76B1A)" }} />
                             <div className="flex-1">
                               <p className="text-sm font-medium text-gray-900">
                                 {unreadMessageCount} unread message{unreadMessageCount !== 1 ? "s" : ""}
@@ -250,7 +250,7 @@ export default function OrgFosterLayout({
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-1.5 py-1.5 px-2 rounded-xl hover:bg-gray-100 transition"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: "#D76B1A" }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ backgroundColor: "var(--brand-primary, #D76B1A)" }}>
                       {(profile?.full_name || profile?.name)?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showUserMenu ? "rotate-180" : ""}`} />
@@ -288,7 +288,7 @@ export default function OrgFosterLayout({
                           window.dispatchEvent(new CustomEvent("openInviteModal"))
                         }}
                         className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium w-full text-left"
-                        style={{ color: "#D76B1A" }}
+                        style={{ color: "var(--brand-primary, #D76B1A)" }}
                       >
                         <Users className="w-4 h-4" />
                         Invite Friends
@@ -329,7 +329,7 @@ export default function OrgFosterLayout({
                     href={tab.href}
                     className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 relative text-sm ${
                       isActive(tab.path)
-                        ? "border-[#D76B1A] text-[#D76B1A] font-semibold"
+                        ? "border-[var(--brand-primary,#D76B1A)] text-[var(--brand-primary,#D76B1A)] font-semibold"
                         : "border-transparent text-gray-500 hover:text-gray-800"
                     }`}
                   >
@@ -362,7 +362,7 @@ export default function OrgFosterLayout({
                   className={`flex flex-col items-center justify-center gap-1 py-3 flex-1 transition-colors relative ${
                     emergency
                       ? active ? "text-red-600 bg-red-50" : "text-red-400 hover:text-red-500"
-                      : active ? "text-[#D76B1A]" : "text-gray-400 hover:text-gray-600"
+                      : active ? "text-[var(--brand-primary,#D76B1A)]" : "text-gray-400 hover:text-gray-600"
                   }`}
                 >
                   <div className="relative">

@@ -170,11 +170,11 @@ export async function GET(request: Request) {
           redirectPath = `/sign-up/rescue?error=setup-incomplete`
         }
       }
-      // Redirect fosters: new signups go to onboarding, returning users go to their dashboard
+      // Redirect fosters: new signups go to dashboard, returning users go to their dashboard
       else if (profile.role === "foster") {
         if (isProfileIncomplete) {
-          // New foster completing email verification — send to onboarding
-          redirectPath = "/foster/onboarding"
+          // New foster completing email verification — send to dashboard
+          redirectPath = "/foster/dashboard"
         } else if (profile.organization_id) {
           redirectPath = `/org/${profile.organization_id}/foster/dashboard`
         } else {

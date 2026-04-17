@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createServiceRoleClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
@@ -66,41 +67,57 @@ export async function GET(request: Request) {
             profile = newProfile
           }
         } else {
-          // Standard foster OAuth signup path
-          // Check if user has pending invitations
+          // Standard foster OAuth/email signup path
+          const meta = data.user.user_metadata || {}
+
+          // Check for pending invitation by email
           const { data: invitation } = await supabase
             .from("invitations")
-            .select("*, organization:organizations!organization_id(id, name)")
+            .select("id, organization_id")
             .eq("email", data.user.email!)
             .eq("status", "pending")
             .maybeSingle()
 
-          // Create profile with organization if invited
-          const { data: newProfile, error: profileError } = await supabase
+          const organizationId = invitation?.organization_id || null
+
+          // Use service role client to bypass RLS for new unconfirmed users
+          const serviceClient = createServiceRoleClient()
+
+          const { data: newProfile, error: profileError } = await serviceClient
             .from("profiles")
             .insert({
               id: data.user.id,
               email: data.user.email,
-              name: data.user.user_metadata?.name || data.user.email?.split("@")[0],
+              name: meta.name || data.user.email?.split("@")[0],
               role: "foster",
-              organization_id: invitation ? invitation.organization_id : null,
+              organization_id: organizationId,
             })
             .select()
             .single()
 
           if (profileError) {
-            console.error("[v0] Error creating profile:", profileError)
+            console.error("Error creating foster profile:", profileError)
           } else {
             profile = newProfile
 
-            // Accept invitation if exists
+            // Create foster_profiles row using vetting data from signup metadata
+            await serviceClient.from("foster_profiles").insert({
+              user_id: data.user.id,
+              city: meta.city || "",
+              state: meta.state || "",
+              housing_type: meta.living_situation || "",
+              has_yard: meta.has_yard || false,
+              has_pets: meta.has_pets || false,
+              existing_pets_description: meta.pets || "",
+              preferred_dog_sizes: meta.dog_sizes || [],
+              onboarding_completed: false,
+            })
+
+            // Accept invitation if one exists
             if (invitation) {
-              await supabase
+              await serviceClient
                 .from("invitations")
-                .update({
-                  status: "accepted",
-                  updated_at: new Date().toISOString(),
-                })
+                .update({ status: "accepted", updated_at: new Date().toISOString() })
                 .eq("id", invitation.id)
             }
           }

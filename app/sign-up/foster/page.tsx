@@ -165,6 +165,16 @@ function FosterSignUpForm() {
           data: {
             name: fullName,
             role: "foster",
+            city,
+            state,
+            living_situation: livingSituation,
+            pets: pets.join(", "),
+            has_pets: pets.length > 0 && !pets.includes("None"),
+            has_yard: livingSituation.toLowerCase().includes("yard"),
+            dog_sizes: dogSizes,
+            restrictions: restrictions.join(", "),
+            why_foster: whyFoster,
+            foster_count: fosterCount,
           },
         },
       })
@@ -172,44 +182,29 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
-        const profileResponse = await fetch("/api/auth/create-foster-profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: authData.user.id,
-            email,
-            name: fullName,
-            city,
-            state,
-            livingSituation,
-            pets,
-            dogSizes,
-          }),
-        })
-
-        if (!profileResponse.ok) {
-          const data = await profileResponse.json()
-          throw new Error(data.error || "Failed to create profile")
-        }
-
         try {
           await fetch("/api/email/send", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               type: "welcome-foster",
-              email: email,
+              email,
               name: fullName,
             }),
           })
-        } catch (emailError) {
+        } catch {
           // Welcome email failed but signup succeeded
         }
       }
 
       router.push(`/auth/sign-up-success?type=foster&email=${encodeURIComponent(email)}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+      const raw = err instanceof Error ? err.message : ""
+      if (raw.includes("already registered") || raw.includes("User already registered")) {
+        setError("An account with this email already exists. Try logging in instead.")
+      } else {
+        setError("Something went wrong creating your account. Please try again.")
+      }
       setIsLoading(false)
     }
   }

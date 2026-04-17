@@ -6,7 +6,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { fetchCarePlanForDog, updateDog, fetchLogsForDog, fetchDogById } from "@/lib/supabase/queries"
-import { ArrowLeft, Edit, Camera, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Edit, Camera, AlertTriangle, MessageCircle } from "lucide-react"
 import Link from "next/link"
 import { AdminDogTabs } from "@/components/admin/admin-animal-tabs"
 import { useToast } from "@/hooks/use-toast"
@@ -833,286 +833,357 @@ function AdminDogDetailContent() {
         </div>
       )}
 
-      <div className="bg-white border-b border-[#E5DED4]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href={`/org/${orgId}/admin/dogs`} className="p-2 hover:bg-[#FDF8F3] rounded-lg transition">
-                <ArrowLeft className="h-5 w-5 text-[#5A4A42]" />
-              </Link>
-              <div>
-                <h1 className="text-3xl font-bold text-[#2C1810]">{dog.name}</h1>
-                <p className="text-[#8B6F47]">{dog.breed}</p>
+      {/* ── Slim sticky top bar ── */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-[#E5DED4] px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <Link
+            href={`/org/${orgId}/admin/dogs`}
+            className="p-2 hover:bg-[#FDF8F3] rounded-lg transition flex-shrink-0"
+          >
+            <ArrowLeft className="h-5 w-5 text-[#5A4A42]" />
+          </Link>
+          <span className="text-sm font-semibold text-[#5A4A42] truncate">{dog.name}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <select
+            value={dog.stage || "intake"}
+            onChange={(e) => handleStageChange(e.target.value)}
+            disabled={isUpdatingStage}
+            className="px-3 py-1.5 pr-8 border border-[#E5DED4] rounded-full text-xs font-medium bg-white text-[#5A4A42] hover:bg-[#FDF8F3] transition disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
+            style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A4A42' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 0.6rem center",
+            }}
+          >
+            <option value="intake">Intake</option>
+            <option value="evaluation">Evaluation</option>
+            <option value="in_foster">In Foster Care</option>
+            <option value="available">Available for Adoption</option>
+            <option value="adoption_pending">Adoption Pending</option>
+            <option value="adopted">Adopted</option>
+            <option value="medical_hold">Medical Hold</option>
+            <option value="returned">Returned to Rescue</option>
+          </select>
+          {!editingBasicInfo && (
+            <button
+              onClick={() => setEditingBasicInfo(true)}
+              className="p-2 hover:bg-[#FDF8F3] rounded-lg transition"
+              title="Edit details"
+            >
+              <Edit className="w-4 h-4 text-[#5A4A42]" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* ── Hero photo ── */}
+      <div className="relative w-full h-64 sm:h-72 lg:h-80 bg-[#F0EBE3] overflow-hidden">
+        {dog.image_url ? (
+          <img
+            src={dog.image_url}
+            alt={`${dog.name} — ${dog.breed}`}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Camera className="h-20 w-20 text-[#C4B5A5]" />
+          </div>
+        )}
+
+        {/* Upload overlay */}
+        <label
+          htmlFor="dog-image-upload"
+          className="absolute inset-0 cursor-pointer opacity-0 hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center"
+        >
+          <div className="bg-white rounded-full p-4 shadow-lg hover:scale-110 transition-transform">
+            {isUploadingImage ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#8B6F47]" />
+                <span className="text-xs text-[#8B6F47]">Uploading...</span>
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <label className="block text-xs text-[#8B6F47] mb-1">Stage</label>
-                <select
-                  value={dog.stage || "intake"}
-                  onChange={(e) => handleStageChange(e.target.value)}
-                  disabled={isUpdatingStage}
-                  className="px-4 py-2 pr-10 border border-[#E5DED4] rounded-full text-sm font-medium bg-white text-[#5A4A42] hover:bg-[#FDF8F3] transition disabled:opacity-50 disabled:cursor-not-allowed appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235A4A42' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                    backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 0.75rem center",
-                  }}
-                >
-                  <option value="intake">Intake</option>
-                  <option value="evaluation">Evaluation</option>
-                  <option value="in_foster">In Foster Care</option>
-                  <option value="available">Available for Adoption</option>
-                  <option value="adoption_pending">Adoption Pending</option>
-                  <option value="adopted">Adopted</option>
-                  <option value="medical_hold">Medical Hold</option>
-                  <option value="returned">Returned to Rescue</option>
-                </select>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <Camera className="h-6 w-6 text-[#8B6F47]" />
+                <span className="text-xs text-[#8B6F47]">Change Photo</span>
               </div>
-            </div>
+            )}
+          </div>
+        </label>
+        <input
+          id="dog-image-upload"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+          disabled={isUploadingImage}
+        />
+
+        {/* Gradient + name overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pointer-events-none">
+          <h1 className="text-3xl sm:text-4xl font-bold text-white drop-shadow mb-1">{dog.name}</h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-white/80 text-sm drop-shadow">
+              {dog.breed}
+              {dog.age && ` • ${dog.age}`}
+              {dog.gender && ` • ${dog.gender}`}
+              {dog.weight && ` • ${dog.weight}`}
+            </p>
+            {dog.stage && (
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                  dog.stage === "in_foster"
+                    ? "bg-[#E8EFE6] text-[#5A4A42]"
+                    : dog.stage === "medical_hold"
+                    ? "bg-[#D97A68] text-white"
+                    : dog.stage === "adopted"
+                    ? "bg-[#8FAF99] text-white"
+                    : "bg-[#F7E2BD] text-[#5A4A42]"
+                }`}
+              >
+                {dog.stage === "in_foster"
+                  ? "In Foster Care"
+                  : dog.stage === "medical_hold"
+                  ? "Medical Hold"
+                  : dog.stage === "available"
+                  ? "Available"
+                  : dog.stage === "adoption_pending"
+                  ? "Adoption Pending"
+                  : dog.stage === "adopted"
+                  ? "Adopted"
+                  : dog.stage === "returned"
+                  ? "Returned to Rescue"
+                  : dog.stage.charAt(0).toUpperCase() + dog.stage.slice(1)}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E5DED4] p-6">
-              <div className="relative group mb-6">
-                <div className="w-full h-64 rounded-xl overflow-hidden bg-gray-100">
-                  {dog.image_url ? (
-                    <img
-                      src={dog.image_url || "/placeholder.svg"}
-                      alt={`${dog.name} - ${dog.breed}`}
-                      className="w-full h-full object-cover"
-                      style={{ display: "block" }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Camera className="h-16 w-16 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Upload overlay - only shows on hover */}
-                <label
-                  htmlFor="dog-image-upload"
-                  className="absolute inset-0 cursor-pointer rounded-xl opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 flex items-center justify-center"
-                >
-                  <div className="bg-white rounded-full p-4 shadow-lg hover:scale-110 transition-transform">
-                    {isUploadingImage ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#8B6F47]"></div>
-                        <span className="text-xs text-[#8B6F47]">Uploading...</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Camera className="h-6 w-6 text-[#8B6F47]" />
-                        <span className="text-xs text-[#8B6F47]">Change Photo</span>
-                      </div>
-                    )}
-                  </div>
-                </label>
+      {/* ── Inline edit form ── */}
+      {editingBasicInfo && (
+        <div className="bg-white border-b border-[#E5DED4]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-medium text-[#8B6F47] mb-1">Name</label>
                 <input
-                  id="dog-image-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                  disabled={isUploadingImage}
+                  type="text"
+                  value={editedDog.name || ""}
+                  onChange={(e) => setEditedDog({ ...editedDog, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm"
+                  placeholder="Name"
                 />
               </div>
-
-              {process.env.NODE_ENV === "development" && dog.image_url && (
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs space-y-1">
-                  <p className="font-semibold text-blue-900">Dev Debug - Photo Info:</p>
-                  <p className="text-blue-800 break-all">
-                    <span className="font-medium">Stored value:</span> {dog.image_url}
-                  </p>
-                  <p className="text-blue-800 break-all">
-                    <span className="font-medium">Final URL used:</span> {dog.image_url}
-                  </p>
-                  <p className="text-blue-800">
-                    <span className="font-medium">Image status:</span>{" "}
-                    <span className="text-green-600 font-semibold">loaded successfully</span>
-                  </p>
-                </div>
-              )}
-
-              {editingBasicInfo ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={editedDog.name || ""}
-                    onChange={(e) => setEditedDog({ ...editedDog, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-neutral-sand rounded-lg"
-                    placeholder="Name"
-                  />
-                  <input
-                    type="text"
-                    value={editedDog.breed || ""}
-                    onChange={(e) => setEditedDog({ ...editedDog, breed: e.target.value })}
-                    className="w-full px-3 py-2 border border-neutral-sand rounded-lg"
-                    placeholder="Breed"
-                  />
-                  <input
-                    type="text"
-                    value={editedDog.age || ""}
-                    onChange={(e) => setEditedDog({ ...editedDog, age: e.target.value })}
-                    className="w-full px-3 py-2 border border-neutral-sand rounded-lg"
-                    placeholder="Age (e.g., 2 years)"
-                  />
-                  <select
-                    value={editedDog.gender || ""}
-                    onChange={(e) => setEditedDog({ ...editedDog, gender: e.target.value })}
-                    className="w-full px-3 py-2 border border-neutral-sand rounded-lg bg-white"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Unknown">Unknown</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={editedDog.weight || ""}
-                    onChange={(e) => setEditedDog({ ...editedDog, weight: e.target.value })}
-                    className="w-full px-3 py-2 border border-neutral-sand rounded-lg"
-                    placeholder="Weight (e.g., 45 lbs)"
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveBasicInfo}
-                      disabled={isSaving}
-                      className="flex-1 bg-primary-orange text-white px-4 py-2 rounded-lg hover:bg-primary-orange/90 transition disabled:opacity-50"
-                    >
-                      {isSaving ? "Saving..." : "Save"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingBasicInfo(false)
-                        setEditedDog(dog)
-                      }}
-                      className="px-4 py-2 border border-neutral-sand rounded-lg hover:bg-neutral-sand/20 transition"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h1 className="text-3xl font-bold text-[#5A4A42] mb-2">{dog.name}</h1>
-                      <p className="text-sm text-[#2E2E2E]/70">
-                        {dog.breed}
-                        {dog.age && ` • ${dog.age}`}
-                        {dog.gender && ` • ${dog.gender}`}
-                        {dog.weight && ` • ${dog.weight}`}
-                      </p>
-                      {dog.intake_date && (
-                        <p className="text-xs text-[#2E2E2E]/50 mt-1">
-                          Intake: {new Date(dog.intake_date).toLocaleDateString()}
-                        </p>
-                      )}
-                      {dog.stage && (
-                        <span
-                          className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                            dog.stage === "in_foster"
-                              ? "bg-[#E8EFE6] text-[#5A4A42]"
-                              : dog.stage === "medical_hold"
-                                ? "bg-[#D97A68] text-white"
-                                : dog.stage === "adopted"
-                                  ? "bg-[#8FAF99] text-white"
-                                  : "bg-[#F7E2BD] text-[#5A4A42]"
-                          }`}
-                        >
-                          {dog.stage === "in_foster"
-                            ? "In Foster Care"
-                            : dog.stage === "medical_hold"
-                              ? "Medical Hold"
-                              : dog.stage === "available"
-                                ? "Available"
-                                : dog.stage === "adoption_pending"
-                                  ? "Adoption Pending"
-                                  : dog.stage === "adopted"
-                                    ? "Adopted"
-                                    : dog.stage === "returned"
-                                      ? "Returned to Rescue"
-                                      : dog.stage.charAt(0).toUpperCase() + dog.stage.slice(1)}
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setEditingBasicInfo(true)}
-                      className="p-2 hover:bg-[#5A4A42]/20 rounded-lg transition"
-                    >
-                      <Edit className="w-4 h-4 text-[#5A4A42]" />
-                    </button>
-                  </div>
-
-                  {dog.foster && !showFosterReassign && (
-                    <div className="bg-[#8FAF99]/10 rounded-xl p-4 mt-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-[#8FAF99]">Current Foster</h3>
-                        <button onClick={handleReassignFosterClick} className="text-xs text-[#D76B1A] hover:underline">
-                          Change Foster
-                        </button>
-                      </div>
-                      <Link
-                        href={`/org/${orgId}/admin/fosters/${dog.foster.id}`}
-                        className="text-[#D76B1A] hover:underline font-medium"
-                      >
-                        {dog.foster.name || dog.foster.email}
-                      </Link>
-                      <button
-                        onClick={() => setShowReturnConfirmation(true)}
-                        className="mt-3 w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm text-[#5A4A42] hover:bg-[#FDF8F3] transition"
-                      >
-                        Return to Rescue
-                      </button>
-                    </div>
-                  )}
-
-                  {showFosterReassign && (
-                    <div className="bg-[#FDF8F3] rounded-xl p-4 mt-4 space-y-3">
-                      <h3 className="text-sm font-medium text-[#5A4A42]">Reassign Foster</h3>
-                      <select
-                        value={selectedNewFoster}
-                        onChange={(e) => setSelectedNewFoster(e.target.value)}
-                        className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg"
-                      >
-                        <option value="">Select a foster...</option>
-                        {availableForsters.map((foster) => (
-                          <option key={foster.id} value={foster.id}>
-                            {foster.name || foster.email}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={handleFosterReassign}
-                          disabled={!selectedNewFoster}
-                          className="flex-1 bg-[#D76B1A] text-white px-3 py-2 rounded-lg hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowFosterReassign(false)
-                            setSelectedNewFoster("")
-                          }}
-                          className="px-3 py-2 border border-[#E5DED4] rounded-lg hover:bg-[#FDF8F3]"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
+              <div>
+                <label className="block text-xs font-medium text-[#8B6F47] mb-1">Breed</label>
+                <input
+                  type="text"
+                  value={editedDog.breed || ""}
+                  onChange={(e) => setEditedDog({ ...editedDog, breed: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm"
+                  placeholder="Breed"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#8B6F47] mb-1">Age</label>
+                <input
+                  type="text"
+                  value={editedDog.age || ""}
+                  onChange={(e) => setEditedDog({ ...editedDog, age: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm"
+                  placeholder="e.g. 2 years"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#8B6F47] mb-1">Gender</label>
+                <select
+                  value={editedDog.gender || ""}
+                  onChange={(e) => setEditedDog({ ...editedDog, gender: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg bg-white text-sm"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Unknown">Unknown</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#8B6F47] mb-1">Weight</label>
+                <input
+                  type="text"
+                  value={editedDog.weight || ""}
+                  onChange={(e) => setEditedDog({ ...editedDog, weight: e.target.value })}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm"
+                  placeholder="e.g. 45 lbs"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveBasicInfo}
+                disabled={isSaving}
+                className="px-5 py-2 bg-[#D76B1A] text-white rounded-lg text-sm font-medium hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
+              >
+                {isSaving ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                onClick={() => {
+                  setEditingBasicInfo(false)
+                  setEditedDog(dog)
+                }}
+                className="px-5 py-2 border border-[#E5DED4] rounded-lg text-sm text-[#5A4A42] hover:bg-[#FDF8F3] transition"
+              >
+                Cancel
+              </button>
             </div>
           </div>
+        </div>
+      )}
 
+      {/* ── Main two-column layout ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          {/* Left sidebar */}
+          <div className="lg:col-span-1 space-y-4">
+
+            {/* Quick details card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E5DED4] p-5">
+              <h3 className="text-xs font-semibold text-[#8B6F47] uppercase tracking-wider mb-3">Details</h3>
+              <dl className="space-y-2 text-sm">
+                {dog.intake_date && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#8B6F47]">Intake</dt>
+                    <dd className="font-medium text-[#2E2E2E]">
+                      {new Date(dog.intake_date).toLocaleDateString()}
+                    </dd>
+                  </div>
+                )}
+                {dog.breed && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#8B6F47]">Breed</dt>
+                    <dd className="font-medium text-[#2E2E2E]">{dog.breed}</dd>
+                  </div>
+                )}
+                {dog.age && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#8B6F47]">Age</dt>
+                    <dd className="font-medium text-[#2E2E2E]">{dog.age}</dd>
+                  </div>
+                )}
+                {dog.gender && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#8B6F47]">Gender</dt>
+                    <dd className="font-medium text-[#2E2E2E]">{dog.gender}</dd>
+                  </div>
+                )}
+                {dog.weight && (
+                  <div className="flex justify-between">
+                    <dt className="text-[#8B6F47]">Weight</dt>
+                    <dd className="font-medium text-[#2E2E2E]">{dog.weight}</dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            {/* Foster card — has a foster */}
+            {dog.foster && !showFosterReassign && (
+              <div className="bg-[#8FAF99]/10 rounded-2xl border border-[#8FAF99]/30 p-5">
+                <h3 className="text-xs font-semibold text-[#8FAF99] uppercase tracking-wider mb-3">Current Foster</h3>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-[#8FAF99]/30 flex items-center justify-center text-[#5A4A42] font-bold text-sm flex-shrink-0">
+                    {(dog.foster.name || dog.foster.email || "?")
+                      .split(" ")
+                      .map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)}
+                  </div>
+                  <Link
+                    href={`/org/${orgId}/admin/fosters/${dog.foster.id}`}
+                    className="font-semibold text-[#D76B1A] hover:underline truncate"
+                  >
+                    {dog.foster.name || dog.foster.email}
+                  </Link>
+                </div>
+                <div className="flex gap-2 mb-3">
+                  <Link
+                    href={`/org/${orgId}/admin/communications?foster=${dog.foster.id}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-[#D76B1A] text-white rounded-lg text-xs font-medium hover:bg-[#D76B1A]/90 transition"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5" />
+                    Message
+                  </Link>
+                  <button
+                    onClick={handleReassignFosterClick}
+                    className="flex-1 flex items-center justify-center px-3 py-2 border border-[#E5DED4] text-[#5A4A42] rounded-lg text-xs font-medium hover:bg-[#FDF8F3] transition"
+                  >
+                    Reassign
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowReturnConfirmation(true)}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-xs text-[#5A4A42] hover:bg-white transition"
+                >
+                  Return to Rescue
+                </button>
+              </div>
+            )}
+
+            {/* No foster placeholder */}
+            {!dog.foster && !showFosterReassign && (
+              <div className="bg-white rounded-2xl border border-dashed border-[#E5DED4] p-5 text-center">
+                <p className="text-sm text-[#8B6F47] mb-3">No foster assigned</p>
+                <button
+                  onClick={handleReassignFosterClick}
+                  className="px-4 py-2 bg-[#D76B1A] text-white rounded-lg text-xs font-medium hover:bg-[#D76B1A]/90 transition"
+                >
+                  Assign a Foster
+                </button>
+              </div>
+            )}
+
+            {/* Reassign form */}
+            {showFosterReassign && (
+              <div className="bg-white rounded-2xl border border-[#E5DED4] p-5 space-y-3">
+                <h3 className="text-sm font-semibold text-[#5A4A42]">Reassign Foster</h3>
+                <select
+                  value={selectedNewFoster}
+                  onChange={(e) => setSelectedNewFoster(e.target.value)}
+                  className="w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm"
+                >
+                  <option value="">Select a foster...</option>
+                  {availableForsters.map((foster) => (
+                    <option key={foster.id} value={foster.id}>
+                      {foster.name || foster.email}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleFosterReassign}
+                    disabled={!selectedNewFoster}
+                    className="flex-1 bg-[#D76B1A] text-white px-3 py-2 rounded-lg text-sm hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowFosterReassign(false)
+                      setSelectedNewFoster("")
+                    }}
+                    className="px-3 py-2 border border-[#E5DED4] rounded-lg text-sm hover:bg-[#FDF8F3] transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right panel: tabs */}
           <div className="lg:col-span-2">
             <AdminDogTabs
               dog={dog}

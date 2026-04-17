@@ -1137,7 +1137,7 @@ function OrgAdminDashboardContent() {
                   )}
                   {pendingSupplies > 0 && (
                     <Link
-                      href={`/org/${orgId}/admin/help-requests?category=supplies`}
+                      href={`/org/${orgId}/admin/request-supplies`}
                       className="flex items-center justify-between p-3 rounded-lg bg-primary-orange-light border border-primary-orange/20 hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-3">
@@ -1176,7 +1176,7 @@ function OrgAdminDashboardContent() {
               type: "help-request",
               title: `${r.foster_id ? "Foster" : "System"} submitted ${r.category} request`,
               timestamp: new Date(r.created_at),
-              link: `/org/${orgId}/admin/help-requests`,
+              link: `/org/${orgId}/admin/request-supplies`,
             })),
             ...appointments.slice(0, 2).map(a => ({
               id: a.id,

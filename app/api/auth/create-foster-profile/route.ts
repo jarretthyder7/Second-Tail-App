@@ -15,22 +15,33 @@ export async function POST(request: Request) {
     const redirectTo = `${origin}/auth/callback`
 
     // Generate a confirmation link using the admin API
-    const { data, error } = await supabase.auth.admin.generateLink({
+    // Try "signup" first for new users, fall back to "magiclink" for existing users
+    let confirmationUrl: string | undefined
+
+    const { data: signupData, error: signupError } = await supabase.auth.admin.generateLink({
       type: "signup",
       email,
       options: { redirectTo },
     })
 
-    if (error) {
-      console.error("[v0] Failed to generate confirmation link:", error.message)
-      return NextResponse.json({ error: "Failed to generate confirmation link" }, { status: 400 })
+    if (!signupError && signupData?.properties?.action_link) {
+      confirmationUrl = signupData.properties.action_link
+    } else {
+      // User already exists, try magiclink instead
+      const { data: magicData, error: magicError } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo },
+      })
+
+      if (!magicError && magicData?.properties?.action_link) {
+        confirmationUrl = magicData.properties.action_link
+      }
     }
 
-    const confirmationUrl = data?.properties?.action_link
-
     if (!confirmationUrl) {
-      console.error("[v0] No action link returned from generateLink")
-      return NextResponse.json({ error: "No confirmation URL generated" }, { status: 400 })
+      console.error("[v0] Failed to generate any confirmation link")
+      return NextResponse.json({ error: "Failed to generate confirmation link" }, { status: 400 })
     }
 
     // Send branded welcome email with confirmation button

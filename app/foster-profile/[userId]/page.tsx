@@ -9,7 +9,7 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function FosterProfilePage({ params }: Props) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: profile } = await supabase
     .from("profiles")

@@ -118,11 +118,11 @@ export default function FosterDashboard() {
     router.push('/')
   }
 
-  const handleCopyLink = () => {
-    const link = `${window.location.origin}/foster-profile/${user?.id}`
+  const handleCopyInviteLink = () => {
+    const link = `https://getsecondtail.com/sign-up/foster`
     navigator.clipboard.writeText(link)
     setCopied(true)
-    toast.success('Profile link copied!')
+    toast.success('Invite link copied!')
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -194,14 +194,14 @@ export default function FosterDashboard() {
               </button>
             </div>
 
-            {/* Share Profile Card */}
+            {/* Invite a Friend Card */}
             <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Share Your Profile</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Invite a Friend</h3>
               <p className="text-gray-600 mb-6">
-                Share your foster profile link with local rescues.
+                Know someone who'd make a great foster? Share the link so they can sign up free.
               </p>
               <button
-                onClick={handleCopyLink}
+                onClick={handleCopyInviteLink}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-[#D76B1A] text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
               >
                 {copied ? (
@@ -212,7 +212,7 @@ export default function FosterDashboard() {
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    Copy Link
+                    Copy Invite Link
                   </>
                 )}
               </button>

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
 import { SiteHeader } from "@/components/site-header"
@@ -51,6 +51,8 @@ export default function FosterLoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteCode = searchParams.get("code")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,7 +67,7 @@ export default function FosterLoginPage() {
       localStorage.removeItem("rememberMeEmail")
     }
 
-    const result = await fosterLogin(email, password)
+    const result = await fosterLogin(email, password, inviteCode)
 
     if (result?.error) {
       setError(result.error)
@@ -152,6 +154,12 @@ export default function FosterLoginPage() {
           </h1>
           <p className="text-sm md:text-base text-text-secondary">Log in to your Foster account</p>
         </div>
+
+        {inviteCode && (
+          <div className="p-3 md:p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs md:text-sm">
+            You have a pending invitation. Log in to accept and join the rescue organization.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
           <div>

@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
         result = await sendMedicalUpdateEmail(data.fosterEmail, data.fosterName, data.dogName, data.updateType)
         break
       case "foster-invitation":
-        result = await sendFosterInvitationEmail(data.email, data.orgName, data.inviteCode, data.signUpUrl)
+        result = await sendFosterInvitationEmail(data.email, data.orgName, data.signUpUrl, data.hasAccount ?? false)
         break
       case "supply-request":
         result = await sendSupplyRequestEmail(data.rescueEmail, data.rescueName, data.fosterName, data.supplies)

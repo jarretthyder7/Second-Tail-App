@@ -359,15 +359,15 @@ export const emailTemplates = {
     `,
   }),
 
-  fosterInvitation: (orgName: string, signUpUrl: string) => ({
+  fosterInvitation: (orgName: string, signUpUrl: string, hasAccount: boolean) => ({
     subject: `You've been invited to foster with ${orgName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #d97706;">You're Invited to Foster!</h1>
         <p><strong>${orgName}</strong> has invited you to join their foster network on Second Tail.</p>
-        <p>Click below to create your foster account and join their network.</p>
+        <p>${hasAccount ? "You already have a Second Tail account. Click below to log in and connect your account with this rescue." : "Click below to create your foster account and join their network."}</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="${signUpUrl}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">Create Your Foster Account</a>
+          <a href="${signUpUrl}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 999px; font-weight: bold; font-size: 16px; text-decoration: none;">Accept Invitation</a>
         </div>
         <p style="color: #666; font-size: 13px;">Or copy this link into your browser:<br/><a href="${signUpUrl}" style="color: #d97706;">${signUpUrl}</a></p>
         <p style="margin-top: 30px; color: #999; font-size: 12px;">This invitation was sent by ${orgName}. If you did not expect this email, you can safely ignore it.</p>

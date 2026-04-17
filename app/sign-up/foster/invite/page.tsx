@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { Eye, EyeOff } from "lucide-react"
 
-export default function FosterInviteSignupPage() {
+function FosterInviteSignupContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const code = searchParams.get("code")
@@ -33,7 +33,7 @@ export default function FosterInviteSignupPage() {
       try {
         const supabase = createClient()
         const { data: invitation, error: invitationError } = await supabase
-          .from("foster_invitations")
+          .from("invitations")
           .select("*, organizations(name)")
           .eq("code", code)
           .eq("status", "pending")
@@ -191,5 +191,13 @@ export default function FosterInviteSignupPage() {
       </main>
       <SiteFooter />
     </div>
+  )
+}
+
+export default function FosterInviteSignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <FosterInviteSignupContent />
+    </Suspense>
   )
 }

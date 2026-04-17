@@ -1591,6 +1591,13 @@ function OrgAdminDashboardContent() {
             Add Animal
           </Link>
           <Link
+            href={`/org/${orgId}/admin/fosters`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
+          >
+            <UsersRound className="w-3.5 h-3.5 text-green-500" />
+            Invite Foster
+          </Link>
+          <Link
             href={`/org/${orgId}/admin/communications`}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
           >

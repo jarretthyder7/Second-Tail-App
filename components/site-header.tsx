@@ -50,11 +50,52 @@ export function SiteHeader() {
               For Fosters
             </Link>
 
+            <div className="relative" ref={loginDropdownRef}>
+              <button
+                onClick={() => { setLoginDropdownOpen(!loginDropdownOpen); setSignupDropdownOpen(false) }}
+                className="flex items-center gap-1 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              >
+                Login
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${loginDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {loginDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
+                  <Link
+                    href="/login/rescue"
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-amber-50 transition-colors"
+                    onClick={() => setLoginDropdownOpen(false)}
+                  >
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
+                      <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Rescue Org</div>
+                      <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
+                    </div>
+                  </Link>
+                  <div className="h-px bg-gray-100" />
+                  <Link
+                    href="/login/foster"
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-orange-50 transition-colors"
+                    onClick={() => setLoginDropdownOpen(false)}
+                  >
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
+                      <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Foster Parent</div>
+                      <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+
             <div className="relative" ref={signupDropdownRef}>
               <button
                 onClick={() => { setSignupDropdownOpen(!signupDropdownOpen); setLoginDropdownOpen(false) }}
-                className="flex items-center gap-1.5 text-sm font-medium px-5 py-2.5 rounded-full border-2 hover:bg-orange-50 transition-colors"
-                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+                className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors shadow-sm"
+                style={{ backgroundColor: "#D76B1A" }}
               >
                 Sign Up
                 <ChevronDown className={`w-4 h-4 transition-transform ${signupDropdownOpen ? "rotate-180" : ""}`} />
@@ -91,48 +132,6 @@ export function SiteHeader() {
                 </div>
               )}
             </div>
-
-            <div className="relative" ref={loginDropdownRef}>
-              <button
-                onClick={() => { setLoginDropdownOpen(!loginDropdownOpen); setSignupDropdownOpen(false) }}
-                className="flex items-center gap-1.5 text-sm font-medium text-white px-5 py-2.5 rounded-full hover:opacity-90 transition-colors"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Login
-                <ChevronDown className={`w-4 h-4 transition-transform ${loginDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              {loginDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
-                  <Link
-                    href="/login/rescue"
-                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-amber-50 transition-colors"
-                    onClick={() => setLoginDropdownOpen(false)}
-                  >
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
-                      <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Rescue Org</div>
-                      <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
-                    </div>
-                  </Link>
-                  <div className="h-px bg-gray-100" />
-                  <Link
-                    href="/login/foster"
-                    className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-orange-50 transition-colors"
-                    onClick={() => setLoginDropdownOpen(false)}
-                  >
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
-                      <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">Foster Parent</div>
-                      <div className="text-xs text-gray-500 font-normal">Login to your dashboard</div>
-                    </div>
-                  </Link>
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -151,12 +150,12 @@ export function SiteHeader() {
 
             {/* CTA Buttons: Sign Up + Login at the top */}
             <div className="flex flex-col gap-2 px-1">
-              {/* Sign Up dropdown */}
+              {/* Sign Up dropdown - primary */}
               <div>
                 <button
                   onClick={() => { setMobileSignupOpen(!mobileSignupOpen); setMobileLoginOpen(false) }}
-                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm border-2 transition-colors hover:bg-orange-50"
-                  style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm text-white transition-colors hover:opacity-90 shadow-sm"
+                  style={{ backgroundColor: "#D76B1A" }}
                 >
                   <span>Sign Up</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${mobileSignupOpen ? "rotate-180" : ""}`} />
@@ -194,12 +193,12 @@ export function SiteHeader() {
                 )}
               </div>
 
-              {/* Login dropdown */}
+              {/* Login dropdown - secondary */}
               <div>
                 <button
                   onClick={() => { setMobileLoginOpen(!mobileLoginOpen); setMobileSignupOpen(false) }}
-                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm text-white transition-colors hover:opacity-90"
-                  style={{ backgroundColor: "#D76B1A" }}
+                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm border-2 transition-colors hover:bg-gray-50"
+                  style={{ borderColor: "rgba(90, 74, 66, 0.2)", color: "#5a4a42" }}
                 >
                   <span>Login</span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${mobileLoginOpen ? "rotate-180" : ""}`} />

@@ -155,9 +155,10 @@ export async function GET(request: Request) {
           redirectPath = `/sign-up/rescue?error=setup-incomplete`
         }
       }
-      // Redirect fosters to unassigned dashboard if no org, or org dashboard if assigned
+      // Redirect fosters: new signups go to onboarding, returning users go to their dashboard
       else if (profile.role === "foster") {
         if (isProfileIncomplete) {
+          // New foster completing email verification — send to onboarding
           redirectPath = "/foster/onboarding"
         } else if (profile.organization_id) {
           redirectPath = `/org/${profile.organization_id}/foster/dashboard`

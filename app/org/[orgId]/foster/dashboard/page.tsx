@@ -108,21 +108,23 @@ export default function FosterDashboardPage() {
         {/* Hero Card - Animal Introduction */}
         <div className="relative">
           <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-            <div className="relative aspect-square sm:aspect-video overflow-hidden bg-muted">
+            <div className="relative aspect-[4/3] sm:aspect-video overflow-hidden bg-muted">
               <img
                 src={dog.image_url || "/placeholder.svg?height=400&width=400&query=animal"}
                 alt={dog.name}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute bottom-3 left-4">
+                <p className="text-white/80 text-xs font-medium">Hi {(profile?.full_name || profile?.name)?.split(" ")[0]}</p>
+                <h1 className="text-white text-2xl sm:text-3xl font-bold drop-shadow-sm">{dog.name}</h1>
+              </div>
             </div>
 
             <div className="p-4 sm:p-6 space-y-4">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Hi {(profile?.full_name || profile?.name)?.split(" ")[0]}</p>
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground">{dog.name}</h1>
-                <p className="text-sm sm:text-base text-muted-foreground mt-2">
-                  Thank you for fostering. You're making a life-changing difference.
+                <p className="text-sm text-muted-foreground">
+                  Thank you for fostering. You&apos;re making a life-changing difference.
                 </p>
               </div>
 
@@ -241,12 +243,13 @@ export default function FosterDashboardPage() {
           {/* Need Help Button */}
           <button
             onClick={() => setShowSupportModal(true)}
-            className="bg-card rounded-xl p-4 hover:shadow-md transition group text-left"
+            className="rounded-xl p-4 hover:shadow-md transition group text-left border border-amber-200"
+            style={{ backgroundColor: "#FFF8F0" }}
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center mb-3 group-hover:bg-primary/10 transition">
-                  <HelpCircle className="w-5 h-5 text-primary" />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: "rgba(215, 107, 26, 0.15)" }}>
+                  <HelpCircle className="w-5 h-5" style={{ color: "#D76B1A" }} />
                 </div>
                 <h3 className="font-semibold text-sm text-foreground">Need Help?</h3>
                 <p className="text-xs text-muted-foreground mt-1">Get support</p>

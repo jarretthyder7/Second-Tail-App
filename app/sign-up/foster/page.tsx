@@ -31,7 +31,7 @@ function FosterSignUpForm() {
   const [fosterCount, setFosterCount] = useState("")
 
   // Step 3: Availability (displayed as step 2)
-  const [homeAvailability, setHomeAvailability] = useState("")
+  const [childrenInHome, setChildrenInHome] = useState("")
   const [dogSizes, setDogSizes] = useState<string[]>([])
   const [restrictions, setRestrictions] = useState<string[]>([])
   const [whyFoster, setWhyFoster] = useState("")
@@ -62,8 +62,8 @@ function FosterSignUpForm() {
   }
 
   const validateStep2 = () => {
-    if (!homeAvailability) {
-      setError("Please select your daytime availability")
+    if (!childrenInHome) {
+      setError("Please select your household situation")
       return false
     }
     if (dogSizes.length === 0) {
@@ -72,10 +72,6 @@ function FosterSignUpForm() {
     }
     if (restrictions.length === 0) {
       setError("Please select any breed restrictions")
-      return false
-    }
-    if (!whyFoster.trim()) {
-      setError("Please tell us why you want to foster")
       return false
     }
     return true
@@ -130,9 +126,16 @@ function FosterSignUpForm() {
   }
 
   const togglePetCheckbox = (pet: string) => {
-    setPets(prev =>
-      prev.includes(pet) ? prev.filter(p => p !== pet) : [...prev, pet]
-    )
+    if (pet === "None") {
+      setPets(["None"])
+    } else {
+      setPets(prev => {
+        const withoutNone = prev.filter(p => p !== "None")
+        return withoutNone.includes(pet)
+          ? withoutNone.filter(p => p !== pet)
+          : [...withoutNone, pet]
+      })
+    }
   }
 
   const toggleDogSizeCheckbox = (size: string) => {
@@ -220,7 +223,7 @@ function FosterSignUpForm() {
             <div>
               <h1 className="text-3xl font-bold text-foreground">Join as Foster</h1>
               <p className="text-muted-foreground text-sm mt-2">
-                Step {step} of 3 — {step === 1 ? "About Your Home" : step === 2 ? "Availability & Preferences" : "Basic Information"}
+                Step {step} of 3 — {step === 1 ? "About Your Home" : step === 2 ? "Availability & Preferences" : "Create Your Account"}
               </p>
             </div>
 
@@ -236,7 +239,7 @@ function FosterSignUpForm() {
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your living situation? *</label>
                     <div className="flex flex-wrap gap-2">
-                      {["Own a house with a yard", "Own a house without a yard", "Rent a house", "Rent an apartment", "Condo", "Other"].map(option => (
+                      {["House with yard", "House without yard", "Apartment (elevator building)", "Apartment (walk-up/stairs)", "Condo", "Other"].map(option => (
                         <button
                           key={option}
                           type="button"
@@ -299,15 +302,15 @@ function FosterSignUpForm() {
               {step === 2 && (
                 <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">What&apos;s your typical daytime availability? *</label>
+                    <label className="block text-sm font-medium text-foreground mb-3">Are there young children in your home? *</label>
                     <div className="flex flex-wrap gap-2">
-                      {["Home most/all day", "Home part-time (afternoons/evenings)", "Work outside home, active evenings", "Limited availability"].map(option => (
+                      {["No children", "Yes, ages 0–5", "Yes, ages 6–12", "Yes, teens (13+)"].map(option => (
                         <button
                           key={option}
                           type="button"
-                          onClick={() => setHomeAvailability(option)}
+                          onClick={() => setChildrenInHome(option)}
                           className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            homeAvailability === option
+                            childrenInHome === option
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-input bg-background text-foreground hover:border-primary/50"
                           }`}

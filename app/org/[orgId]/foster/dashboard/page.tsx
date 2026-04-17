@@ -119,7 +119,7 @@ export default function FosterDashboardPage() {
 
             <div className="p-4 sm:p-6 space-y-4">
               <div>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Hi {(profile?.full_name || profile?.name)?.split(" ")[0]}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Hi {profile?.full_name?.split(" ")[0]}</p>
                 <h1 className="text-3xl sm:text-4xl font-bold text-foreground">{dog.name}</h1>
                 <p className="text-sm sm:text-base text-muted-foreground mt-2">
                   Thank you for fostering. You're making a life-changing difference.

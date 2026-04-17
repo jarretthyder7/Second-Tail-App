@@ -273,10 +273,10 @@ export default function OrgFosterLayout({
                     className="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-neutral-cream transition"
                   >
                     <div className="w-8 h-8 rounded-full bg-primary-orange/20 flex items-center justify-center text-sm font-bold text-primary-orange">
-                      {(profile?.full_name || profile?.name)?.charAt(0).toUpperCase() || "U"}
+                      {profile?.full_name?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <span className="text-sm font-medium text-primary-bark hidden sm:block">
-                      {profile?.full_name || profile?.name || "User"}
+                      {profile?.full_name || "User"}
                     </span>
                     <ChevronDown
                       className={`w-4 h-4 text-text-muted transition-transform ${showUserMenu ? "rotate-180" : ""}`}

@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Users, MessageCircle, Mail, Plus, Clock, DollarSign, Users2, FileUp, Briefcase, Calendar, Package, AlertCircle, Heart } from "lucide-react"
+import { Users, MessageCircle, DollarSign, Briefcase, Calendar, Package, AlertCircle, Check, ArrowRight, X } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
@@ -136,72 +136,149 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </section>
 
-      {/* Features Grid Section */}
-      <section className="bg-[#FDF6EC] py-12 sm:py-16 lg:py-20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 lg:mb-12 text-center px-2">
-            What&apos;s included
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <Mail className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Foster invitations</span>
+      {/* ─── INCLUDED CHECKLIST ───────────────── */}
+      <section className="bg-white py-16 sm:py-20 lg:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#FDF6EC] rounded-3xl p-8 sm:p-12 lg:p-16 border border-[#50402B]/10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8 sm:mb-10">
+              <div>
+                <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: "#D76B1A" }}>
+                  Included in every plan
+                </p>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight">
+                  Every tool your rescue needs.
+                </h2>
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#D76B1A]/30 self-start sm:self-end">
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                <span className="text-sm font-semibold text-gray-900">Free during beta</span>
+              </div>
             </div>
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <FileUp className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Animal profiles</span>
-            </div>
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Appointment calendar</span>
-            </div>
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <Plus className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Supply request management</span>
-            </div>
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Reimbursement tracking</span>
-            </div>
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Team chat</span>
-            </div>
-            <div className="flex items-start gap-2 p-3 sm:p-4">
-              <FileUp className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-xs sm:text-sm text-gray-900 font-semibold">Data import from spreadsheets</span>
-            </div>
-            <div className="flex items-start gap-3 p-4">
-              <Users2 className="w-6 h-6 flex-shrink-0 mt-0.5" style={{ color: "#50402B" }} />
-              <span className="text-gray-900 font-semibold">Mobile-friendly foster dashboard</span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+              {[
+                "Foster invitations by email",
+                "Animal profiles with full history",
+                "Shared appointment calendar",
+                "Supply request management",
+                "Reimbursement tracking",
+                "Direct team & foster messaging",
+                "Spreadsheet import for existing data",
+                "Mobile-friendly foster dashboard",
+                "Emergency contacts & resources",
+                "Daily care updates from fosters",
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3 py-1">
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "rgba(215, 107, 26, 0.15)" }}
+                  >
+                    <Check className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} strokeWidth={3} />
+                  </div>
+                  <span className="text-sm sm:text-base text-gray-900">{item}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-white py-12 sm:py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4 sm:space-y-6">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 px-2">
-            This saves you time. This reduces chaos.
-          </h2>
-          <p className="text-base sm:text-lg md:text-xl text-gray-600 leading-relaxed px-2">
-            Your team is stretched thin. Second Tail doesn't add more to your plate—it clears it. Simple tools that help
-            you scale without burnout.
-          </p>
+      {/* ─── BEFORE / AFTER ───────────────────── */}
+      <section className="bg-[#FBF8F4] py-16 sm:py-20 lg:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-14 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight mb-4">
+              Less chaos. More fosters fostered.
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600">
+              Second Tail doesn't add to your plate — it clears it.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            {/* Before */}
+            <div className="rounded-3xl p-8 sm:p-10 bg-gray-100 border border-gray-200">
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4">Before Second Tail</p>
+              <ul className="space-y-3">
+                {[
+                  "Spreadsheets, group texts, sticky notes",
+                  "Volunteers chasing each other for updates",
+                  "Supplies and reimbursements tracked in DMs",
+                  "Onboarding a new foster takes a phone call",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-gray-600">
+                    <X className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <span className="text-sm sm:text-base leading-relaxed">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* After */}
+            <div
+              className="rounded-3xl p-8 sm:p-10 text-white shadow-lg"
+              style={{ backgroundColor: "#50402B" }}
+            >
+              <p className="text-xs font-semibold uppercase tracking-wider mb-4" style={{ color: "#F7E2BD" }}>
+                With Second Tail
+              </p>
+              <ul className="space-y-3">
+                {[
+                  "One dashboard the whole team can see",
+                  "Updates flow in from fosters automatically",
+                  "Supplies and reimbursements tracked in one tap",
+                  "New fosters self-onboard in minutes",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3">
+                    <Check className="w-5 h-5 mt-0.5 flex-shrink-0" style={{ color: "#F7E2BD" }} strokeWidth={3} />
+                    <span className="text-sm sm:text-base leading-relaxed text-white/95">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 text-center space-y-6 sm:space-y-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 px-2">
-          Ready to streamline your rescue operations?
-        </h2>
-        <Link
-          href="/sign-up/rescue"
-            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
-          style={{ backgroundColor: "#50402B" }}
-        >
-          Register a Rescue
-        </Link>
+      {/* ─── FINAL CTA ────────────────────────── */}
+      <section className="bg-white py-16 sm:py-20 lg:py-24">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div
+            className="rounded-3xl p-8 sm:p-12 lg:p-16 text-center text-white relative overflow-hidden"
+            style={{ backgroundColor: "#D76B1A" }}
+          >
+            {/* Soft decorative blobs */}
+            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+
+            <div className="relative">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight mb-4 max-w-2xl mx-auto">
+                Ready to streamline your rescue?
+              </h2>
+              <p className="text-base sm:text-lg text-white/90 max-w-xl mx-auto mb-8 sm:mb-10">
+                Set up your organization in minutes. Invite your first fosters today.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-5">
+                <Link
+                  href="/sign-up/rescue"
+                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-[#D76B1A] rounded-full font-semibold text-base sm:text-lg hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+                >
+                  Register Your Rescue
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="/login/rescue"
+                  className="text-sm sm:text-base font-semibold text-white/90 hover:text-white hover:underline underline-offset-4 transition-colors"
+                >
+                  Already have an account? Log in →
+                </Link>
+              </div>
+              <p className="text-xs sm:text-sm text-white/70 pt-6">
+                Free during beta · No credit card required
+              </p>
+            </div>
+          </div>
+        </div>
       </section>
 
       <SiteFooter />

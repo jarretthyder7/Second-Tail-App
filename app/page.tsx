@@ -31,9 +31,11 @@ export default function Home() {
       <SiteHeader />
 
       {/* ─── HERO ─────────────────────────────── */}
-      <section className="pt-10 sm:pt-12 lg:pt-16 pb-8 sm:pb-12 lg:pb-16" style={{ backgroundColor: "#FDF6EC" }}>
+      <section className="pt-10 sm:pt-12 lg:pt-16 pb-0" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
+
+          {/* Text + CTAs */}
+          <div className="max-w-3xl mx-auto space-y-5 sm:space-y-7 text-center">
             <div className="flex justify-center mb-2 sm:mb-3">
               <img
                 src="/logo-dog.png"
@@ -46,10 +48,10 @@ export default function Home() {
             </h1>
 
             <p className="text-base sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
-              Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
+              One dashboard for your whole foster network — assignments, care plans, appointments, and communication, all in one place.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 justify-center pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 justify-center pt-2 sm:pt-4">
               <Link
                 href="/sign-up/rescue"
                 className="inline-flex items-center justify-center w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
@@ -59,16 +61,43 @@ export default function Home() {
               </Link>
               <Link
                 href="/sign-up/foster"
-                className="inline-flex items-center justify-center text-sm sm:text-base font-semibold transition-colors hover:underline underline-offset-4"
-                style={{ color: "#D76B1A" }}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
-                Or sign up as a foster →
+                I'm a foster parent →
               </Link>
             </div>
 
-            <p className="text-xs sm:text-sm text-gray-500 pt-2">
+            <p className="text-xs sm:text-sm text-gray-500 pt-1">
               Free for foster parents · No credit card required · Built by a foster
             </p>
+          </div>
+
+          {/* Device mockups */}
+          <div className="mt-10 sm:mt-14 flex items-end justify-center gap-4 sm:gap-6 lg:gap-10 px-2">
+            {/* Laptop — rescue dashboard */}
+            <div className="float-slower hidden sm:block relative w-full max-w-[460px] lg:max-w-[580px] aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
+              <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+              </div>
+              <img
+                src="/demo/rescue-desktop.png"
+                alt="Rescue admin dashboard"
+                className="w-full h-full object-cover object-top pt-4"
+                onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
+              />
+            </div>
+
+            {/* Phone — foster dashboard */}
+            <div className="float-slow relative w-full max-w-[130px] sm:max-w-[150px] lg:max-w-[180px] aspect-[9/19] rounded-[1.75rem] border-[6px] sm:border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
+              <img
+                src="/demo/foster-mobile.png"
+                alt="Foster dashboard on mobile"
+                className="w-full h-full object-cover object-top"
+                onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
+              />
+            </div>
           </div>
         </div>
       </section>

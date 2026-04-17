@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
 import { SiteHeader } from "@/components/site-header"
@@ -44,13 +44,15 @@ const Heart = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-export default function FosterLoginPage() {
+function FosterLoginContent() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteCode = searchParams.get("code")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,7 +67,7 @@ export default function FosterLoginPage() {
       localStorage.removeItem("rememberMeEmail")
     }
 
-    const result = await fosterLogin(email, password)
+    const result = await fosterLogin(email, password, inviteCode)
 
     if (result?.error) {
       setError(result.error)
@@ -153,6 +155,12 @@ export default function FosterLoginPage() {
           <p className="text-sm md:text-base text-text-secondary">Log in to your Foster account</p>
         </div>
 
+        {inviteCode && (
+          <div className="p-3 md:p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs md:text-sm">
+            You have a pending invitation. Log in to accept and join the rescue organization.
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
           <div>
             <label className="block text-xs md:text-sm font-semibold text-bark mb-2">Email</label>
@@ -221,5 +229,13 @@ export default function FosterLoginPage() {
       </div>
       <SiteFooter />
     </div>
+  )
+}
+
+export default function FosterLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <FosterLoginContent />
+    </Suspense>
   )
 }

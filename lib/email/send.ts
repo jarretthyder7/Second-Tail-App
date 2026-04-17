@@ -117,10 +117,10 @@ export async function sendMedicalUpdateEmail(
 export async function sendFosterInvitationEmail(
   email: string,
   orgName: string,
-  inviteCode: string,
   signUpUrl: string,
+  hasAccount: boolean,
 ) {
-  const template = emailTemplates.fosterInvitation(orgName, inviteCode, signUpUrl)
+  const template = emailTemplates.fosterInvitation(orgName, signUpUrl, hasAccount)
   return sendEmail({ to: email, ...template })
 }
 

@@ -160,10 +160,22 @@ export default function AdminFostersPage() {
 
       const invitation = await createInvitation(orgId, inviteEmail, user.id)
 
-      // Send the invitation email with the unique code and sign-up link
+      // Send the invitation email with a link that directs to sign up or login
       if (invitation?.code) {
-        const signUpUrl = `${window.location.origin}/sign-up/foster?code=${invitation.code}`
         try {
+          // Check if the invited email already has a Second Tail account
+          const checkRes = await fetch("/api/auth/check-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: inviteEmail }),
+          })
+          const { exists: hasAccount } = await checkRes.json()
+
+          // Build the correct destination URL based on account status
+          const destination = hasAccount
+            ? `${window.location.origin}/login/foster?code=${invitation.code}`
+            : `${window.location.origin}/sign-up/foster/invite?code=${invitation.code}`
+
           // Fetch org name for the email
           const supabaseForOrg = createClient()
           const { data: org } = await supabaseForOrg
@@ -179,8 +191,8 @@ export default function AdminFostersPage() {
               type: "foster-invitation",
               email: inviteEmail,
               orgName: org?.name || "your rescue organization",
-              inviteCode: invitation.code,
-              signUpUrl,
+              signUpUrl: destination,
+              hasAccount,
             }),
           })
         } catch (emailError) {
@@ -356,11 +368,6 @@ export default function AdminFostersPage() {
                       <p className="text-sm text-text-muted">
                         Invited {new Date(invitation.created_at).toLocaleDateString()}
                       </p>
-                      {invitation.code && (
-                        <p className="text-xs font-mono text-amber-700 mt-1 tracking-widest">
-                          Code: {invitation.code}
-                        </p>
-                      )}
                     </div>
                   </div>
                   <Button

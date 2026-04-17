@@ -28,6 +28,7 @@ import {
   DollarSign,
   Stethoscope,
   ArrowRight,
+  Newspaper,
 } from "lucide-react"
 
 // New consolidated widget types following the Command Center philosophy
@@ -1598,11 +1599,18 @@ function OrgAdminDashboardContent() {
             Invite Foster
           </Link>
           <Link
-            href={`/org/${orgId}/admin/communications`}
+            href={`/org/${orgId}/admin/messages`}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
           >
             <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
             Message Foster
+          </Link>
+          <Link
+            href={`/org/${orgId}/admin/communications`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
+          >
+            <Newspaper className="w-3.5 h-3.5 text-violet-500" />
+            Generate Newsletter
           </Link>
           <Link
             href={`/org/${orgId}/admin/appointments`}

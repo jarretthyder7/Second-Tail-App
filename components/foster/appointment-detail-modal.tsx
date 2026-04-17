@@ -61,7 +61,7 @@ export function AppointmentDetailModal({ appointment, onClose }: AppointmentDeta
       setRescheduleReason("")
       alert("Reschedule request submitted! The team will contact you soon.")
     } catch (error) {
-      console.error("[v0] Error submitting reschedule:", error)
+      // Error submitting reschedule
     } finally {
       setSubmitting(false)
     }

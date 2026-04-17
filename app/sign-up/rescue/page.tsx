@@ -86,8 +86,7 @@ export default function RescueSignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo:
-            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name: adminName,
             role: "rescue",
@@ -147,7 +146,7 @@ export default function RescueSignUpPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: "offline",
             prompt: "consent",

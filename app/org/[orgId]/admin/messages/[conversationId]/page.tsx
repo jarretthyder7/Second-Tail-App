@@ -84,7 +84,7 @@ export default function AdminConversationPage() {
       setMessages(msgs || [])
       setLoading(false)
     } catch (error) {
-      console.error("[v0] Error loading conversation:", error)
+      console.error("Error loading conversation:", error)
       setLoading(false)
     }
   }
@@ -157,7 +157,7 @@ export default function AdminConversationPage() {
           })
         }
       } catch (emailError) {
-        console.warn("[v0] Failed to send message notification email:", emailError)
+        console.warn("Failed to send message notification email:", emailError)
       }
 
       setMessages([...messages, message])
@@ -169,7 +169,7 @@ export default function AdminConversationPage() {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
       }, 100)
     } catch (error) {
-      console.error("[v0] Error sending message:", error)
+      console.error("Error sending message:", error)
       setSending(false)
       setUploading(false)
       alert("Failed to send message. Please try again.")
@@ -195,9 +195,9 @@ export default function AdminConversationPage() {
         })
         .in("id", messageIds)
 
-      console.log(`[v0] Marked ${messageIds.length} messages as read`)
+
     } catch (error) {
-      console.error("[v0] Error marking messages as read:", error)
+      console.error("Error marking messages as read:", error)
     }
   }
 

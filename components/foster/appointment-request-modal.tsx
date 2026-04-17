@@ -45,7 +45,6 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
           setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
         }
       } catch (error) {
-        console.error("[v0] Error fetching appointment types:", error)
         setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
       } finally {
         setLoadingTypes(false)
@@ -130,7 +129,6 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
       onClose()
       router.refresh()
     } catch (error) {
-      console.error("[v0] Error submitting appointment request:", error)
       toast({
         title: "Error",
         description: "Failed to submit your request. Please try again.",

@@ -90,7 +90,7 @@ export default function SetupCompletePage() {
         ],
       })
     } catch (error) {
-      console.error("[v0] Error loading summary:", error)
+      console.error("Error loading summary:", error)
     } finally {
       setLoading(false)
     }
@@ -117,7 +117,7 @@ export default function SetupCompletePage() {
         setTicketSubmitted(false)
       }, 2000)
     } catch (error) {
-      console.error("[v0] Error submitting ticket:", error)
+      console.error("Error submitting ticket:", error)
       alert("Failed to submit support ticket. Please try again.")
     } finally {
       setSubmittingTicket(false)

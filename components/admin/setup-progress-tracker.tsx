@@ -28,7 +28,7 @@ export function SetupProgressTracker({ orgId, onDismiss, isFloating = false }: S
       setCompletionPercentage(data.percentage)
       setMissingCount(data.total - data.completed)
     } catch (error) {
-      console.error("[v0] Error loading setup status:", error)
+      // Error loading setup status
     } finally {
       setLoading(false)
     }

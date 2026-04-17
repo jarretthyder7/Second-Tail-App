@@ -309,7 +309,7 @@ function OrgAdminDashboardContent() {
         // Set capacity warning based on available capacity
         setCapacityWarning(availableCapacityCount < 5)
       } catch (error) {
-        console.error("[v0] Error loading dashboard data:", error)
+        console.error("Error loading dashboard data:", error)
       } finally {
         setIsLoading(false)
       }
@@ -348,7 +348,7 @@ function OrgAdminDashboardContent() {
     }
 
     if (error) {
-      console.error("[v0] Error saving dashboard config:", error)
+      console.error("Error saving dashboard config:", error)
     }
   }
 

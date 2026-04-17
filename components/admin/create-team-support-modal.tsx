@@ -150,7 +150,7 @@ export function CreateTeamSupportModal({ orgId, isOpen, onClose, onSuccess }: Cr
       resetForm()
       onClose()
     } catch (error) {
-      console.error('[v0] Error creating support request:', error)
+      console.error('Error creating support request:', error)
       alert('Failed to create support request. Please try again.')
     } finally {
       setLoading(false)

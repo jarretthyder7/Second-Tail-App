@@ -23,7 +23,6 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.error("[v0] Failed to generate password reset link:", error.message)
       // Don't reveal if user exists or not for security
       return NextResponse.json({ success: true, message: "If an account exists with this email, a reset link has been sent." })
     }
@@ -31,7 +30,6 @@ export async function POST(request: Request) {
     const resetUrl = data?.properties?.action_link
 
     if (!resetUrl) {
-      console.error("[v0] No reset link returned from generateLink")
       return NextResponse.json({ success: true, message: "If an account exists with this email, a reset link has been sent." })
     }
 
@@ -39,14 +37,11 @@ export async function POST(request: Request) {
     const { success, error: emailError } = await sendPasswordResetEmail(email, resetUrl)
 
     if (!success) {
-      console.error("[v0] Failed to send password reset email:", emailError)
       return NextResponse.json({ error: "Failed to send password reset email" }, { status: 500 })
     }
 
-    console.log("[v0] Password reset email sent successfully to:", email)
     return NextResponse.json({ success: true, message: "Password reset email sent" })
   } catch (err) {
-    console.error("[v0] reset-password error:", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

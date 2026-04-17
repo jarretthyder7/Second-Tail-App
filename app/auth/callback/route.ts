@@ -71,7 +71,7 @@ export async function GET(request: Request) {
             .single()
 
           if (orgError) {
-            console.error("[v0] Error creating organization:", orgError)
+            // Organization creation failed
           }
 
           // Create rescue admin profile linked to the new org
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
             .single()
 
           if (profileError) {
-            console.error("[v0] Error creating rescue admin profile:", profileError)
+            // Profile creation failed
           } else {
             profile = newProfile
           }

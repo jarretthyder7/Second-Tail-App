@@ -144,7 +144,7 @@ export default function AppointmentsPage() {
         setPendingRequests(requestsData || [])
       }
     } catch (error) {
-      console.error("[v0] Error loading data:", error)
+      console.error("Error loading data:", error)
     } finally {
       setLoading(false)
     }
@@ -181,7 +181,7 @@ export default function AppointmentsPage() {
           })
           window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "first_appointment" } }))
         } catch (error) {
-          console.error("[v0] Error marking setup step complete:", error)
+          console.error("Error marking setup step complete:", error)
         }
 
         // If this appointment was scheduled from a pending foster request,
@@ -250,7 +250,7 @@ export default function AppointmentsPage() {
         loadData()
       }
     } catch (error) {
-      console.error("[v0] Error creating appointment:", error)
+      console.error("Error creating appointment:", error)
     } finally {
       setSaving(false)
     }
@@ -274,7 +274,7 @@ export default function AppointmentsPage() {
         setShowEditModal(false)
       }
     } catch (error) {
-      console.error("[v0] Error archiving appointment:", error)
+      console.error("Error archiving appointment:", error)
     }
   }
 
@@ -294,7 +294,7 @@ export default function AppointmentsPage() {
         alert(data.error || "Failed to delete appointment")
       }
     } catch (error) {
-      console.error("[v0] Error deleting appointment:", error)
+      console.error("Error deleting appointment:", error)
       alert("Failed to delete appointment")
     }
   }
@@ -470,7 +470,7 @@ export default function AppointmentsPage() {
       })
       loadData()
     } catch (error: any) {
-      console.error("[v0] Error scheduling appointment:", error?.message || JSON.stringify(error))
+      console.error("Error scheduling appointment:", error?.message || JSON.stringify(error))
       toast({
         title: "Error",
         description: error?.message || "Failed to schedule appointment. Please try again.",
@@ -521,7 +521,7 @@ export default function AppointmentsPage() {
 
       loadData()
     } catch (error) {
-      console.error("[v0] Error declining request:", error)
+      console.error("Error declining request:", error)
     }
   }
 

@@ -25,7 +25,6 @@ export async function GET() {
       .eq("public_listing", true)
 
     if (error) {
-      console.error("[v0] Error fetching public animals:", error)
       return NextResponse.json(
         { error: "Failed to fetch animals" },
         { status: 500 }
@@ -45,7 +44,6 @@ export async function GET() {
 
     return NextResponse.json(formattedDogs)
   } catch (error) {
-    console.error("[v0] Unexpected error in GET /api/public/animals:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

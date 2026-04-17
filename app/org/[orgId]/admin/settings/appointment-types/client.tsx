@@ -41,7 +41,7 @@ export default function AppointmentTypesSettings() {
       .order("name")
 
     if (error) {
-      console.error("[v0] Error fetching appointment types:", error)
+      console.error("Error fetching appointment types:", error)
     } else {
       setTypes(data || [])
     }
@@ -59,7 +59,7 @@ export default function AppointmentTypesSettings() {
     })
 
     if (error) {
-      console.error("[v0] Error adding appointment type:", error)
+      console.error("Error adding appointment type:", error)
     } else {
       setNewForm({ name: "", color: "#3B82F6" })
       setIsAddingNew(false)
@@ -82,7 +82,7 @@ export default function AppointmentTypesSettings() {
       .eq("id", id)
 
     if (error) {
-      console.error("[v0] Error updating appointment type:", error)
+      console.error("Error updating appointment type:", error)
     } else {
       setEditingId(null)
       fetchTypes()
@@ -100,7 +100,7 @@ export default function AppointmentTypesSettings() {
     const { error } = await supabase.from("appointment_types").delete().eq("id", id)
 
     if (error) {
-      console.error("[v0] Error deleting appointment type:", error)
+      console.error("Error deleting appointment type:", error)
     } else {
       fetchTypes()
     }

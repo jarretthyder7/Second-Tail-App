@@ -24,7 +24,7 @@ export function DashboardSetupWidget({ orgId }: DashboardSetupWidgetProps) {
       const data = await response.json()
       setCompletedSteps(data.completedSteps)
     } catch (error) {
-      console.error("[v0] Error loading setup status:", error)
+      // Error loading setup status
     } finally {
       setLoading(false)
     }

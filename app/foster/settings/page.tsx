@@ -38,7 +38,6 @@ export default function FosterSettingsPage() {
         .single()
 
       if (profileError) {
-        console.error("[v0] Error loading profile:", profileError)
         setError("Failed to load profile")
         setLoading(false)
         return
@@ -77,7 +76,6 @@ export default function FosterSettingsPage() {
       .eq("id", profile.id)
 
     if (updateError) {
-      console.error("[v0] Error saving notification preferences:", updateError)
       setError("Failed to save preferences")
       setIsSaving(false)
       return

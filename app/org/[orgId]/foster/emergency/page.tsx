@@ -27,7 +27,7 @@ export default function EmergencyPage() {
       const data = await response.json()
       setSettings(data)
     } catch (err) {
-      console.error("[v0] Error fetching settings:", err)
+      console.error("Error fetching settings:", err)
     } finally {
       setIsLoadingSettings(false)
     }
@@ -62,7 +62,7 @@ export default function EmergencyPage() {
     } catch (err: any) {
       setSubmitStatus("error")
       setSubmitError(err.message)
-      console.error("[v0] Error submitting help request:", err)
+      console.error("Error submitting help request:", err)
     } finally {
       setIsSubmitting(false)
     }

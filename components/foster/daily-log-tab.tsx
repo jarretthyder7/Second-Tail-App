@@ -35,7 +35,7 @@ export function DailyLogTab({ dog, logs }: DailyLogTabProps) {
         })
       }
     } catch (err) {
-      console.error('[v0] Error submitting log:', err)
+      console.error('Error submitting log:', err)
     }
     
     setSubmitting(false)

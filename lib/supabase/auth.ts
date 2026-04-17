@@ -23,7 +23,6 @@ export async function getCurrentUser() {
     .single()
 
   if (profileError) {
-    console.error("[v0] Error fetching profile:", profileError)
     return null
   }
 

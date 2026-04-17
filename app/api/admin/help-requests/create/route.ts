@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       .single()
 
     if (helpRequestError) {
-      console.error('[v0] Error creating help request:', helpRequestError)
+      console.error('Error creating help request:', helpRequestError)
       return NextResponse.json({ error: helpRequestError.message }, { status: 500 })
     }
 
@@ -103,10 +103,9 @@ export async function POST(request: Request) {
           .single()
 
         if (appointmentError) {
-          console.warn('[v0] Failed to create appointment:', appointmentError)
+          console.warn('Failed to create appointment:', appointmentError)
         } else {
           appointmentId = appointment?.id
-          console.log('[v0] Created appointment:', appointmentId)
         }
       }
     }
@@ -117,7 +116,7 @@ export async function POST(request: Request) {
       message: 'Support request created successfully',
     })
   } catch (error) {
-    console.error('[v0] Error in create support request API:', error)
+    console.error('Error in create support request API:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

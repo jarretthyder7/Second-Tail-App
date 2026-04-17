@@ -87,7 +87,7 @@ export default function FosterAppointmentsPage() {
       .order("start_time", { ascending: true })
 
     if (error) {
-      console.error("[v0] Error loading appointments:", error)
+      console.error("Error loading appointments:", error)
     } else {
       setAppointments(data || [])
     }

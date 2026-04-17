@@ -58,20 +58,17 @@ export default function OrgMessagesPage() {
 
   async function loadData() {
     try {
-      console.log("[v0] Loading data for orgId:", orgId)
+
 
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser()
 
-      console.log("[v0] Auth user:", authUser?.id)
       if (!authUser) {
-        console.log("[v0] No authenticated user")
         return
       }
 
       const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser.id).single()
-      console.log("[v0] User profile:", profile)
       setUser(profile)
 
       // Get all dogs in this organization
@@ -84,39 +81,34 @@ export default function OrgMessagesPage() {
       // Get unique foster IDs from the dogs
       const fosterIds = [...new Set(orgDogs?.map((d) => d.foster_id).filter(Boolean) || [])]
 
-      console.log("[v0] Foster IDs from dogs:", fosterIds)
-
       // Fetch foster profiles - either directly assigned to org OR connected via dogs
       let fosterProfiles = []
       if (fosterIds.length > 0) {
-        const { data, error: fostersError } = await supabase
+        const { data } = await supabase
           .from("profiles")
           .select("id, name, email")
           .or(`organization_id.eq.${orgId},id.in.(${fosterIds.join(",")})`)
           .eq("role", "foster")
 
-        console.log("[v0] Fosters query result:", { data, fostersError, count: data?.length })
         fosterProfiles = data || []
       } else {
         // Fallback to just checking organization_id if no dogs are assigned
-        const { data, error: fostersError } = await supabase
+        const { data } = await supabase
           .from("profiles")
           .select("id, name, email")
           .eq("organization_id", orgId)
           .eq("role", "foster")
 
-        console.log("[v0] Fosters query result (fallback):", { data, fostersError, count: data?.length })
         fosterProfiles = data || []
       }
 
       setFosters(fosterProfiles || [])
 
-      const { data: teamsData, error: teamsError } = await supabase
+      const { data: teamsData } = await supabase
         .from("teams")
         .select("id, name")
         .eq("organization_id", orgId)
 
-      console.log("[v0] Teams query result:", { teamsData, teamsError, count: teamsData?.length })
       setTeams(teamsData || [])
 
       const { data: convs, error: convsError } = await supabase
@@ -143,8 +135,6 @@ export default function OrgMessagesPage() {
         .eq("organization_id", orgId)
         .order("updated_at", { ascending: false })
 
-      console.log("[v0] Conversations query result:", { convs, convsError, count: convs?.length })
-
       const transformedConvs =
         convs?.map((conv) => ({
           ...conv,
@@ -155,7 +145,7 @@ export default function OrgMessagesPage() {
       setConversations(transformedConvs)
       setLoading(false)
     } catch (error) {
-      console.error("[v0] Error loading data:", error)
+      console.error("Error loading data:", error)
       setLoading(false)
     }
   }
@@ -207,7 +197,6 @@ export default function OrgMessagesPage() {
     if (!selectedFoster || !messageContent.trim() || !user) return
 
     try {
-      console.log("[v0] Sending message:", { selectedFoster, selectedDog, selectedTeam, messageContent })
 
       let conversationId = null
 
@@ -233,8 +222,6 @@ export default function OrgMessagesPage() {
           conversationData.team = team?.name
         }
 
-        console.log("[v0] Creating conversation with data:", conversationData)
-
         const { data: newConv, error: convError } = await supabase
           .from("conversations")
           .insert(conversationData)
@@ -242,11 +229,10 @@ export default function OrgMessagesPage() {
           .single()
 
         if (convError) {
-          console.error("[v0] Error creating conversation:", convError)
+          console.error("Error creating conversation:", convError)
           throw convError
         }
 
-        console.log("[v0] Created conversation:", newConv)
         conversationId = newConv.id
       }
 
@@ -257,11 +243,9 @@ export default function OrgMessagesPage() {
       })
 
       if (msgError) {
-        console.error("[v0] Error creating message:", msgError)
+        console.error("Error creating message:", msgError)
         throw msgError
       }
-
-      console.log("[v0] Message sent successfully")
 
       // Reset form
       setSelectedFoster("")
@@ -273,7 +257,7 @@ export default function OrgMessagesPage() {
       // Refresh conversations
       await loadData()
     } catch (error) {
-      console.error("[v0] Failed to send message:", error)
+      console.error("Failed to send message:", error)
       alert("Failed to send message. Please try again.")
     }
   }
@@ -314,7 +298,7 @@ export default function OrgMessagesPage() {
       // Refresh conversations
       await loadData()
     } catch (error) {
-      console.error("[v0] Failed to assign team:", error)
+      console.error("Failed to assign team:", error)
       alert("Failed to assign team. Please try again.")
     }
   }

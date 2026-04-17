@@ -125,7 +125,7 @@ function FosterDogProfilePage() {
 
         setConversations(enrichedConversations)
       } catch (err: any) {
-        console.error("[v0] Error loading dog:", err)
+        console.error("Error loading dog:", err)
         setError(err.message)
       } finally {
         setIsLoading(false)
@@ -466,7 +466,7 @@ function OverviewTab({
             })
           }
         } catch (emailError) {
-          console.warn("[v0] Failed to send medical update email:", emailError)
+          console.warn("Failed to send medical update email:", emailError)
         }
       }
 
@@ -474,7 +474,7 @@ function OverviewTab({
       setNotes("")
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (err) {
-      console.error("[v0] Error submitting log:", err)
+      console.error("Error submitting log:", err)
     } finally {
       setSubmitting(false)
     }

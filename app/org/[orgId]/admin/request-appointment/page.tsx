@@ -41,7 +41,6 @@ function RequestAppointmentContent() {
     setIsSubmitting(true)
 
     // TODO: Replace with actual API call
-    console.log("[v0] Submitting appointment request:", formData)
 
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000))

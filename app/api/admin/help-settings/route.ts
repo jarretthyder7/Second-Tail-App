@@ -49,7 +49,6 @@ export async function GET(request: NextRequest) {
       .maybeSingle()
 
     if (error) {
-      console.error("[v0] Fetch settings error:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -64,7 +63,6 @@ export async function GET(request: NextRequest) {
           .single()
 
         if (createError) {
-          console.error("[v0] Create settings error:", createError)
           return NextResponse.json({ error: createError.message }, { status: 500 })
         }
         settings = newSettings
@@ -76,7 +74,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(settings || {})
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
-    console.error("[v0] Help settings fetch error:", error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -123,7 +120,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(settings)
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
-    console.error("[v0] Help settings update error:", error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -37,7 +37,6 @@ export async function GET(request: NextRequest) {
       percentage: Math.round((completedStepIds.length / 8) * 100),
     })
   } catch (error) {
-    console.error("[v0] Error fetching setup status:", error)
     return NextResponse.json({ error: "Failed to fetch setup status" }, { status: 500 })
   }
 }
@@ -68,7 +67,6 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (selectError) {
-      console.error("[v0] Error checking existing setup status:", selectError)
       throw selectError
     }
 
@@ -110,7 +108,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data)
   } catch (error) {
-    console.error("[v0] Error updating setup status:", error)
     return NextResponse.json({ error: "Failed to update setup status" }, { status: 500 })
   }
 }

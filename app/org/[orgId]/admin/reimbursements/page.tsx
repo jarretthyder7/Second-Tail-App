@@ -65,6 +65,18 @@ export default function AdminReimbursementsPage() {
     setLoading(false)
   }
 
+  const sendReimbursementEmail = async (type: string, params: Record<string, string | undefined>) => {
+    try {
+      await fetch("/api/email/reimbursement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, ...params }),
+      })
+    } catch (err) {
+      console.error("Failed to send reimbursement email:", err)
+    }
+  }
+
   const handleApprove = async () => {
     if (!selectedReimbursement) return
     setProcessing(true)
@@ -88,6 +100,19 @@ export default function AdminReimbursementsPage() {
         .eq("id", selectedReimbursement.id)
 
       if (error) throw error
+
+      // Notify foster by email
+      const fosterEmail = selectedReimbursement.profiles?.email
+      const fosterName = selectedReimbursement.profiles?.name || "Foster"
+      if (fosterEmail) {
+        await sendReimbursementEmail("approved", {
+          fosterEmail,
+          fosterName: fosterName.split(" ")[0],
+          amount: selectedReimbursement.amount.toFixed(2),
+          category: getCategoryLabel(selectedReimbursement.category),
+          notes: reviewNotes || undefined,
+        })
+      }
 
       setSelectedReimbursement(null)
       setReviewNotes("")
@@ -124,6 +149,19 @@ export default function AdminReimbursementsPage() {
 
       if (error) throw error
 
+      // Notify foster by email
+      const fosterEmail = selectedReimbursement.profiles?.email
+      const fosterName = selectedReimbursement.profiles?.name || "Foster"
+      if (fosterEmail) {
+        await sendReimbursementEmail("rejected", {
+          fosterEmail,
+          fosterName: fosterName.split(" ")[0],
+          amount: selectedReimbursement.amount.toFixed(2),
+          category: getCategoryLabel(selectedReimbursement.category),
+          notes: reviewNotes || undefined,
+        })
+      }
+
       setSelectedReimbursement(null)
       setReviewNotes("")
       loadReimbursements()
@@ -152,6 +190,20 @@ export default function AdminReimbursementsPage() {
         .eq("id", selectedReimbursement.id)
 
       if (error) throw error
+
+      // Notify foster by email
+      const fosterEmail = selectedReimbursement.profiles?.email
+      const fosterName = selectedReimbursement.profiles?.name || "Foster"
+      if (fosterEmail) {
+        await sendReimbursementEmail("paid", {
+          fosterEmail,
+          fosterName: fosterName.split(" ")[0],
+          amount: selectedReimbursement.amount.toFixed(2),
+          category: getCategoryLabel(selectedReimbursement.category),
+          paymentDate: new Date(paymentDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+          paymentMethod: paymentMethod || undefined,
+        })
+      }
 
       setSelectedReimbursement(null)
       setPaymentDate("")

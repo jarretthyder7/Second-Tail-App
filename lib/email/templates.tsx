@@ -490,4 +490,146 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  // ── Reimbursement notifications ───────────────────────────────────────────
+
+  reimbursementSubmitted: (orgName: string, fosterName: string, amount: string, category: string, description: string) => ({
+    subject: `New reimbursement request from ${fosterName} — $${amount}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FDF6EC; border-radius: 12px; overflow: hidden;">
+        <div style="background-color: #D76B1A; padding: 32px 40px;">
+          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">New Reimbursement Request</h1>
+          <p style="margin: 8px 0 0; color: #fde8d0; font-size: 14px;">${orgName}</p>
+        </div>
+        <div style="padding: 32px 40px;">
+          <p style="font-size: 16px; color: #3d2c1e; margin: 0 0 24px;">
+            <strong>${fosterName}</strong> has submitted a new expense reimbursement request that needs your review.
+          </p>
+          <div style="background-color: #ffffff; border: 1px solid #e8d5bc; border-radius: 10px; padding: 20px; margin: 0 0 24px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px; width: 40%;">Amount</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 18px; font-weight: bold;">$${amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px;">Category</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${category}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px; vertical-align: top;">Description</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${description}</td>
+              </tr>
+            </table>
+          </div>
+          <p style="font-size: 13px; color: #9a7b62; margin: 0;">Log in to your Second Tail dashboard to approve or reject this request.</p>
+        </div>
+        <div style="background-color: #f5e6d3; padding: 16px 40px; text-align: center; border-top: 1px solid #e8d5bc;">
+          <p style="font-size: 12px; color: #9a7b62; margin: 0;">&copy; ${new Date().getFullYear()} Second Tail &mdash; <a href="https://getsecondtail.com" style="color: #D76B1A; text-decoration: none;">getsecondtail.com</a></p>
+        </div>
+      </div>
+    `,
+  }),
+
+  reimbursementApproved: (fosterName: string, amount: string, category: string, notes?: string) => ({
+    subject: `Your $${amount} reimbursement request has been approved ✓`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FDF6EC; border-radius: 12px; overflow: hidden;">
+        <div style="background-color: #16a34a; padding: 32px 40px;">
+          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">Reimbursement Approved ✓</h1>
+          <p style="margin: 8px 0 0; color: #bbf7d0; font-size: 14px;">Great news — your request has been approved</p>
+        </div>
+        <div style="padding: 32px 40px;">
+          <p style="font-size: 16px; color: #3d2c1e; margin: 0 0 16px;">Hi ${fosterName},</p>
+          <p style="font-size: 15px; color: #3d2c1e; margin: 0 0 24px; line-height: 1.6;">Your rescue team has approved your reimbursement request. Payment will be sent to you soon.</p>
+          <div style="background-color: #ffffff; border: 1px solid #e8d5bc; border-radius: 10px; padding: 20px; margin: 0 0 24px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px; width: 40%;">Amount Approved</td>
+                <td style="padding: 8px 0; color: #16a34a; font-size: 18px; font-weight: bold;">$${amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px;">Category</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${category}</td>
+              </tr>
+              ${notes ? `<tr><td style="padding: 8px 0; color: #9a7b62; font-size: 13px; vertical-align: top;">Note from rescue</td><td style="padding: 8px 0; color: #3d2c1e; font-size: 14px; font-style: italic;">${notes}</td></tr>` : ""}
+            </table>
+          </div>
+          <p style="font-size: 15px; color: #5a3e2b; margin: 0; line-height: 1.6;">Thank you for all you do,<br/><strong>Your Rescue Team via Second Tail</strong></p>
+        </div>
+        <div style="background-color: #f5e6d3; padding: 16px 40px; text-align: center; border-top: 1px solid #e8d5bc;">
+          <p style="font-size: 12px; color: #9a7b62; margin: 0;">&copy; ${new Date().getFullYear()} Second Tail &mdash; <a href="https://getsecondtail.com" style="color: #D76B1A; text-decoration: none;">getsecondtail.com</a></p>
+        </div>
+      </div>
+    `,
+  }),
+
+  reimbursementRejected: (fosterName: string, amount: string, category: string, notes?: string) => ({
+    subject: `Update on your $${amount} reimbursement request`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FDF6EC; border-radius: 12px; overflow: hidden;">
+        <div style="background-color: #dc2626; padding: 32px 40px;">
+          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">Reimbursement Not Approved</h1>
+          <p style="margin: 8px 0 0; color: #fecaca; font-size: 14px;">Your rescue team has reviewed your request</p>
+        </div>
+        <div style="padding: 32px 40px;">
+          <p style="font-size: 16px; color: #3d2c1e; margin: 0 0 16px;">Hi ${fosterName},</p>
+          <p style="font-size: 15px; color: #3d2c1e; margin: 0 0 24px; line-height: 1.6;">Your rescue team was unable to approve this reimbursement request. Please see any notes below and reach out if you have questions.</p>
+          <div style="background-color: #ffffff; border: 1px solid #e8d5bc; border-radius: 10px; padding: 20px; margin: 0 0 24px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px; width: 40%;">Amount Requested</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 16px; font-weight: bold;">$${amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px;">Category</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${category}</td>
+              </tr>
+              ${notes ? `<tr><td style="padding: 8px 0; color: #9a7b62; font-size: 13px; vertical-align: top;">Reason</td><td style="padding: 8px 0; color: #3d2c1e; font-size: 14px; font-style: italic;">${notes}</td></tr>` : ""}
+            </table>
+          </div>
+          <p style="font-size: 15px; color: #5a3e2b; margin: 0; line-height: 1.6;">If you have questions, please reach out to your rescue team directly.<br/><br/><strong>Your Rescue Team via Second Tail</strong></p>
+        </div>
+        <div style="background-color: #f5e6d3; padding: 16px 40px; text-align: center; border-top: 1px solid #e8d5bc;">
+          <p style="font-size: 12px; color: #9a7b62; margin: 0;">&copy; ${new Date().getFullYear()} Second Tail &mdash; <a href="https://getsecondtail.com" style="color: #D76B1A; text-decoration: none;">getsecondtail.com</a></p>
+        </div>
+      </div>
+    `,
+  }),
+
+  reimbursementPaid: (fosterName: string, amount: string, category: string, paymentDate: string, paymentMethod?: string) => ({
+    subject: `Payment sent — $${amount} reimbursement 💸`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #FDF6EC; border-radius: 12px; overflow: hidden;">
+        <div style="background-color: #2563eb; padding: 32px 40px;">
+          <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold;">Payment Sent 💸</h1>
+          <p style="margin: 8px 0 0; color: #bfdbfe; font-size: 14px;">Your reimbursement has been paid</p>
+        </div>
+        <div style="padding: 32px 40px;">
+          <p style="font-size: 16px; color: #3d2c1e; margin: 0 0 16px;">Hi ${fosterName},</p>
+          <p style="font-size: 15px; color: #3d2c1e; margin: 0 0 24px; line-height: 1.6;">Your reimbursement payment has been sent. Please allow a few days for it to arrive depending on the payment method.</p>
+          <div style="background-color: #ffffff; border: 1px solid #e8d5bc; border-radius: 10px; padding: 20px; margin: 0 0 24px;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px; width: 40%;">Amount Paid</td>
+                <td style="padding: 8px 0; color: #2563eb; font-size: 18px; font-weight: bold;">$${amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px;">Category</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${category}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; color: #9a7b62; font-size: 13px;">Payment Date</td>
+                <td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${paymentDate}</td>
+              </tr>
+              ${paymentMethod ? `<tr><td style="padding: 8px 0; color: #9a7b62; font-size: 13px;">Payment Method</td><td style="padding: 8px 0; color: #3d2c1e; font-size: 14px;">${paymentMethod}</td></tr>` : ""}
+            </table>
+          </div>
+          <p style="font-size: 15px; color: #5a3e2b; margin: 0; line-height: 1.6;">Thank you for everything you do for these animals. 🐾<br/><br/><strong>Your Rescue Team via Second Tail</strong></p>
+        </div>
+        <div style="background-color: #f5e6d3; padding: 16px 40px; text-align: center; border-top: 1px solid #e8d5bc;">
+          <p style="font-size: 12px; color: #9a7b62; margin: 0;">&copy; ${new Date().getFullYear()} Second Tail &mdash; <a href="https://getsecondtail.com" style="color: #D76B1A; text-decoration: none;">getsecondtail.com</a></p>
+        </div>
+      </div>
+    `,
+  }),
 }

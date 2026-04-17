@@ -192,6 +192,54 @@ export async function sendRescueInviteFromFosterEmail(
 }
 
 // Send appointment request confirmation to foster
+// ── Reimbursement email notifications ────────────────────────────────────────
+
+export async function sendReimbursementSubmittedEmail(
+  orgEmail: string,
+  orgName: string,
+  fosterName: string,
+  amount: string,
+  category: string,
+  description: string,
+) {
+  const template = emailTemplates.reimbursementSubmitted(orgName, fosterName, amount, category, description)
+  return sendEmail({ to: orgEmail, ...template })
+}
+
+export async function sendReimbursementApprovedEmail(
+  fosterEmail: string,
+  fosterName: string,
+  amount: string,
+  category: string,
+  notes?: string,
+) {
+  const template = emailTemplates.reimbursementApproved(fosterName, amount, category, notes)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendReimbursementRejectedEmail(
+  fosterEmail: string,
+  fosterName: string,
+  amount: string,
+  category: string,
+  notes?: string,
+) {
+  const template = emailTemplates.reimbursementRejected(fosterName, amount, category, notes)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
+export async function sendReimbursementPaidEmail(
+  fosterEmail: string,
+  fosterName: string,
+  amount: string,
+  category: string,
+  paymentDate: string,
+  paymentMethod?: string,
+) {
+  const template = emailTemplates.reimbursementPaid(fosterName, amount, category, paymentDate, paymentMethod)
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
 export async function sendAppointmentRequestConfirmationEmail(
   fosterEmail: string,
   fosterName: string,

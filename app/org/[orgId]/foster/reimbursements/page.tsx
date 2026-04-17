@@ -61,18 +61,24 @@ export default function ReimbursementsPage() {
 
   useEffect(() => { loadData() }, [orgId])
 
+  const [orgInfo, setOrgInfo] = useState<{ name: string; email: string | null } | null>(null)
+
   const loadData = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    const [dogsRes, reimbRes] = await Promise.all([
+    const [dogsRes, reimbRes, orgRes] = await Promise.all([
       supabase.from("dogs").select("id, name").eq("foster_id", user.id).eq("organization_id", orgId),
       supabase.from("reimbursements").select("*, dogs(name)").eq("foster_id", user.id).eq("organization_id", orgId).order("created_at", { ascending: false }),
+      supabase.from("organizations").select("name, contact_email").eq("id", orgId).maybeSingle(),
     ])
 
     setDogs(dogsRes.data || [])
     setReimbursements(reimbRes.data || [])
+    if (orgRes.data) {
+      setOrgInfo({ name: orgRes.data.name, email: orgRes.data.contact_email })
+    }
     setLoading(false)
   }
 
@@ -126,6 +132,26 @@ export default function ReimbursementsPage() {
       })
 
       if (error) throw error
+
+      // Notify rescue org by email (best effort — won't block success if it fails)
+      if (orgInfo?.email) {
+        const { data: fosterProfile } = await supabase.from("profiles").select("name").eq("id", user.id).maybeSingle()
+        const fosterName = fosterProfile?.name || user.email || "A foster"
+        const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label || category
+        fetch("/api/email/reimbursement", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "submitted",
+            orgEmail: orgInfo.email,
+            orgName: orgInfo.name,
+            fosterName,
+            amount: parseFloat(amount).toFixed(2),
+            category: categoryLabel,
+            description,
+          }),
+        }).catch(() => {}) // silent fail — email is non-critical
+      }
 
       resetForm()
       setShowForm(false)

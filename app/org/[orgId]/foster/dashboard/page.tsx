@@ -174,7 +174,7 @@ export default function FosterDashboardPage() {
                 <Link
                   key={apt.id}
                   href={`/org/${orgId}/foster/appointments`}
-                  className="p-3 bg-secondary rounded-lg hover:bg-secondary/80 transition flex items-between justify-between"
+                  className="p-3 bg-secondary rounded-lg hover:bg-secondary/80 transition flex items-center justify-between"
                 >
                   <div>
                     <p className="font-semibold text-sm text-foreground">{apt.title}</p>

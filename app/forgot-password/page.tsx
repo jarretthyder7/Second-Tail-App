@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
       })
 
       if (resetError) {
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#4A90A4]/5 via-[#FBF8F4] to-[#FF8B7B]/5 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center bg-[#FBF8F4] px-4 py-8">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
         <Link
           href="/"
@@ -86,23 +86,22 @@ export default function ForgotPasswordPage() {
         </Link>
 
         <div className="space-y-2 md:space-y-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#4A90A4]/10 flex items-center justify-center mb-3 md:mb-4">
-            <Mail className="w-5 h-5 md:w-6 md:h-6 text-[#4A90A4]" />
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#D76B1A]/10 flex items-center justify-center mb-3 md:mb-4">
+            <Mail className="w-5 h-5 md:w-6 md:h-6 text-[#D76B1A]" />
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-[#5A4A42]" style={{ fontFamily: "Lora, serif" }}>
             Forgot password?
           </h1>
           <p className="text-sm md:text-base text-[#2E2E2E]/70">
-            No worries! Enter your email and we'll send you a reset link.
+            No worries! Enter your email and we&apos;ll send you a reset link.
           </p>
         </div>
 
         {success ? (
-          <div className="p-4 md:p-5 bg-[#4A90A4]/10 border border-[#4A90A4]/30 text-[#5A4A42] rounded-xl">
+          <div className="p-4 md:p-5 bg-[#D76B1A]/10 border border-[#D76B1A]/30 text-[#5A4A42] rounded-xl">
             <p className="text-sm md:text-base font-medium mb-2">Check your email!</p>
             <p className="text-xs md:text-sm text-[#2E2E2E]/70">
-              We've sent a password reset link to <strong>{email}</strong>. Click the link in the email to reset your
-              password.
+              We&apos;ve sent a password reset link to <strong>{email}</strong>. Click the link in the email to reset your password.
             </p>
           </div>
         ) : (
@@ -114,13 +113,13 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="w-full rounded-xl border border-[#E5D5B7] bg-white px-3 md:px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#4A90A4]/40 focus:border-[#4A90A4] transition"
+                className="w-full rounded-xl border border-[#E5D5B7] bg-white px-3 md:px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/30 focus:border-[#D76B1A] transition"
                 required
               />
             </div>
 
             {error && (
-              <div className="p-3 md:p-4 bg-[#D97A68]/10 border border-[#D97A68]/30 text-[#D97A68] rounded-xl text-xs md:text-sm">
+              <div className="p-3 md:p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs md:text-sm">
                 {error}
               </div>
             )}
@@ -128,7 +127,8 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full inline-flex items-center justify-center rounded-full bg-[#4A90A4] px-5 md:px-6 py-3 md:py-3.5 text-sm md:text-base font-semibold text-white hover:bg-[#4A90A4]/90 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex items-center justify-center rounded-full px-5 md:px-6 py-3 md:py-3.5 text-sm md:text-base font-semibold text-white hover:opacity-90 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ backgroundColor: "#D76B1A" }}
             >
               {isLoading ? "Sending..." : "Send reset link"}
             </button>

@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Edit, Save, X, Dog } from "lucide-react"
+import { ArrowLeft, Edit, Save, X, Dog, AlertTriangle } from "lucide-react"
 import Link from "next/link"
 import useSWR from "swr"
+import { createClient } from "@/lib/supabase/client"
 
 export default function FosterProfilePage() {
   return (
@@ -28,6 +29,9 @@ function FosterProfileContent() {
   const [isEditing, setIsEditing] = useState(false)
   const [editedProfile, setEditedProfile] = useState<any>({})
   const [isSaving, setIsSaving] = useState(false)
+  const [showReturnConfirmation, setShowReturnConfirmation] = useState(false)
+  const [isReturning, setIsReturning] = useState(false)
+  const [returnSuccess, setReturnSuccess] = useState(false)
 
   const {
     data: foster,
@@ -89,6 +93,27 @@ function FosterProfileContent() {
     }
   }
 
+  const handleReturnDog = async () => {
+    const assignedDog = foster?.dogs?.[0]
+    if (!assignedDog) return
+    setIsReturning(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("dogs")
+        .update({ foster_id: null, stage: "intake", status: "available", updated_at: new Date().toISOString() })
+        .eq("id", assignedDog.id)
+      if (error) throw error
+      setShowReturnConfirmation(false)
+      setReturnSuccess(true)
+      await mutate()
+    } catch (err: any) {
+      alert(err.message || "Failed to return dog to rescue. Please try again.")
+    } finally {
+      setIsReturning(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-neutral-cream flex items-center justify-center">
@@ -129,6 +154,39 @@ function FosterProfileContent() {
 
   return (
     <div className="min-h-screen bg-neutral-cream">
+      {showReturnConfirmation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-amber-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-primary-bark">Return Dog to Rescue</h3>
+            </div>
+            <p className="text-primary-bark/80 mb-6">
+              Are you sure you want to return <strong>{foster?.dogs?.[0]?.name}</strong> to rescue care and remove this
+              dog from <strong>{foster?.name || foster?.email}</strong>?
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowReturnConfirmation(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReturnDog}
+                disabled={isReturning}
+                className="flex-1 bg-primary-orange hover:bg-primary-orange/90"
+              >
+                {isReturning ? "Returning..." : "Confirm Return"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-6">
         <div className="flex items-center justify-between">
           <Link
@@ -239,21 +297,36 @@ function FosterProfileContent() {
               {assignedDog && (
                 <div className="pt-4 border-t border-neutral-cream">
                   <h3 className="text-lg font-semibold text-primary-bark mb-3">Currently Fostering</h3>
-                  <Link
-                    href={`/org/${orgId}/admin/animals/${assignedDog.id}`}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-neutral-cream hover:bg-primary-orange/5 border border-transparent hover:border-primary-orange transition-colors"
-                  >
-                    <img
-                      src={assignedDog.image_url || "/placeholder.svg?height=80&width=80&query=dog"}
-                      alt={assignedDog.name}
-                      className="w-16 h-16 rounded-lg object-cover"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-primary-bark">{assignedDog.name}</h4>
-                      <p className="text-sm text-neutral-charcoal/60">{assignedDog.breed}</p>
+                  {returnSuccess ? (
+                    <div className="p-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm font-medium">
+                      {assignedDog.name} has been returned to rescue care.
                     </div>
-                    <Dog className="w-5 h-5 text-primary-orange" />
-                  </Link>
+                  ) : (
+                    <>
+                      <Link
+                        href={`/org/${orgId}/admin/animals/${assignedDog.id}`}
+                        className="flex items-center gap-4 p-4 rounded-xl bg-neutral-cream hover:bg-primary-orange/5 border border-transparent hover:border-primary-orange transition-colors"
+                      >
+                        <img
+                          src={assignedDog.image_url || "/placeholder.svg?height=80&width=80&query=dog"}
+                          alt={assignedDog.name}
+                          className="w-16 h-16 rounded-lg object-cover"
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-primary-bark">{assignedDog.name}</h4>
+                          <p className="text-sm text-neutral-charcoal/60">{assignedDog.breed}</p>
+                        </div>
+                        <Dog className="w-5 h-5 text-primary-orange" />
+                      </Link>
+                      <Button
+                        onClick={() => setShowReturnConfirmation(true)}
+                        variant="outline"
+                        className="mt-3 w-full border-neutral-charcoal/20 text-primary-bark hover:bg-neutral-cream"
+                      >
+                        Return Dog to Rescue
+                      </Button>
+                    </>
+                  )}
                 </div>
               )}
 

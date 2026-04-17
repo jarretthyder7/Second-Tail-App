@@ -6,9 +6,9 @@ import {
   FileText,
   Package,
   AlertCircle,
-  Check,
-  X,
   ArrowRight,
+  MapPin,
+  Smartphone,
 } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
@@ -26,7 +26,7 @@ export default function ForFostersPage() {
 
       <SiteHeader />
 
-      {/* Hero */}
+      {/* ─── HERO ─────────────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div className="text-center space-y-4 sm:space-y-6">
           <div
@@ -36,11 +36,11 @@ export default function ForFostersPage() {
             <Heart className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: "#D76B1A" }} />
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight px-2">
-            Fostering, finally organized.
+            Open your home.<br className="hidden sm:block" /> Change a life.
           </h1>
           <p className="text-sm sm:text-base md:text-lg lg:text-2xl text-gray-600 leading-relaxed max-w-3xl mx-auto px-2">
-            Care plans, supply requests, vet appointments, and direct messaging with your rescue — all in one
-            place, right from your phone.
+            Fostering saves animals' lives. Second Tail connects you with rescue organizations near you
+            and handles all the coordination — so you can focus on the animal, not the admin.
           </p>
           <div className="pt-4 sm:pt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
             <Link
@@ -48,30 +48,78 @@ export default function ForFostersPage() {
               className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-4 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#D76B1A" }}
             >
-              Sign Up to Foster
+              Get Started — It&apos;s Free
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               href="/login/foster"
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm font-medium text-gray-500 hover:text-gray-900 transition-colors"
             >
-              Already a member? Log in
+              Already fostering? Log in
             </Link>
           </div>
-          <p className="text-xs sm:text-sm text-gray-500 pt-2">
-            Free for fosters · Works with any rescue using Second Tail
+          <p className="text-xs sm:text-sm text-gray-500 pt-1">
+            Free for fosters · No credit card required
           </p>
         </div>
       </section>
 
-      {/* Phone demo */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 sm:pb-16">
+      {/* ─── HOW IT WORKS ─────────────────────── */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3 px-2">
+            Start fostering in three steps
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto px-2">
+            No experience required. Rescues are happy to guide first-timers.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+          {[
+            {
+              n: "1",
+              icon: Heart,
+              title: "Create your free profile",
+              body: "Tell rescues a bit about yourself — your home, your schedule, the kinds of animals you can take in.",
+            },
+            {
+              n: "2",
+              icon: MapPin,
+              title: "Connect with a local rescue",
+              body: "Browse rescue organizations in your area and express interest. They'll reach out to get you started.",
+            },
+            {
+              n: "3",
+              icon: Smartphone,
+              title: "Get your foster & their care plan",
+              body: "When you're matched, your rescue sends everything to your dashboard — care instructions, contacts, the works.",
+            },
+          ].map(({ n, icon: Icon, title, body }) => (
+            <div key={n} className="flex flex-col items-center text-center gap-3 sm:gap-4">
+              <div
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-md flex-shrink-0"
+                style={{ backgroundColor: "#D76B1A" }}
+              >
+                {n}
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-base sm:text-lg mb-1">{title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ─── PHONE DEMO ───────────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
-            Designed for fostering on the go
+            Everything in your pocket
           </h2>
           <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
-            Your full foster dashboard, right from your phone.
+            Your foster dashboard lives on your phone, so help is always one tap away.
           </p>
         </div>
         <div className="flex justify-center">
@@ -85,47 +133,48 @@ export default function ForFostersPage() {
         </div>
       </section>
 
-      {/* What you can do */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+      {/* ─── THE LITTLE THINGS ────────────────── */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
-            Everything you need in one app
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3 px-2">
+            We handle the coordination.<br className="hidden sm:block" /> You handle the cuddles.
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
-            Stop juggling group chats, sticky notes, and lost paperwork.
+          <p className="text-sm sm:text-base text-gray-600 max-w-xl mx-auto px-2">
+            No more texts back and forth, lost instructions, or wondering who to call. It&apos;s all in the app.
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {[
             {
-              icon: Heart,
-              title: "Care plans at your fingertips",
-              body: "See your animal's profile, medical history, and feeding or behavior instructions any time.",
+              icon: Package,
+              title: "Request supplies in one tap",
+              body: "Running low on food or poop bags? Send a supply request to your rescue directly from the app.",
             },
             {
               icon: FileText,
-              title: "Daily updates in seconds",
-              body: "Log progress notes and concerns. Your rescue stays in the loop without having to ask.",
-            },
-            {
-              icon: Package,
-              title: "Request supplies",
-              body: "Need food, meds, or toys? Submit a request and track what's on the way.",
-            },
-            {
-              icon: Calendar,
-              title: "Appointments, sorted",
-              body: "Book vet visits, check-ins, and pickups. Everything lives on one shared calendar.",
+              title: "Care plan, always with you",
+              body: "Medication schedules, feeding instructions, behavior notes — all organized in your dashboard.",
             },
             {
               icon: MessageCircle,
-              title: "Message your rescue directly",
-              body: "Have a question at 9pm? Skip the group chat and get a fast, focused answer.",
+              title: "Message your rescue, not a group chat",
+              body: "Have a question at 9pm? Send a direct message and get a real answer without the noise.",
+            },
+            {
+              icon: Calendar,
+              title: "Appointments, handled",
+              body: "Request vet visits, schedule pickups, and track upcoming appointments in one calendar.",
+            },
+            {
+              icon: FileText,
+              title: "Log daily updates",
+              body: "Jot down how your foster is doing. Your rescue stays informed without you having to call.",
             },
             {
               icon: AlertCircle,
               title: "Emergency help, 24/7",
-              body: "One tap to emergency contacts and critical resources when something feels off.",
+              body: "Something feel off? One tap to emergency contacts and resources, any time of day.",
             },
           ].map(({ icon: Icon, title, body }) => (
             <div
@@ -138,73 +187,27 @@ export default function ForFostersPage() {
               >
                 <Icon className="w-5 h-5" style={{ color: "#D76B1A" }} />
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{title}</h3>
+              <h3 className="text-base font-bold text-gray-900 mb-2">{title}</h3>
               <p className="text-sm text-gray-600 leading-relaxed">{body}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Before / After */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
-            Less stress. More time with your foster.
+      {/* ─── REASSURANCE BAND ─────────────────── */}
+      <section className="bg-white py-12 sm:py-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-4">
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 px-2">
+            You don&apos;t have to figure it out alone.
           </h2>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
-            Here's what changes the day you start using Second Tail.
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed px-2">
+            Every rescue on Second Tail is there to support you — from your first placement to your
+            hundredth. The app just makes staying connected easier.
           </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-          {/* Before */}
-          <div className="rounded-2xl p-5 sm:p-7 bg-gray-50 border border-gray-200">
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Without Second Tail</div>
-            <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-5">The usual fostering chaos</h3>
-            <ul className="space-y-3">
-              {[
-                "Endless group chats and missed messages",
-                "Lost medication dosages and care notes",
-                "Scrambling to remember vet appointment times",
-                "Texting the rescue for every small question",
-                "Paper forms and sticky-note reminders",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <X className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-sm text-gray-600">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* After */}
-          <div
-            className="rounded-2xl p-5 sm:p-7 border"
-            style={{ backgroundColor: "#50402B", borderColor: "#50402B" }}
-          >
-            <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#F7E2BD" }}>
-              With Second Tail
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold text-white mb-5">One calm dashboard</h3>
-            <ul className="space-y-3">
-              {[
-                "Direct messaging — no more group chat noise",
-                "Care plans and meds always one tap away",
-                "Appointments on a shared calendar",
-                "Supply requests submitted in seconds",
-                "Emergency contacts ready when you need them",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <Check className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "#F7E2BD" }} />
-                  <span className="text-sm text-white/90">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </section>
 
-      {/* Final CTA */}
+      {/* ─── FINAL CTA ────────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         <div
           className="relative rounded-3xl px-6 sm:px-12 py-12 sm:py-16 text-center overflow-hidden"
@@ -215,10 +218,11 @@ export default function ForFostersPage() {
 
           <div className="relative">
             <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
-              You're not fostering alone.
+              Ready to open your home?
             </h2>
             <p className="text-base sm:text-lg md:text-xl text-white/90 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
-              Create your foster profile and connect with rescue organizations near you in minutes.
+              Create your free profile and start connecting with rescue organizations near you.
+              A foster animal is waiting.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center">
               <Link
@@ -226,7 +230,7 @@ export default function ForFostersPage() {
                 className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-white rounded-full font-semibold text-sm sm:text-base hover:opacity-95 transition-opacity shadow-lg"
                 style={{ color: "#D76B1A" }}
               >
-                Sign Up to Foster
+                Get Started — It&apos;s Free
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link

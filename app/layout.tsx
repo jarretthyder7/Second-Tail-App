@@ -11,9 +11,8 @@ const lora = Lora({ subsets: ['latin'], weight: ['400', '600', '700'] })
 const geist = Geist({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Second Tail Foster Portal',
-  description: 'Supporting fosters and rescues in one place',
-  generator: 'v0.app',
+  title: 'Second Tail — Fostering and rescue, made easier.',
+  description: 'Second Tail connects foster parents with rescue organizations. Manage care plans, supply requests, appointments, and communication — all in one place. Free for fosters.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

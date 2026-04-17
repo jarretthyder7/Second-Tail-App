@@ -3,9 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import {
-  MessageCircle, Pill, Truck, HeartHandshake,
-  Calendar, Package, Users, Stethoscope, Smile,
-  ChevronDown, Quote, Sparkles,
+  MessageCircle, Truck, HeartHandshake, Stethoscope,
+  ChevronDown, Quote,
 } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
@@ -81,39 +80,43 @@ export default function Home() {
         </svg>
       </div>
 
-      {/* ─── PROBLEM BAND ─────────────────────── */}
+      {/* ─── 4 PILLARS ────────────────────────── */}
       <section className="bg-white py-16 sm:py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14 max-w-3xl mx-auto">
-            <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "#D76B1A" }}>
-              Sound familiar?
-            </p>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
-              Fostering today is held together by group texts and sticky notes.
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight mb-4">
+              Everything fostering needs, in one place.
             </h2>
+            <p className="text-base sm:text-lg text-gray-600">
+              Four things Second Tail handles for you and your foster team.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[
               {
                 icon: MessageCircle,
-                title: "Communication",
-                items: ["30-message email chains", "Three group texts no one reads", "Phone numbers lost when volunteers leave"],
+                title: "Coordinate",
+                tagline: "Stay in sync with your team",
+                items: ["One inbox per foster", "Direct messaging with your rescue", "No more scattered group chats"],
               },
               {
-                icon: Pill,
-                title: "Medical & care",
-                items: ["Lost prescriptions and dosages", "Vaccine records buried in PDFs", "Behavior notes that die with each transfer"],
+                icon: Stethoscope,
+                title: "Care",
+                tagline: "Track every detail",
+                items: ["Medical history & vaccine records", "Medication schedules & dosages", "Behavior notes that follow the dog"],
               },
               {
                 icon: Truck,
                 title: "Logistics",
-                items: ["\"Do we have any puppy food?\"", "Missed pickups and vet visits", "Reimbursements forgotten"],
+                tagline: "Run the day-to-day",
+                items: ["Vet appointments", "Supply requests", "Pickups & drop-offs"],
               },
               {
                 icon: HeartHandshake,
-                title: "Foster support",
-                items: ["No one to call at 2am", "Don't know what's normal", "Burnout and silent dropouts"],
+                title: "Support",
+                tagline: "Be there for your fosters",
+                items: ["Emergency contacts & resources", "Quick-answer help", "Daily updates & milestones"],
               },
             ].map((cat) => (
               <div
@@ -126,10 +129,11 @@ export default function Home() {
                 >
                   <cat.icon className="w-5 h-5" style={{ color: "#D76B1A" }} />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-3">{cat.title}</h3>
+                <h3 className="font-bold text-gray-900 text-lg">{cat.title}</h3>
+                <p className="text-sm text-gray-500 mb-3">{cat.tagline}</p>
                 <ul className="space-y-2">
                   {cat.items.map((item) => (
-                    <li key={item} className="text-sm text-gray-600 leading-relaxed flex items-start gap-2">
+                    <li key={item} className="text-sm text-gray-700 leading-relaxed flex items-start gap-2">
                       <span className="text-[#D76B1A] mt-1 flex-shrink-0">•</span>
                       <span>{item}</span>
                     </li>
@@ -140,12 +144,8 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-12 sm:mt-16 max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FDF6EC] border border-[#D76B1A]/20 mb-5">
-              <Sparkles className="w-4 h-4" style={{ color: "#D76B1A" }} />
-              <span className="text-sm font-semibold" style={{ color: "#D76B1A" }}>The fix</span>
-            </div>
             <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-              Second Tail puts it all in one place — for rescues and the fosters they rely on.
+              All your fostering, finally in one place.
             </p>
           </div>
         </div>
@@ -287,41 +287,6 @@ export default function Home() {
               <p className="text-base sm:text-lg font-bold text-gray-900 mt-6">For Rescues</p>
               <p className="text-sm text-gray-600">Full admin control on desktop</p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── FEATURES GRID ────────────────────── */}
-      <section className="bg-[#FBF8F4] py-16 sm:py-20 lg:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 max-w-2xl mx-auto">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4 tracking-tight">
-              Everything in one place.
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600">
-              No more app-hopping, spreadsheet-tracking, or "wait, who has the meds?"
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {[
-              { icon: Smile, title: "Daily updates", desc: "Photos, notes, milestones — all in the foster's pocket." },
-              { icon: Package, title: "Supply requests", desc: "Food, meds, toys — request and track in one tap." },
-              { icon: Calendar, title: "Vet appointments", desc: "Schedule, remind, log outcomes. Nothing slips." },
-              { icon: MessageCircle, title: "In-app messaging", desc: "Direct line to your rescue team. No more group chat hell." },
-              { icon: Users, title: "Foster matching", desc: "Connect rescues with fosters in their area." },
-              { icon: Stethoscope, title: "Medical history", desc: "Vaccines, meds, behavior — everything follows the dog." },
-            ].map((f) => (
-              <div key={f.title} className="bg-white rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
-                  style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}
-                >
-                  <f.icon className="w-5 h-5" style={{ color: "#D76B1A" }} />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
           </div>
         </div>
       </section>

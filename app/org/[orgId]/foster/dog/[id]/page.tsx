@@ -186,7 +186,7 @@ function FosterDogProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-screen bg-background pb-28">
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
         <div className="grid lg:grid-cols-[320px_1fr] gap-6">
           {/* LEFT COLUMN - Animal Summary (Always Visible) */}
@@ -298,9 +298,9 @@ function FosterDogProfilePage() {
           </div>
 
           {/* RIGHT COLUMN - Tabbed Content */}
-          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card rounded-2xl shadow-sm">
             {/* Tab Navigation */}
-            <div className="border-b border-border px-4 pt-4">
+            <div className="border-b border-border px-4 pt-4 rounded-t-2xl overflow-hidden">
               <div className="flex gap-1 overflow-x-auto pb-0 -mb-px">
                 {[
                   { id: "overview", label: "Overview", icon: FileText },

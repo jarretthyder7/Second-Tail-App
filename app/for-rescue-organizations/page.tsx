@@ -56,9 +56,6 @@ export default function ForRescueOrganizationsPage() {
               src="/demo/rescue-desktop.png"
               alt="Rescue admin onboarding flow on desktop"
               className="w-full h-full object-cover object-top pt-5"
-              onError={(e) => {
-                e.currentTarget.src = "/placeholder.svg"
-              }}
             />
           </div>
         </div>

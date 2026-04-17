@@ -57,9 +57,6 @@ export default function ForFostersPage() {
               src="/demo/foster-mobile.png"
               alt="Foster dashboard on mobile"
               className="w-full h-full object-cover object-top"
-              onError={(e) => {
-                e.currentTarget.src = "/placeholder.svg"
-              }}
             />
           </div>
         </div>

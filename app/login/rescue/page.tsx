@@ -6,8 +6,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { rescueLogin } from "./actions"
-import { SiteHeader } from "@/components/site-header"
-import { SiteFooter } from "@/components/site-footer"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -79,151 +77,140 @@ export default function RescueLoginPage() {
   }
 
   return (
-    <div 
-      className="min-h-screen flex flex-col relative overflow-hidden"
-      style={{
-        // Modern multi-layer background
-        background: `
-          radial-gradient(
-            circle at 50% 30%,
-            rgba(90, 74, 66, 0.09) 0%,
-            transparent 50%
-          ),
-          radial-gradient(
-            circle at 15% 75%,
-            rgba(215, 107, 26, 0.06) 0%,
-            transparent 45%
-          ),
-          linear-gradient(
-            to bottom,
-            rgba(255, 255, 255, 0.4),
-            rgba(247, 226, 189, 0.25)
-          ),
-          var(--brand-bg, #F8F5F0)
-        `,
-        backgroundAttachment: 'fixed',
-      }}
-    >
-      {/* Subtle noise overlay */}
-      <div 
-        className="absolute inset-0 pointer-events-none opacity-[0.015]"
-        style={{
-          backgroundImage: `
-            repeating-linear-gradient(
-              45deg,
-              transparent,
-              transparent 2px,
-              rgba(0, 0, 0, 0.1) 2px,
-              rgba(0, 0, 0, 0.1) 4px
-            )
-          `,
-        }}
-      />
+    <div className="min-h-screen bg-[#FBF8F4] flex flex-col">
 
-      {/* Soft decorative blobs */}
-      <div className="absolute top-28 left-20 w-72 h-72 opacity-[0.08] pointer-events-none hidden md:block" 
-        style={{
-          background: 'radial-gradient(circle, rgba(90, 74, 66, 0.25) 0%, transparent 70%)',
-          borderRadius: '45% 55% 52% 48% / 48% 45% 55% 52%',
-          filter: 'blur(40px)',
-        }}
-      />
-
-      <div className="absolute bottom-44 right-12 w-80 h-80 opacity-[0.07] pointer-events-none hidden lg:block" 
-        style={{
-          background: 'radial-gradient(circle, rgba(215, 107, 26, 0.3) 0%, transparent 70%)',
-          borderRadius: '52% 48% 45% 55% / 55% 52% 48% 45%',
-          filter: 'blur(50px)',
-        }}
-      />
-      <SiteHeader />
-      <div className="flex-1 flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-lg p-6 sm:p-8 md:p-10 space-y-6 md:space-y-8">
+      {/* Minimal top bar */}
+      <header className="px-6 py-4 flex items-center justify-between max-w-7xl mx-auto w-full">
+        <Link href="/" className="text-lg font-bold text-gray-900">
+          Second Tail
+        </Link>
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-bark hover:text-primary-orange transition"
+          className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 transition-colors"
         >
-          <ArrowLeft className="w-3 h-3 md:w-4 md:h-4" />
-          Back to Home
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Back to home
         </Link>
+      </header>
 
-        <div className="space-y-2 md:space-y-3">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-bark/10 flex items-center justify-center mb-3 md:mb-4">
-            <Users className="w-5 h-5 md:w-6 md:h-6 text-bark" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-bark" style={{ fontFamily: "Lora, serif" }}>
-            Rescue Team Login
-          </h1>
-          <p className="text-sm md:text-base text-text-secondary">Access your organization dashboard</p>
-        </div>
+      {/* Card */}
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
 
-        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
-          <div>
-            <label className="block text-xs md:text-sm font-semibold text-bark mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full rounded-xl border border-neutral-sand bg-white px-3 md:px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition"
-              required
-            />
+          {/* Icon + headline above card */}
+          <div className="text-center mb-6">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}
+            >
+              <Users className="w-6 h-6" style={{ color: "#5a4a42" }} />
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              Rescue team login
+            </h1>
+            <p className="text-sm text-gray-500 mt-1.5">
+              Access your organization dashboard
+            </p>
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs md:text-sm font-semibold text-bark">Password</label>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-primary-orange hover:text-bark font-medium transition"
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
+            <form onSubmit={handleSubmit} className="space-y-4">
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                  style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.3)" } as React.CSSProperties}
+                  required
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Password
+                  </label>
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-medium hover:opacity-80 transition"
+                    style={{ color: "#D76B1A" }}
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition"
+                  style={{ "--tw-ring-color": "rgba(90, 74, 66, 0.3)" } as React.CSSProperties}
+                  required
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded cursor-pointer"
+                  style={{ accentColor: "#5a4a42" }}
+                />
+                <label htmlFor="rememberMe" className="text-sm text-gray-500 cursor-pointer">
+                  Remember me on this device
+                </label>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full inline-flex items-center justify-center rounded-full px-6 py-3.5 text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                style={{ backgroundColor: "#5a4a42" }}
               >
-                Forgot password?
+                {isLoading ? "Logging in..." : "Log in to dashboard"}
+              </button>
+            </form>
+          </div>
+
+          {/* Footer links */}
+          <div className="mt-5 text-center space-y-2">
+            <p className="text-sm text-gray-500">
+              Don&apos;t have an account?{" "}
+              <Link
+                href="/sign-up/rescue"
+                className="font-semibold hover:opacity-80 transition"
+                style={{ color: "#D76B1A" }}
+              >
+                Register your rescue
               </Link>
-            </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full rounded-xl border border-neutral-sand bg-white px-3 md:px-4 py-2.5 md:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 focus:border-primary-orange transition"
-              required
-            />
+            </p>
+            <p className="text-xs text-gray-400">
+              Foster parent?{" "}
+              <Link
+                href="/login/foster"
+                className="font-medium text-gray-500 hover:text-gray-900 transition"
+              >
+                Log in here instead
+              </Link>
+            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="rememberMe"
-              checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 rounded border-neutral-sand bg-white cursor-pointer accent-primary-orange"
-            />
-            <label htmlFor="rememberMe" className="text-xs md:text-sm text-text-secondary cursor-pointer">
-              Remember me on this device
-            </label>
-          </div>
-
-          {error && (
-            <div className="p-3 md:p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs md:text-sm">
-              {error}
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full inline-flex items-center justify-center rounded-full bg-primary-orange px-5 md:px-6 py-3 md:py-3.5 text-sm md:text-base font-semibold text-white hover:bg-primary-orange/90 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? "Logging in..." : "Log in as Rescue Team"}
-          </button>
-
-          <p className="text-xs text-center text-text-tertiary pt-2">
-            Only rescue organization staff should use this portal.
-          </p>
-        </form>
+        </div>
       </div>
-      </div>
-      <SiteFooter />
     </div>
   )
 }

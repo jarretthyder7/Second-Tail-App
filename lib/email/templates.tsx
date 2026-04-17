@@ -1,6 +1,25 @@
 // Email template functions for different notification types
 
 export const emailTemplates = {
+  passwordReset: (resetUrl: string) => ({
+    subject: "Reset your Second Tail password",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <img src="https://getsecondtail.com/logo-dog.png" alt="Second Tail" width="64" height="64" style="display: inline-block;" />
+        </div>
+        <h1 style="color: #D76B1A; font-size: 26px; margin-bottom: 8px;">Reset your password</h1>
+        <p style="color: #374151; font-size: 16px; line-height: 1.6;">We received a request to reset your password. Click the button below to choose a new password.</p>
+        <div style="text-align: center; margin: 36px 0;">
+          <a href="${resetUrl}" style="display: inline-block; background-color: #D76B1A; color: #ffffff; padding: 16px 40px; border-radius: 999px; font-weight: bold; font-size: 17px; text-decoration: none; letter-spacing: 0.3px;">Reset Password</a>
+        </div>
+        <p style="color: #6b7280; font-size: 13px;">Or copy this link into your browser:<br/><a href="${resetUrl}" style="color: #D76B1A; word-break: break-all;">${resetUrl}</a></p>
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+        <p style="color: #9ca3af; font-size: 12px; text-align: center;">If you didn't request a password reset, you can safely ignore this email. This link will expire in 24 hours.</p>
+      </div>
+    `,
+  }),
+
   welcomeFoster: (name: string, orgName?: string, confirmationUrl?: string) => ({
     subject: "Confirm your Second Tail account",
     html: `

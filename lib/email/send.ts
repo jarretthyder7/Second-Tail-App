@@ -48,6 +48,11 @@ export async function sendEmail(options: EmailOptions) {
 }
 
 // Specific email sending functions
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  const template = emailTemplates.passwordReset(resetUrl)
+  return sendEmail({ to: email, ...template })
+}
+
 export async function sendWelcomeEmailFoster(email: string, name: string, orgName?: string, confirmationUrl?: string) {
   const template = emailTemplates.welcomeFoster(name, orgName, confirmationUrl)
   return sendEmail({ to: email, ...template })

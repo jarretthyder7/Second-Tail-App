@@ -100,6 +100,21 @@ export async function GET(request: Request) {
           } else {
             profile = newProfile
 
+            // Send welcome email now that email is confirmed
+            try {
+              await fetch(`${origin}/api/email/send`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: "welcome-foster",
+                  email: data.user.email,
+                  name: meta.name || data.user.email?.split("@")[0],
+                }),
+              })
+            } catch {
+              // Welcome email failed but signup succeeded
+            }
+
             // Create foster_profiles row using vetting data from signup metadata
             await serviceClient.from("foster_profiles").insert({
               user_id: data.user.id,

@@ -174,7 +174,7 @@ export default function ForRescueOrganizationsPage() {
             className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
           style={{ backgroundColor: "#50402B" }}
         >
-          Request Early Access
+          Register a Rescue
         </Link>
       </section>
 

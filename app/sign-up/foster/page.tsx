@@ -184,19 +184,8 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
-        // Send welcome email with confirmation link (profile created in auth callback)
-        // Don't block on email failure - user can still complete signup
-        fetch("/api/auth/create-foster-profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: authData.user.id,
-            email,
-            name: fullName,
-          }),
-        }).catch(() => {
-          // Email send failed silently - Supabase will still send its own confirmation
-        })
+        // Profile creation and confirmation email are handled by Supabase automatically
+        // The auth callback will create the profile when the user clicks the confirmation link
       }
 
       router.push(`/auth/sign-up-success?type=foster&email=${encodeURIComponent(email)}`)

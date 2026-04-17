@@ -61,8 +61,8 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
     {
       id: "priority-inbox",
       name: "Priority Inbox",
-      description: "Who needs a response? Messages + Support Requests",
-      defaultSpan: 12,
+      description: "Who needs a response? Messages + Support Requests + Appointment Requests",
+      defaultSpan: 6,
       isDefault: true,
     },
     {
@@ -76,28 +76,21 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       id: "foster-network-status",
       name: "Foster Network Status",
       description: "Capacity and foster wellbeing at a glance",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: true,
     },
     {
       id: "todays-schedule",
       name: "Today's Schedule",
       description: "What's happening today and next 48 hours",
-      defaultSpan: 12,
-      isDefault: false,
-    },
-    {
-      id: "pending-requests",
-      name: "Pending Requests",
-      description: "Appointment + supply requests waiting for your response",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
     {
       id: "recent-activity",
       name: "Recent Activity",
       description: "What happened in the last 24 hours",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
   ],
@@ -106,35 +99,35 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       id: "team-load",
       name: "Team Load",
       description: "Is anyone overloaded? Staff workload overview",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
     {
       id: "outreach-communications",
       name: "Outreach & Communications",
       description: "Foster announcements and adoption pushes",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
     {
       id: "animals-without-updates",
       name: "Animals Without Updates",
       description: "Animals that haven't had a log entry in 3+ days",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
     {
       id: "reimbursements-pending",
       name: "Reimbursements Pending",
       description: "Foster reimbursement requests waiting for approval",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
     {
       id: "foster-checkins-needed",
       name: "Foster Check-ins Needed",
       description: "Fosters who haven't logged an update recently",
-      defaultSpan: 12,
+      defaultSpan: 6,
       isDefault: false,
     },
   ],
@@ -142,9 +135,11 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
 
 // Default tiles for new organizations (auto-created during onboarding)
 const DEFAULT_WIDGETS: Widget[] = [
-  { id: "default-1", type: "priority-inbox", col_span: 12 },
-  { id: "default-2", type: "animal-health-status", col_span: 12 },
-  { id: "default-3", type: "foster-network-status", col_span: 12 },
+  { id: "default-1", type: "priority-inbox", col_span: 6 },
+  { id: "default-2", type: "todays-schedule", col_span: 6 },
+  { id: "default-3", type: "animal-health-status", col_span: 12 },
+  { id: "default-4", type: "foster-network-status", col_span: 6 },
+  { id: "default-5", type: "animals-without-updates", col_span: 6 },
 ]
 
 export default function OrgAdminDashboard() {
@@ -453,15 +448,17 @@ function OrgAdminDashboardContent() {
   const fortyEightHoursFromNow = new Date()
   fortyEightHoursFromNow.setHours(fortyEightHoursFromNow.getHours() + 48)
 
-  // Priority Inbox metrics (combines messages + support requests)
+  // Priority Inbox metrics (combines messages + support requests + appointment requests)
   const unansweredMessages = conversations.filter((c) => {
     // Messages that haven't been read or responded to by rescue staff
     return c.last_message_sender_role === "foster" && !c.read_by_rescue
   }).length
   const openSupportRequests = helpRequests.filter((r) => r.status === "open").length
-  const totalInboxItems = unansweredMessages + openSupportRequests
+  const pendingAppointmentRequests = appointmentRequests.filter((r) => r.status === "pending").length
+  const totalInboxItems = unansweredMessages + openSupportRequests + pendingAppointmentRequests
 
   // Animals Needing Attention metrics
+  const totalAnimalsInCare = dogs.filter((d) => d.status !== "adopted").length
   const medicalFlags = dogs.filter((d) => d.status === "medical-hold" || d.medical_notes?.includes("urgent")).length
   const behaviorAlerts = dogs.filter((d) => d.behavior_notes?.includes("caution") || d.behavior_notes?.includes("alert")).length
   const animalsWithoutFoster = dogs.filter((d) => !d.foster_id && d.status !== "adopted").length
@@ -523,22 +520,25 @@ function OrgAdminDashboardContent() {
   const getAddedWidgetTypes = () => dashboardConfig.widgets.map((w) => w.type)
   const addedTypes = getAddedWidgetTypes()
 
+  const getColSpanClass = (colSpan: number) =>
+    colSpan === 6 ? "col-span-12 md:col-span-6" : "col-span-12"
+
   const renderWidget = (widget: Widget) => {
     const isHovered = hoveredWidget === widget.id
     const isDragging = draggedWidget === widget.id
     const isHighlighted = highlightedWidgetId === widget.id
 
     const baseClasses = `
-      group relative bg-white rounded-xl 
+      group relative bg-white rounded-xl
       transition-all duration-200 ease-out
-      ${isCustomizing 
-        ? "cursor-grab active:cursor-grabbing border-2 border-border-soft hover:border-primary-orange/40" 
+      ${isCustomizing
+        ? "cursor-grab active:cursor-grabbing border-2 border-border-soft hover:border-primary-orange/40"
         : "border border-border-soft hover:border-border-strong"
       }
       ${isHovered && isCustomizing ? "shadow-lg border-primary-orange/60 scale-[1.01] ring-4 ring-primary-orange/10" : "shadow-[0_1px_3px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.1)]"}
       ${isDragging ? "opacity-40 scale-95" : ""}
       ${isHighlighted ? "animate-highlight-pulse" : ""}
-      col-span-12
+      ${getColSpanClass(widget.col_span)}
     `
 
     const widgetContent = () => {
@@ -578,54 +578,66 @@ function OrgAdminDashboardContent() {
                   <p className="text-xs text-primary-bark/50 mt-1">No action needed right now</p>
                 </div>
               ) : (
-                <>
-                  {/* Main count badge */}
-                  <Link
-                    href={`/org/${orgId}/admin/messages`}
-                    className="block p-4 rounded-lg bg-primary-orange-light border border-primary-orange/20 hover:border-primary-orange/40 hover:shadow-md transition-all mb-3"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary-orange/10 flex items-center justify-center">
-                          <Inbox className="w-5 h-5 text-primary-orange" />
-                        </div>
-                        <div>
-                          <div className="stat-number">{totalInboxItems}</div>
-                          <div className="text-xs text-primary-bark/60">need attention</div>
-                        </div>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-primary-bark/30" />
-                    </div>
-                  </Link>
-                  
-                  {/* Breakdown by type */}
-                  <div className="space-y-1.5">
-                    {unansweredMessages > 0 && (
-                      <Link
-                        href={`/org/${orgId}/admin/messages`}
-                        className="flex items-center justify-between p-2.5 rounded-lg hover:bg-neutral-cream transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-status-info" />
-                          <span className="text-sm text-primary-bark/80">Foster Messages</span>
-                        </div>
-                        <span className="text-sm font-bold text-primary-bark">{unansweredMessages}</span>
-                      </Link>
-                    )}
-                    {openSupportRequests > 0 && (
-                      <Link
-                        href={`/org/${orgId}/admin/help-requests`}
-                        className="flex items-center justify-between p-2.5 rounded-lg hover:bg-neutral-cream transition-colors"
-                      >
-                        <div className="flex items-center gap-2">
-                          <HelpCircle className="w-4 h-4 text-primary-orange" />
-                          <span className="text-sm text-primary-bark/80">Support Requests</span>
-                        </div>
-                        <span className="text-sm font-bold text-primary-bark">{openSupportRequests}</span>
-                      </Link>
-                    )}
+                <div className="space-y-2">
+                  {/* Total badge */}
+                  <div className="flex items-center justify-between px-1 mb-1">
+                    <span className="text-xs text-primary-bark/50 font-medium">{totalInboxItems} item{totalInboxItems !== 1 ? "s" : ""} need attention</span>
                   </div>
-                </>
+
+                  {unansweredMessages > 0 && (
+                    <Link
+                      href={`/org/${orgId}/admin/messages`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-primary-orange-light border border-primary-orange/20 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-primary-orange/10 flex items-center justify-center">
+                          <MessageSquare className="w-4 h-4 text-primary-orange" />
+                        </div>
+                        <span className="text-sm font-medium text-primary-bark">Foster Messages</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-primary-bark">{unansweredMessages}</span>
+                        <ChevronRight className="w-4 h-4 text-primary-bark/30" />
+                      </div>
+                    </Link>
+                  )}
+
+                  {openSupportRequests > 0 && (
+                    <Link
+                      href={`/org/${orgId}/admin/settings/help-requests`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-100 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                          <HelpCircle className="w-4 h-4 text-amber-600" />
+                        </div>
+                        <span className="text-sm font-medium text-primary-bark">Support Requests</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-primary-bark">{openSupportRequests}</span>
+                        <ChevronRight className="w-4 h-4 text-primary-bark/30" />
+                      </div>
+                    </Link>
+                  )}
+
+                  {pendingAppointmentRequests > 0 && (
+                    <Link
+                      href={`/org/${orgId}/admin/appointments`}
+                      className="flex items-center justify-between p-3 rounded-lg bg-blue-50 border border-blue-100 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <CalendarIcon className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span className="text-sm font-medium text-primary-bark">Appointment Requests</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-primary-bark">{pendingAppointmentRequests}</span>
+                        <ChevronRight className="w-4 h-4 text-primary-bark/30" />
+                      </div>
+                    </Link>
+                  )}
+                </div>
               )}
             </div>
           )
@@ -1561,7 +1573,60 @@ function OrgAdminDashboardContent() {
           </div>
         </div>
 
-        <div 
+        {/* ── Stats Summary Bar ───────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {[
+            {
+              label: "Animals in Care",
+              value: totalAnimalsInCare,
+              icon: PawPrint,
+              iconColor: "text-primary-orange",
+              iconBg: "bg-orange-50",
+              highlight: false,
+            },
+            {
+              label: "Active Fosters",
+              value: activeFosters,
+              icon: Users,
+              iconColor: "text-blue-600",
+              iconBg: "bg-blue-50",
+              highlight: false,
+            },
+            {
+              label: "Need Response",
+              value: totalInboxItems,
+              icon: Inbox,
+              iconColor: totalInboxItems > 0 ? "text-red-600" : "text-emerald-600",
+              iconBg: totalInboxItems > 0 ? "bg-red-50" : "bg-emerald-50",
+              highlight: totalInboxItems > 0,
+            },
+            {
+              label: "Appts (48h)",
+              value: todaysAppointments.length,
+              icon: CalendarIcon,
+              iconColor: "text-purple-600",
+              iconBg: "bg-purple-50",
+              highlight: false,
+            },
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className={`bg-white rounded-xl border p-4 shadow-sm ${stat.highlight ? "border-red-200" : "border-gray-100"}`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-500">{stat.label}</span>
+                <div className={`w-7 h-7 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
+                  <stat.icon className={`w-3.5 h-3.5 ${stat.iconColor}`} />
+                </div>
+              </div>
+              <div className={`text-2xl font-bold ${stat.highlight ? "text-red-600" : "text-gray-900"}`}>
+                {stat.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div
           className={`grid grid-cols-12 auto-rows-auto ${
             isCustomizing ? "gap-4" : "gap-3"
           }`}

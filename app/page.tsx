@@ -2,6 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import {
+  MessageCircle, Pill, Truck, HeartHandshake,
+  Calendar, Package, Users, Stethoscope, Smile,
+  ChevronDown, Quote, Sparkles,
+} from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
@@ -10,12 +15,26 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Subtle keyframes for the device frames */}
+      <style>{`
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-8px); }
+        }
+        @keyframes float-slower {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-6px); }
+        }
+        .float-slow { animation: float-slow 5s ease-in-out infinite; }
+        .float-slower { animation: float-slower 6s ease-in-out infinite; animation-delay: 1s; }
+      `}</style>
+
       <SiteHeader />
 
+      {/* ─── HERO ─────────────────────────────── */}
       <section className="pt-10 sm:pt-12 lg:pt-16 pb-8 sm:pb-12 lg:pb-16" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mx-auto space-y-6 sm:space-y-8 text-center">
-            {/* Dog logo - full color, centered */}
             <div className="flex justify-center mb-2 sm:mb-3">
               <img
                 src="/logo-dog.png"
@@ -23,10 +42,10 @@ export default function Home() {
                 className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28"
               />
             </div>
-            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 leading-tight tracking-tight">
               Fostering and rescue, made easier for everyone involved.
             </h1>
-            
+
             <p className="text-base sm:text-xl lg:text-2xl text-gray-700 leading-relaxed max-w-2xl mx-auto">
               Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
             </p>
@@ -55,176 +74,205 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Curved divider */}
+      {/* curved divider */}
       <div className="relative h-16 sm:h-24" style={{ backgroundColor: "#FDF6EC" }}>
         <svg className="absolute bottom-0 w-full h-16 sm:h-24" viewBox="0 0 1440 96" fill="none" preserveAspectRatio="none">
           <path d="M0 96L1440 96L1440 0C1440 0 1080 96 720 96C360 96 0 0 0 0L0 96Z" fill="white" />
         </svg>
       </div>
 
-      <section className="w-full py-8 sm:py-12 lg:py-16 bg-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2">
-          How Second Tail Works
-        </h2>
+      {/* ─── PROBLEM BAND ─────────────────────── */}
+      <section className="bg-white py-16 sm:py-20 lg:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-14 max-w-3xl mx-auto">
+            <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3" style={{ color: "#D76B1A" }}>
+              Sound familiar?
+            </p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
+              Fostering today is held together by group texts and sticky notes.
+            </h2>
+          </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
-          <button
-            onClick={() => setActiveView("rescue")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
-              activeView === "rescue" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
-          >
-            For Rescue Organizations
-          </button>
-          <button
-            onClick={() => setActiveView("foster")}
-            className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
-              activeView === "foster" ? "text-white shadow-lg" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
-            style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
-          >
-            For Foster Parents
-          </button>
-        </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {[
+              {
+                icon: MessageCircle,
+                title: "Communication",
+                items: ["30-message email chains", "Three group texts no one reads", "Phone numbers lost when volunteers leave"],
+              },
+              {
+                icon: Pill,
+                title: "Medical & care",
+                items: ["Lost prescriptions and dosages", "Vaccine records buried in PDFs", "Behavior notes that die with each transfer"],
+              },
+              {
+                icon: Truck,
+                title: "Logistics",
+                items: ["\"Do we have any puppy food?\"", "Missed pickups and vet visits", "Reimbursements forgotten"],
+              },
+              {
+                icon: HeartHandshake,
+                title: "Foster support",
+                items: ["No one to call at 2am", "Don't know what's normal", "Burnout and silent dropouts"],
+              },
+            ].map((cat) => (
+              <div
+                key={cat.title}
+                className="rounded-2xl p-6 bg-[#FBF8F4] border border-[#5a4a42]/10 hover:border-[#D76B1A]/40 hover:-translate-y-0.5 transition-all"
+              >
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}
+                >
+                  <cat.icon className="w-5 h-5" style={{ color: "#D76B1A" }} />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-3">{cat.title}</h3>
+                <ul className="space-y-2">
+                  {cat.items.map((item) => (
+                    <li key={item} className="text-sm text-gray-600 leading-relaxed flex items-start gap-2">
+                      <span className="text-[#D76B1A] mt-1 flex-shrink-0">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
 
-        {activeView === "foster" ? (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-              <div className="text-center px-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                  style={{ backgroundColor: "#D76B1A" }}
-                >
-                  1
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Sign up and get started</h3>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Create your foster account directly. No invite required—join and connect with rescues
-                </p>
-              </div>
-              <div className="text-center px-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                  style={{ backgroundColor: "#D76B1A" }}
-                >
-                  2
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Connect with rescues and receive placements</h3>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Browse rescues, express interest, and receive animals to foster
-                </p>
-              </div>
-              <div className="text-center px-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                  style={{ backgroundColor: "#D76B1A" }}
-                >
-                  3
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Track care, share updates, request supplies</h3>
-                <p className="text-gray-600 text-sm sm:text-base">
-                  Manage everything in one place and communicate seamlessly with your rescue partner
-                </p>
-              </div>
+          <div className="text-center mt-12 sm:mt-16 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FDF6EC] border border-[#D76B1A]/20 mb-5">
+              <Sparkles className="w-4 h-4" style={{ color: "#D76B1A" }} />
+              <span className="text-sm font-semibold" style={{ color: "#D76B1A" }}>The fix</span>
             </div>
-            <div className="text-center mt-10 sm:mt-14">
-              <Link
-                href="/sign-up/foster"
-                className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white"
-                style={{ backgroundColor: "#D76B1A" }}
-              >
-                Sign Up to Foster
-              </Link>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-              <div className="text-center px-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                  style={{ backgroundColor: "#5a4a42" }}
-                >
-                  1
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Create your org and invite your team members</h3>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                  Register your rescue, add team members, and set up your organization
-                </p>
-              </div>
-              <div className="text-center px-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                  style={{ backgroundColor: "#5a4a42" }}
-                >
-                  2
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Add your animals and invite fosters by email</h3>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                  Onboard your rescue animals and send invitations to foster parents
-                </p>
-              </div>
-              <div className="text-center px-4">
-                <div
-                  className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6"
-                  style={{ backgroundColor: "#5a4a42" }}
-                >
-                  3
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Manage everything from your dashboard. Answer requests. Track care.</h3>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                  Track placements, coordinate appointments, and communicate with your entire foster network
-                </p>
-              </div>
-            </div>
-            <div className="text-center mt-10 sm:mt-14">
-              <Link
-                href="/for-rescue-organizations"
-                className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white"
-                style={{ backgroundColor: "#5a4a42" }}
-              >
-                Learn More
-              </Link>
-            </div>
-          </>
-        )}
+            <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+              Second Tail puts it all in one place — for rescues and the fosters they rely on.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Demo Section - Built for both sides */}
-      <section className="bg-white py-12 sm:py-16 lg:py-20">
+      {/* ─── HOW IT WORKS ─────────────────────── */}
+      <section className="w-full py-12 sm:py-16 lg:py-20 bg-[#FBF8F4]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2 tracking-tight">
+            How Second Tail works
+          </h2>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
+            <button
+              onClick={() => setActiveView("rescue")}
+              className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
+                activeView === "rescue" ? "text-white shadow-lg" : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
+              style={activeView === "rescue" ? { backgroundColor: "#5a4a42" } : {}}
+            >
+              For Rescue Organizations
+            </button>
+            <button
+              onClick={() => setActiveView("foster")}
+              className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
+                activeView === "foster" ? "text-white shadow-lg" : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
+              style={activeView === "foster" ? { backgroundColor: "#D76B1A" } : {}}
+            >
+              For Foster Parents
+            </button>
+          </div>
+
+          {activeView === "foster" ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
+                {[
+                  { n: 1, t: "Sign up and get started", d: "Create your foster account directly. No invite required—join and connect with rescues." },
+                  { n: 2, t: "Connect with rescues and receive placements", d: "Browse rescues, express interest, and receive animals to foster." },
+                  { n: 3, t: "Track care, share updates, request supplies", d: "Manage everything in one place and communicate seamlessly with your rescue partner." },
+                ].map((s) => (
+                  <div key={s.n} className="text-center px-4">
+                    <div
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6 shadow-md"
+                      style={{ backgroundColor: "#D76B1A" }}
+                    >
+                      {s.n}
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{s.t}</h3>
+                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{s.d}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-10 sm:mt-14">
+                <Link
+                  href="/sign-up/foster"
+                  className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  style={{ backgroundColor: "#D76B1A" }}
+                >
+                  Sign Up to Foster
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
+                {[
+                  { n: 1, t: "Create your org and invite your team", d: "Register your rescue, add team members, and set up your organization." },
+                  { n: 2, t: "Add your animals and invite fosters by email", d: "Onboard your rescue animals and send invitations to foster parents." },
+                  { n: 3, t: "Manage everything from one dashboard", d: "Track placements, coordinate appointments, and answer requests in one place." },
+                ].map((s) => (
+                  <div key={s.n} className="text-center px-4">
+                    <div
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6 shadow-md"
+                      style={{ backgroundColor: "#5a4a42" }}
+                    >
+                      {s.n}
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{s.t}</h3>
+                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{s.d}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-10 sm:mt-14">
+                <Link
+                  href="/for-rescue-organizations"
+                  className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                  style={{ backgroundColor: "#5a4a42" }}
+                >
+                  Learn More
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ─── DEMO: Built for both sides ───────── */}
+      <section className="bg-white py-16 sm:py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10 sm:mb-14">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+          <div className="text-center mb-12 sm:mb-16">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-2 tracking-tight">
               Built for both sides of fostering
             </h2>
-            <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
+            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">
               A mobile-first foster experience and a powerful desktop dashboard for rescue teams.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-8 items-center">
             {/* Foster Mobile Preview */}
             <div className="flex flex-col items-center">
-              <div className="relative w-full max-w-[240px] sm:max-w-[260px] aspect-[9/19] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-xl overflow-hidden">
+              <div className="float-slow relative w-full max-w-[240px] sm:max-w-[260px] aspect-[9/19] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
                 <img
                   src="/demo/foster-mobile.png"
                   alt="Foster dashboard on mobile"
                   className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder.svg"
-                  }}
+                  onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
                 />
               </div>
-              <p className="text-sm sm:text-base font-semibold text-gray-900 mt-4">For Fosters</p>
-              <p className="text-xs sm:text-sm text-gray-600">On the go, on your phone</p>
+              <p className="text-base sm:text-lg font-bold text-gray-900 mt-6">For Fosters</p>
+              <p className="text-sm text-gray-600">On the go, on your phone</p>
             </div>
 
             {/* Rescue Desktop Preview */}
             <div className="flex flex-col items-center">
-              <div className="relative w-full aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-xl overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2">
+              <div className="float-slower relative w-full aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                   <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
@@ -233,115 +281,171 @@ export default function Home() {
                   src="/demo/rescue-desktop.png"
                   alt="Rescue admin dashboard on desktop"
                   className="w-full h-full object-cover object-top pt-4"
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder.svg"
-                  }}
+                  onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
                 />
               </div>
-              <p className="text-sm sm:text-base font-semibold text-gray-900 mt-4">For Rescues</p>
-              <p className="text-xs sm:text-sm text-gray-600">Full admin control on desktop</p>
+              <p className="text-base sm:text-lg font-bold text-gray-900 mt-6">For Rescues</p>
+              <p className="text-sm text-gray-600">Full admin control on desktop</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 sm:py-16 lg:py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
-          {activeView === "foster" ? (
-            <>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2">
-                Foster with confidence and support
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
-                Second Tail keeps you connected to your rescue team so you're never figuring it out alone.
-              </p>
-              <Link
-                href="/sign-up/foster"
-            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-colors shadow-lg"
-              style={{ backgroundColor: "#D76B1A" }}
-            >
-              Sign Up to Foster
-              </Link>
-            </>
-          ) : (
-            <>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight px-2">
-                Build a foster network that actually scales.
-              </h2>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto px-2">
-                Second Tail helps rescue organizations coordinate care, reduce admin burden, and focus on what
-                matters—saving more lives.
-              </p>
-              <Link
-                href="/for-rescue-organizations"
-            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg transition-colors shadow-lg"
-              style={{ backgroundColor: "#5a4a42" }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-              >
-                Learn More for Rescues
-              </Link>
-            </>
-          )}
+      {/* ─── FEATURES GRID ────────────────────── */}
+      <section className="bg-[#FBF8F4] py-16 sm:py-20 lg:py-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight mb-4 tracking-tight">
+              Everything in one place.
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600">
+              No more app-hopping, spreadsheet-tracking, or "wait, who has the meds?"
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {[
+              { icon: Smile, title: "Daily updates", desc: "Photos, notes, milestones — all in the foster's pocket." },
+              { icon: Package, title: "Supply requests", desc: "Food, meds, toys — request and track in one tap." },
+              { icon: Calendar, title: "Vet appointments", desc: "Schedule, remind, log outcomes. Nothing slips." },
+              { icon: MessageCircle, title: "In-app messaging", desc: "Direct line to your rescue team. No more group chat hell." },
+              { icon: Users, title: "Foster matching", desc: "Connect rescues with fosters in their area." },
+              { icon: Stethoscope, title: "Medical history", desc: "Vaccines, meds, behavior — everything follows the dog." },
+            ].map((f) => (
+              <div key={f.title} className="bg-white rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                  style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}
+                >
+                  <f.icon className="w-5 h-5" style={{ color: "#D76B1A" }} />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* CTA Banner Section */}
-      <section style={{ backgroundColor: "#D76B1A" }} className="py-16 sm:py-20 lg:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight">
-            Built by someone who actually fosters.
-          </h2>
-          <p className="text-lg sm:text-xl text-white/90 leading-relaxed max-w-2xl mx-auto">
-            Making fostering easier, one dog at a time.
-          </p>
-          <Link
-            href="/for-fosters"
-            className="inline-block w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-orange-600 rounded-full font-semibold text-base sm:text-lg hover:bg-gray-100 transition-colors"
-          >
-            Learn More
-          </Link>
-        </div>
-      </section>
-
-      {/* Two-Column CTA Section */}
-      <section className="py-16 sm:py-20 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Card - Orange */}
-            <div style={{ backgroundColor: "#D76B1A" }} className="rounded-2xl p-8 sm:p-12 text-white flex flex-col justify-between">
-              <div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
-                  For Rescue Organizations
-                </h2>
-                <p className="text-lg sm:text-xl text-white/90 mb-8">
-                  Manage your foster network without the chaos.
+      {/* ─── FOUNDER ──────────────────────────── */}
+      <section className="bg-white py-16 sm:py-20 lg:py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-[#FDF6EC] rounded-3xl p-8 sm:p-12 lg:p-16 relative overflow-hidden">
+            <Quote className="absolute top-6 right-6 w-16 h-16 sm:w-20 sm:h-20 text-[#D76B1A]/15" />
+            <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 items-start sm:items-center relative">
+              {/* Avatar with photo + gradient fallback */}
+              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-[#D76B1A]/40 to-[#5a4a42]/40 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md overflow-hidden">
+                <img
+                  src="/founder.jpg"
+                  alt="Founder of Second Tail"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.currentTarget.style.display = "none" }}
+                />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: "#D76B1A" }}>
+                  From the founder
+                </p>
+                <p className="text-xl sm:text-2xl font-semibold text-gray-900 leading-relaxed mb-4">
+                  "I built this because I was juggling three group chats, a Google Sheet, and a stack of vet receipts — for one foster dog."
+                </p>
+                <p className="text-sm sm:text-base text-gray-600">
+                  — Jarrett, founder &amp; active foster parent
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FAQ ──────────────────────────────── */}
+      <section className="bg-[#FBF8F4] py-16 sm:py-20 lg:py-24">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+              Common questions
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600">Real answers to what rescues ask first.</p>
+          </div>
+          <div className="space-y-3">
+            {[
+              {
+                q: "Is it really free?",
+                a: "Yes — Second Tail is free for foster parents, always. Rescue organizations get a free tier to manage their first foster network, with paid plans coming for larger orgs.",
+              },
+              {
+                q: "How is this different from Petstablished or Shelterluv?",
+                a: "Those tools focus on shelter management and adoptions. Second Tail is built for the day-to-day of fostering — communication, supplies, appointments, and care logging — the work that happens in between intake and adoption.",
+              },
+              {
+                q: "Where does my data live?",
+                a: "Securely on Supabase, hosted in the US. Your foster network's data is yours — we don't sell it, share it, or train models on it.",
+              },
+              {
+                q: "Can my whole volunteer team use it?",
+                a: "Yes. Invite as many team members and fosters as you need. Everyone sees what they're meant to see, no more, no less.",
+              },
+              {
+                q: "What if I only have a few fosters right now?",
+                a: "Perfect. Second Tail works whether you have 2 fosters or 200. Start small and grow into it.",
+              },
+            ].map((item, i) => (
+              <details
+                key={i}
+                className="group bg-white rounded-2xl border border-[#5a4a42]/10 overflow-hidden hover:border-[#D76B1A]/30 transition-colors"
+              >
+                <summary className="flex items-center justify-between cursor-pointer p-5 sm:p-6 list-none">
+                  <span className="font-semibold text-gray-900 text-base sm:text-lg pr-4">{item.q}</span>
+                  <ChevronDown className="w-5 h-5 text-gray-400 group-open:rotate-180 transition-transform flex-shrink-0" />
+                </summary>
+                <div className="px-5 sm:px-6 pb-5 sm:pb-6 text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FINAL TWO-COLUMN CTA ─────────────── */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            {/* Rescue card */}
+            <div
+              className="rounded-3xl p-8 sm:p-10 lg:p-12 text-white flex flex-col"
+              style={{ backgroundColor: "#D76B1A" }}
+            >
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight">
+                For rescue organizations
+              </h3>
+              <p className="text-base sm:text-lg text-white/90 mb-8 flex-1">
+                Manage your foster network without the chaos.
+              </p>
               <Link
                 href="/sign-up/rescue"
-                className="inline-block w-full sm:w-auto px-8 py-4 bg-white text-orange-600 rounded-full font-semibold text-base hover:bg-gray-100 transition-colors text-center"
+                className="inline-flex items-center justify-center w-full sm:w-fit bg-white text-[#D76B1A] rounded-full font-semibold text-base px-8 py-4 hover:bg-gray-50 transition-colors"
               >
-                Register Your Rescue
+                Register Your Rescue →
               </Link>
             </div>
 
-            {/* Right Card - Cream with Border */}
-            <div style={{ backgroundColor: "#FDF6EC", borderColor: "#D76B1A" }} className="rounded-2xl p-8 sm:p-12 border-2 text-gray-900 flex flex-col justify-between">
-              <div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4 leading-tight">
-                  For Foster Parents
-                </h2>
-                <p className="text-lg sm:text-xl text-gray-700 mb-8">
-                  Sign up free and connect with rescues in your area.
-                </p>
-              </div>
+            {/* Foster card */}
+            <div
+              className="rounded-3xl p-8 sm:p-10 lg:p-12 flex flex-col border-2"
+              style={{ backgroundColor: "#FDF6EC", borderColor: "#D76B1A" }}
+            >
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 leading-tight text-gray-900">
+                For foster parents
+              </h3>
+              <p className="text-base sm:text-lg text-gray-700 mb-8 flex-1">
+                Sign up free and connect with rescues in your area.
+              </p>
               <Link
                 href="/sign-up/foster"
-                className="inline-block w-full sm:w-auto px-8 py-4 text-white rounded-full font-semibold text-base hover:opacity-90 transition-colors text-center"
+                className="inline-flex items-center justify-center w-full sm:w-fit text-white rounded-full font-semibold text-base px-8 py-4 hover:opacity-90 transition-opacity"
                 style={{ backgroundColor: "#D76B1A" }}
               >
-                Sign Up for Fosters
+                Sign Up to Foster →
               </Link>
             </div>
           </div>

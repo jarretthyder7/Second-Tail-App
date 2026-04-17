@@ -184,18 +184,8 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
-        // Send branded confirmation email with button
-        fetch("/api/auth/create-foster-profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: authData.user.id,
-            email,
-            name: fullName,
-          }),
-        }).catch(err => {
-          console.error("[v0] Failed to send confirmation email:", err)
-        })
+        // Supabase automatically sends a confirmation email
+        // Profile will be created in auth callback when user clicks the link
       }
 
       router.push(`/auth/sign-up-success?type=foster&email=${encodeURIComponent(email)}`)

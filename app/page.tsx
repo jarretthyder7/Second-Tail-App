@@ -60,7 +60,7 @@ export default function Home() {
                 Register Your Rescue
               </Link>
               <Link
-                href="/sign-up/foster"
+                href="/for-fosters"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
                 I'm a foster parent →

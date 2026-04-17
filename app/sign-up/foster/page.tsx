@@ -172,37 +172,26 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
-        // Create profile
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: authData.user.id,
-          email: email,
-          name: fullName,
-          role: "foster",
-          organization_id: null,
+        const profileResponse = await fetch("/api/auth/create-foster-profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: authData.user.id,
+            email,
+            name: fullName,
+            city,
+            state,
+            livingSituation,
+            pets,
+            dogSizes,
+          }),
         })
 
-        if (profileError) {
-          throw new Error("Failed to create profile")
+        if (!profileResponse.ok) {
+          const data = await profileResponse.json()
+          throw new Error(data.error || "Failed to create profile")
         }
 
-        // Create foster profile with vetting answers
-        const { error: fosterProfileError } = await supabase.from("foster_profiles").insert({
-          user_id: authData.user.id,
-          city,
-          state,
-          housing_type: livingSituation,
-          has_yard: livingSituation.includes("yard"),
-          has_pets: pets.length > 0 && !pets.includes("None"),
-          existing_pets_description: pets.join(", "),
-          preferred_dog_sizes: dogSizes,
-          onboarding_completed: false,
-        })
-
-        if (fosterProfileError) {
-          throw new Error("Failed to create foster profile")
-        }
-
-        // Send welcome email
         try {
           await fetch("/api/email/send", {
             method: "POST",
@@ -214,7 +203,7 @@ function FosterSignUpForm() {
             }),
           })
         } catch (emailError) {
-          // Welcome email failed to send, but signup was successful
+          // Welcome email failed but signup succeeded
         }
       }
 

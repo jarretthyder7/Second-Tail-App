@@ -85,10 +85,10 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10 sm:mb-14 max-w-3xl mx-auto">
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 leading-tight tracking-tight mb-4">
-              Everything fostering needs, in one place.
+              One platform. Built for rescues — and the fosters they rely on.
             </h2>
             <p className="text-base sm:text-lg text-gray-600">
-              Four things Second Tail handles for you and your foster team.
+              Four ways Second Tail powers your rescue and supports your foster network.
             </p>
           </div>
 
@@ -97,26 +97,26 @@ export default function Home() {
               {
                 icon: MessageCircle,
                 title: "Coordinate",
-                tagline: "Stay in sync with your team",
-                items: ["One inbox per foster", "Direct messaging with your rescue", "No more scattered group chats"],
+                tagline: "Keep your team and fosters in sync",
+                items: ["One inbox per animal", "Direct messaging across your network", "No more scattered group chats"],
               },
               {
                 icon: Stethoscope,
                 title: "Care",
-                tagline: "Track every detail",
-                items: ["Medical history & vaccine records", "Medication schedules & dosages", "Behavior notes that follow the dog"],
+                tagline: "Every animal's history in one place",
+                items: ["Medical records & vaccine history", "Medication schedules & dosages", "Behavior notes that follow each dog"],
               },
               {
                 icon: Truck,
                 title: "Logistics",
-                tagline: "Run the day-to-day",
-                items: ["Vet appointments", "Supply requests", "Pickups & drop-offs"],
+                tagline: "Run the day-to-day without the texts",
+                items: ["Vet appointments on a shared calendar", "Supply requests and approvals", "Pickups, drop-offs, and reimbursements"],
               },
               {
                 icon: HeartHandshake,
                 title: "Support",
-                tagline: "Be there for your fosters",
-                items: ["Emergency contacts & resources", "Quick-answer help", "Daily updates & milestones"],
+                tagline: "Back up your fosters, 24/7",
+                items: ["Emergency contacts & resources", "Quick-answer help when it matters", "Daily updates and milestones"],
               },
             ].map((cat) => (
               <div
@@ -145,20 +145,23 @@ export default function Home() {
 
           <div className="text-center mt-12 sm:mt-16 max-w-2xl mx-auto">
             <p className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-              All your fostering, finally in one place.
+              Everything your rescue runs on, finally in one place.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ─── HOW IT WORKS ─────────────────────── */}
-      <section className="w-full py-12 sm:py-16 lg:py-20 bg-[#FBF8F4]">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ─── HOW IT WORKS + DEMO (combined) ───── */}
+      <section className="w-full py-16 sm:py-20 lg:py-24 bg-[#FBF8F4]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 text-center mb-6 sm:mb-8 px-2 tracking-tight">
             How Second Tail works
           </h2>
+          <p className="text-base sm:text-lg text-gray-600 text-center max-w-2xl mx-auto mb-10 sm:mb-12 px-2">
+            A powerful desktop dashboard for rescue teams and a mobile-first experience for fosters on the go.
+          </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-16 px-4">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16 px-4">
             <button
               onClick={() => setActiveView("rescue")}
               className={`w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-3 rounded-full font-semibold transition-all text-base ${
@@ -179,115 +182,102 @@ export default function Home() {
             </button>
           </div>
 
-          {activeView === "foster" ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
-                {[
-                  { n: 1, t: "Sign up and get started", d: "Create your foster account directly. No invite required—join and connect with rescues." },
-                  { n: 2, t: "Connect with rescues and receive placements", d: "Browse rescues, express interest, and receive animals to foster." },
-                  { n: 3, t: "Track care, share updates, request supplies", d: "Manage everything in one place and communicate seamlessly with your rescue partner." },
-                ].map((s) => (
-                  <div key={s.n} className="text-center px-4">
-                    <div
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6 shadow-md"
-                      style={{ backgroundColor: "#D76B1A" }}
-                    >
-                      {s.n}
-                    </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{s.t}</h3>
-                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{s.d}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="text-center mt-10 sm:mt-14">
-                <Link
-                  href="/sign-up/foster"
-                  className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                  style={{ backgroundColor: "#D76B1A" }}
-                >
-                  Sign Up to Foster
-                </Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
+          {activeView === "rescue" ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Steps */}
+              <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
                 {[
                   { n: 1, t: "Create your org and invite your team", d: "Register your rescue, add team members, and set up your organization." },
                   { n: 2, t: "Add your animals and invite fosters by email", d: "Onboard your rescue animals and send invitations to foster parents." },
                   { n: 3, t: "Manage everything from one dashboard", d: "Track placements, coordinate appointments, and answer requests in one place." },
                 ].map((s) => (
-                  <div key={s.n} className="text-center px-4">
+                  <div key={s.n} className="flex gap-4 sm:gap-5">
                     <div
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white flex items-center justify-center text-xl sm:text-2xl font-bold mx-auto mb-4 sm:mb-6 shadow-md"
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-white flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0 shadow-md"
                       style={{ backgroundColor: "#5a4a42" }}
                     >
                       {s.n}
                     </div>
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{s.t}</h3>
-                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{s.d}</p>
+                    <div className="pt-1 sm:pt-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5">{s.t}</h3>
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{s.d}</p>
+                    </div>
                   </div>
                 ))}
-              </div>
-              <div className="text-center mt-10 sm:mt-14">
-                <Link
-                  href="/for-rescue-organizations"
-                  className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-colors text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
-                  style={{ backgroundColor: "#5a4a42" }}
-                >
-                  Learn More
-                </Link>
-              </div>
-            </>
-          )}
-        </div>
-      </section>
-
-      {/* ─── DEMO: Built for both sides ───────── */}
-      <section className="bg-white py-16 sm:py-20 lg:py-24">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-2 tracking-tight">
-              Built for both sides of fostering
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">
-              A mobile-first foster experience and a powerful desktop dashboard for rescue teams.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-8 items-center">
-            {/* Foster Mobile Preview */}
-            <div className="flex flex-col items-center">
-              <div className="float-slow relative w-full max-w-[240px] sm:max-w-[260px] aspect-[9/19] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
-                <img
-                  src="/demo/foster-mobile.png"
-                  alt="Foster dashboard on mobile"
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
-                />
-              </div>
-              <p className="text-base sm:text-lg font-bold text-gray-900 mt-6">For Fosters</p>
-              <p className="text-sm text-gray-600">On the go, on your phone</p>
-            </div>
-
-            {/* Rescue Desktop Preview */}
-            <div className="flex flex-col items-center">
-              <div className="float-slower relative w-full aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
-                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                <div className="pt-2 sm:pt-4 pl-0 sm:pl-[68px]">
+                  <Link
+                    href="/sign-up/rescue"
+                    className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                    style={{ backgroundColor: "#5a4a42" }}
+                  >
+                    Register Your Rescue
+                  </Link>
                 </div>
-                <img
-                  src="/demo/rescue-desktop.png"
-                  alt="Rescue admin dashboard on desktop"
-                  className="w-full h-full object-cover object-top pt-4"
-                  onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
-                />
               </div>
-              <p className="text-base sm:text-lg font-bold text-gray-900 mt-6">For Rescues</p>
-              <p className="text-sm text-gray-600">Full admin control on desktop</p>
+
+              {/* Desktop frame */}
+              <div className="flex justify-center order-1 lg:order-2">
+                <div className="float-slower relative w-full max-w-xl aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                  </div>
+                  <img
+                    src="/demo/rescue-desktop.png"
+                    alt="Rescue admin dashboard on desktop"
+                    className="w-full h-full object-cover object-top pt-4"
+                    onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Steps */}
+              <div className="space-y-6 sm:space-y-8 order-2 lg:order-1">
+                {[
+                  { n: 1, t: "Sign up and get started", d: "Create your foster account directly. No invite required—join and connect with rescues." },
+                  { n: 2, t: "Connect with rescues and receive placements", d: "Browse rescues, express interest, and receive animals to foster." },
+                  { n: 3, t: "Track care, share updates, request supplies", d: "Manage everything in one place and communicate seamlessly with your rescue partner." },
+                ].map((s) => (
+                  <div key={s.n} className="flex gap-4 sm:gap-5">
+                    <div
+                      className="w-12 h-12 sm:w-14 sm:h-14 rounded-full text-white flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0 shadow-md"
+                      style={{ backgroundColor: "#D76B1A" }}
+                    >
+                      {s.n}
+                    </div>
+                    <div className="pt-1 sm:pt-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1.5">{s.t}</h3>
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{s.d}</p>
+                    </div>
+                  </div>
+                ))}
+                <div className="pt-2 sm:pt-4 pl-0 sm:pl-[68px]">
+                  <Link
+                    href="/sign-up/foster"
+                    className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                    style={{ backgroundColor: "#D76B1A" }}
+                  >
+                    Sign Up to Foster
+                  </Link>
+                </div>
+              </div>
+
+              {/* Phone frame */}
+              <div className="flex justify-center order-1 lg:order-2">
+                <div className="float-slow relative w-full max-w-[240px] sm:max-w-[260px] aspect-[9/19] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
+                  <img
+                    src="/demo/foster-mobile.png"
+                    alt="Foster dashboard on mobile"
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

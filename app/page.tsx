@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import {
   MessageCircle, Truck, HeartHandshake, Stethoscope,
-  ChevronDown, Quote,
+  ChevronDown,
 } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
@@ -278,37 +278,6 @@ export default function Home() {
               </div>
             </div>
           )}
-        </div>
-      </section>
-
-      {/* ─── FOUNDER ──────────────────────────── */}
-      <section className="bg-white py-16 sm:py-20 lg:py-24">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[#FDF6EC] rounded-3xl p-8 sm:p-12 lg:p-16 relative overflow-hidden">
-            <Quote className="absolute top-6 right-6 w-16 h-16 sm:w-20 sm:h-20 text-[#D76B1A]/15" />
-            <div className="flex flex-col sm:flex-row gap-6 sm:gap-10 items-start sm:items-center relative">
-              {/* Avatar with photo + gradient fallback */}
-              <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gradient-to-br from-[#D76B1A]/40 to-[#5a4a42]/40 flex items-center justify-center flex-shrink-0 border-4 border-white shadow-md overflow-hidden">
-                <img
-                  src="/founder.jpg"
-                  alt="Founder of Second Tail"
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.currentTarget.style.display = "none" }}
-                />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2" style={{ color: "#D76B1A" }}>
-                  From the founder
-                </p>
-                <p className="text-xl sm:text-2xl font-semibold text-gray-900 leading-relaxed mb-4">
-                  "I built this because I was juggling three group chats, a Google Sheet, and a stack of vet receipts — for one foster dog."
-                </p>
-                <p className="text-sm sm:text-base text-gray-600">
-                  — Jarrett, founder &amp; active foster parent
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

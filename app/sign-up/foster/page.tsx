@@ -166,6 +166,7 @@ function FosterSignUpForm() {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: {
             name: fullName,
+            full_name: fullName,
             role: "foster",
             city,
             state,

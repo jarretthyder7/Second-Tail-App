@@ -29,6 +29,28 @@ export async function GET(request: Request) {
         .eq("id", data.user.id)
         .single()
 
+      // Check if this is a first-time email confirmation (user just confirmed their email)
+      // email_confirmed_at being set recently means they just clicked the confirmation link
+      const emailConfirmedAt = data.user.email_confirmed_at ? new Date(data.user.email_confirmed_at) : null
+      const isRecentConfirmation = emailConfirmedAt && (Date.now() - emailConfirmedAt.getTime() < 60000) // within 1 minute
+
+      // If profile exists but this is a first-time email confirmation, send welcome email
+      if (profile && profile.role === "foster" && isRecentConfirmation) {
+        try {
+          await fetch(`${origin}/api/email/send`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "welcome-foster",
+              email: data.user.email,
+              name: profile.name || data.user.email?.split("@")[0],
+            }),
+          })
+        } catch {
+          // Welcome email failed but confirmation succeeded
+        }
+      }
+
       // If no profile exists (Google OAuth signup), create one
       if (!profile) {
         const isRescueAdminSignup = signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin"
@@ -170,11 +192,11 @@ export async function GET(request: Request) {
           redirectPath = `/sign-up/rescue?error=setup-incomplete`
         }
       }
-      // Redirect fosters: new signups go to onboarding, returning users go to their dashboard
+      // Redirect fosters: new signups go to dashboard, returning users go to their dashboard
       else if (profile.role === "foster") {
         if (isProfileIncomplete) {
-          // New foster completing email verification — send to onboarding
-          redirectPath = "/foster/onboarding"
+          // New foster completing email verification — send to dashboard
+          redirectPath = "/foster/dashboard"
         } else if (profile.organization_id) {
           redirectPath = `/org/${profile.organization_id}/foster/dashboard`
         } else {

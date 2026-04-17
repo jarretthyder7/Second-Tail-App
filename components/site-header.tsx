@@ -8,8 +8,6 @@ export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false)
   const [signupDropdownOpen, setSignupDropdownOpen] = useState(false)
-  const [mobileSignupOpen, setMobileSignupOpen] = useState(false)
-  const [mobileLoginOpen, setMobileLoginOpen] = useState(false)
 
   const loginDropdownRef = useRef<HTMLDivElement>(null)
   const signupDropdownRef = useRef<HTMLDivElement>(null)
@@ -146,123 +144,95 @@ export function SiteHeader() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden pt-4 pb-3 border-t border-gray-100 mt-4 space-y-3">
+          <div className="md:hidden pt-5 pb-4 border-t border-gray-100 mt-4 space-y-5">
 
-            {/* CTA Buttons: Sign Up + Login at the top */}
-            <div className="flex flex-col gap-2 px-1">
-              {/* Sign Up dropdown - primary */}
-              <div>
-                <button
-                  onClick={() => { setMobileSignupOpen(!mobileSignupOpen); setMobileLoginOpen(false) }}
-                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm text-white transition-colors hover:opacity-90 shadow-sm"
-                  style={{ backgroundColor: "#D76B1A" }}
+            {/* Sign-up cards (primary action) */}
+            <div className="space-y-2.5 px-1">
+              {/* Rescue Org card - primary (orange filled) */}
+              <div
+                className="rounded-2xl p-4 text-white shadow-sm"
+                style={{ backgroundColor: "#D76B1A" }}
+              >
+                <Link
+                  href="/sign-up/rescue"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 hover:opacity-95 transition-opacity"
                 >
-                  <span>Sign Up</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileSignupOpen ? "rotate-180" : ""}`} />
-                </button>
-                {mobileSignupOpen && (
-                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <Link
-                      href="/sign-up/rescue"
-                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-amber-50 transition-colors"
-                      onClick={() => { setMobileMenuOpen(false); setMobileSignupOpen(false) }}
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
-                        <Users className="w-4 h-4" style={{ color: "#5a4a42" }} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Rescue Org</div>
-                        <div className="text-xs text-gray-500">Create your account</div>
-                      </div>
-                    </Link>
-                    <div className="h-px bg-gray-100 mx-4" />
-                    <Link
-                      href="/sign-up/foster"
-                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors"
-                      onClick={() => { setMobileMenuOpen(false); setMobileSignupOpen(false) }}
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
-                        <Heart className="w-4 h-4" style={{ color: "#D76B1A" }} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Foster Parent</div>
-                        <div className="text-xs text-gray-500">Create your account</div>
-                      </div>
-                    </Link>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/20">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
-                )}
+                  <div className="flex-1">
+                    <div className="font-semibold text-base">Register Your Rescue</div>
+                    <div className="text-xs text-white/80">Manage your foster network</div>
+                  </div>
+                </Link>
+                <div className="flex justify-end mt-1">
+                  <Link
+                    href="/for-rescue-organizations"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-xs font-medium text-white/90 hover:text-white underline-offset-2 hover:underline"
+                  >
+                    Learn more →
+                  </Link>
+                </div>
               </div>
 
-              {/* Login dropdown - secondary */}
-              <div>
-                <button
-                  onClick={() => { setMobileLoginOpen(!mobileLoginOpen); setMobileSignupOpen(false) }}
-                  className="flex items-center justify-between w-full px-5 py-3 rounded-full font-semibold text-sm border-2 transition-colors hover:bg-gray-50"
-                  style={{ borderColor: "rgba(90, 74, 66, 0.2)", color: "#5a4a42" }}
+              {/* Foster card - secondary (orange outlined) */}
+              <div
+                className="rounded-2xl p-4 border-2"
+                style={{ borderColor: "#D76B1A" }}
+              >
+                <Link
+                  href="/sign-up/foster"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-3 hover:opacity-90 transition-opacity"
                 >
-                  <span>Login</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${mobileLoginOpen ? "rotate-180" : ""}`} />
-                </button>
-                {mobileLoginOpen && (
-                  <div className="mt-1.5 mx-1 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <Link
-                      href="/login/rescue"
-                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-amber-50 transition-colors"
-                      onClick={() => { setMobileMenuOpen(false); setMobileLoginOpen(false) }}
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.12)" }}>
-                        <Users className="w-4 h-4" style={{ color: "#5a4a42" }} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Rescue Org</div>
-                        <div className="text-xs text-gray-500">Login to your dashboard</div>
-                      </div>
-                    </Link>
-                    <div className="h-px bg-gray-100 mx-4" />
-                    <Link
-                      href="/login/foster"
-                      className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-orange-50 transition-colors"
-                      onClick={() => { setMobileMenuOpen(false); setMobileLoginOpen(false) }}
-                    >
-                      <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}>
-                        <Heart className="w-4 h-4" style={{ color: "#D76B1A" }} />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900">Foster Parent</div>
-                        <div className="text-xs text-gray-500">Login to your dashboard</div>
-                      </div>
-                    </Link>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: "rgba(215, 107, 26, 0.12)" }}
+                  >
+                    <Heart className="w-5 h-5" style={{ color: "#D76B1A" }} />
                   </div>
-                )}
+                  <div className="flex-1">
+                    <div className="font-semibold text-base text-gray-900">Sign Up to Foster</div>
+                    <div className="text-xs text-gray-500">Connect with rescues near you</div>
+                  </div>
+                </Link>
+                <div className="flex justify-end mt-1">
+                  <Link
+                    href="/for-fosters"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="text-xs font-medium hover:underline underline-offset-2"
+                    style={{ color: "#D76B1A" }}
+                  >
+                    Learn more →
+                  </Link>
+                </div>
               </div>
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-gray-100 mx-1" />
-
-            {/* Learn More section */}
+            {/* Quiet login row */}
             <div className="px-1">
-              <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Learn More</p>
-              <div className="space-y-0.5">
+              <div className="flex items-center gap-3 px-2">
+                <div className="flex-1 h-px bg-gray-100" />
+                <span className="text-xs text-gray-400">Already a member?</span>
+                <div className="flex-1 h-px bg-gray-100" />
+              </div>
+              <div className="flex items-center justify-center gap-5 mt-3">
                 <Link
-                  href="/for-rescue-organizations"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                  href="/login/rescue"
                   onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(90, 74, 66, 0.1)" }}>
-                    <Users className="w-3.5 h-3.5" style={{ color: "#5a4a42" }} />
-                  </div>
-                  For Rescue Organizations
+                  Login as Rescue
                 </Link>
+                <span className="text-gray-300">·</span>
                 <Link
-                  href="/for-fosters"
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                  href="/login/foster"
                   onClick={() => setMobileMenuOpen(false)}
+                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "rgba(215, 107, 26, 0.1)" }}>
-                    <Heart className="w-3.5 h-3.5" style={{ color: "#D76B1A" }} />
-                  </div>
-                  For Fosters
+                  Login as Foster
                 </Link>
               </div>
             </div>

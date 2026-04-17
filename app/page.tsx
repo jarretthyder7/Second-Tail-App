@@ -31,22 +31,26 @@ export default function Home() {
               Rescue coordination without the chaos. Invite fosters, assign animals, track appointments, handle supply requests — everything from one dashboard.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-5 justify-center pt-4 sm:pt-6">
               <Link
                 href="/sign-up/rescue"
-                className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
+                className="inline-flex items-center justify-center w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 style={{ backgroundColor: "#D76B1A" }}
               >
                 Register Your Rescue
               </Link>
               <Link
                 href="/sign-up/foster"
-                className="inline-flex items-center justify-center w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 border-2 rounded-full font-semibold text-sm sm:text-base transition-colors"
-                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+                className="inline-flex items-center justify-center text-sm sm:text-base font-semibold transition-colors hover:underline underline-offset-4"
+                style={{ color: "#D76B1A" }}
               >
-                Sign Up to Foster
+                Or sign up as a foster →
               </Link>
             </div>
+
+            <p className="text-xs sm:text-sm text-gray-500 pt-2">
+              Free for foster parents · No credit card required · Built by a foster
+            </p>
           </div>
         </div>
       </section>

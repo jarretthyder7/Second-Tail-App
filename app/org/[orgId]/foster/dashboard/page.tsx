@@ -162,7 +162,7 @@ export default function FosterDashboardPage() {
                   <div>
                     <p className="font-semibold text-sm text-foreground">{apt.title}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {new Date(apt.appointment_date).toLocaleDateString("en-US", {
+                      {new Date(apt.appointment_date).toLocaleString("en-US", {
                         month: "short",
                         day: "numeric",
                         hour: "2-digit",

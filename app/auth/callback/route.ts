@@ -23,6 +23,11 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      // If a ?next= param was provided (e.g. password reset), redirect there immediately
+      if (next && next !== "/") {
+        return NextResponse.redirect(`${origin}${next}`)
+      }
+
       let { data: profile } = await supabase
         .from("profiles")
         .select("role, organization_id, name, phone, city, state, experience_level, dog_size_preference, availability")

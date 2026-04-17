@@ -241,21 +241,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Decorative divider */}
-      <div className="max-w-4xl mx-auto px-8 py-8 sm:py-12">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#D76B1A]/30 to-transparent"></div>
-          <div className="flex gap-2">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#D76B1A" }}></div>
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#5a4a42" }}></div>
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#D76B1A" }}></div>
-          </div>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#5a4a42]/30 to-transparent"></div>
-        </div>
-      </div>
-
-
-
       <section className="bg-gradient-to-br from-gray-50 to-gray-100 py-12 sm:py-16 lg:py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 sm:space-y-8">
           {activeView === "foster" ? (

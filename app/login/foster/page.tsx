@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
@@ -44,7 +44,7 @@ const Heart = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-export default function FosterLoginPage() {
+function FosterLoginContent() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
@@ -229,5 +229,13 @@ export default function FosterLoginPage() {
       </div>
       <SiteFooter />
     </div>
+  )
+}
+
+export default function FosterLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <FosterLoginContent />
+    </Suspense>
   )
 }

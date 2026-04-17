@@ -180,111 +180,109 @@ export default function RequestAppointmentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background-soft p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
-        <Link
-          href={`/org/${orgId}/foster/dashboard`}
-          className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-primary-bark mb-6 transition"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Dashboard
-        </Link>
+    <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <Link
+        href={`/org/${orgId}/foster/dashboard`}
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-5 transition"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Dashboard
+      </Link>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-primary-orange/10 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-primary-orange" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl">Request Appointment</CardTitle>
-                <CardDescription>Schedule a vet visit, check-up, or meeting with the rescue team</CardDescription>
-              </div>
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
+          <Calendar className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 leading-tight">Request Appointment</h1>
+          <p className="text-sm text-gray-500">Schedule a vet visit, check-up, or meeting</p>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+          <div>
+            <Label htmlFor="appointmentType" className="text-sm font-semibold text-gray-700 mb-1.5 block">Appointment Type *</Label>
+            <select
+              id="appointmentType"
+              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-200"
+              value={formData.appointmentType}
+              onChange={(e) => setFormData({ ...formData, appointmentType: e.target.value })}
+              required
+            >
+              <option value="">Select type...</option>
+              <option value="vet-checkup">Veterinary Check-up</option>
+              <option value="vaccination">Vaccination</option>
+              <option value="emergency-vet">Emergency Vet Visit</option>
+              <option value="behavioral-consult">Behavioral Consultation</option>
+              <option value="grooming">Grooming Appointment</option>
+              <option value="training">Training Session</option>
+              <option value="foster-meeting">Foster Team Meeting</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="preferredDate" className="text-sm font-semibold text-gray-700 mb-1.5 block">Preferred Date *</Label>
+              <Input
+                id="preferredDate"
+                type="date"
+                value={formData.preferredDate}
+                onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
+                className="rounded-xl border-gray-200 py-3"
+                required
+              />
             </div>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="appointmentType">Appointment Type *</Label>
-                <select
-                  id="appointmentType"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  value={formData.appointmentType}
-                  onChange={(e) => setFormData({ ...formData, appointmentType: e.target.value })}
-                  required
-                >
-                  <option value="">Select type...</option>
-                  <option value="vet-checkup">Veterinary Check-up</option>
-                  <option value="vaccination">Vaccination</option>
-                  <option value="emergency-vet">Emergency Vet Visit</option>
-                  <option value="behavioral-consult">Behavioral Consultation</option>
-                  <option value="grooming">Grooming Appointment</option>
-                  <option value="training">Training Session</option>
-                  <option value="foster-meeting">Foster Team Meeting</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+            <div>
+              <Label htmlFor="preferredTime" className="text-sm font-semibold text-gray-700 mb-1.5 block">Preferred Time *</Label>
+              <Input
+                id="preferredTime"
+                type="time"
+                value={formData.preferredTime}
+                onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
+                className="rounded-xl border-gray-200 py-3"
+                required
+              />
+            </div>
+          </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="preferredDate">Preferred Date *</Label>
-                  <Input
-                    id="preferredDate"
-                    type="date"
-                    value={formData.preferredDate}
-                    onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                    required
-                  />
-                </div>
+          <div>
+            <Label htmlFor="reason" className="text-sm font-semibold text-gray-700 mb-1.5 block">Reason *</Label>
+            <Input
+              id="reason"
+              placeholder="Brief description of why you need this appointment"
+              value={formData.reason}
+              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
+              className="rounded-xl border-gray-200 py-3"
+              required
+            />
+          </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="preferredTime">Preferred Time *</Label>
-                  <Input
-                    id="preferredTime"
-                    type="time"
-                    value={formData.preferredTime}
-                    onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
+          <div>
+            <Label htmlFor="notes" className="text-sm font-semibold text-gray-700 mb-1.5 block">Additional Notes</Label>
+            <Textarea
+              id="notes"
+              placeholder="Any extra details the rescue team should know..."
+              rows={3}
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              className="rounded-xl border-gray-200 resize-none"
+            />
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="reason">Reason for Appointment *</Label>
-                <Input
-                  id="reason"
-                  placeholder="Brief description of why you need this appointment"
-                  value={formData.reason}
-                  onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="notes">Additional Notes</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Any additional details about your request..."
-                  rows={4}
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button type="submit" disabled={loading} className="flex-1">
-                  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                  Submit Request
-                </Button>
-                <Link href={`/org/${orgId}/foster/dashboard`}>
-                  <Button type="button" variant="outline" disabled={loading}>
-                    Cancel
-                  </Button>
-                </Link>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3.5 rounded-xl font-semibold text-sm text-white transition hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+            style={{ backgroundColor: "var(--brand-primary, #D76B1A)" }}
+          >
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? "Submitting..." : "Submit Request"}
+          </button>
+        </form>
       </div>
     </div>
   )

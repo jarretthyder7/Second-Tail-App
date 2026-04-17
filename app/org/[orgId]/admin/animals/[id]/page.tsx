@@ -112,6 +112,8 @@ function AdminDogDetailContent() {
   const [selectedNewFoster, setSelectedNewFoster] = useState<string>("")
   const [pendingStageChange, setPendingStageChange] = useState<string | null>(null)
   const [showStageConfirmation, setShowStageConfirmation] = useState(false)
+  const [showReturnConfirmation, setShowReturnConfirmation] = useState(false)
+  const [isReturning, setIsReturning] = useState(false)
   const [fosterConversations, setFosterConversations] = useState<any[]>([])
 
   useEffect(() => {
@@ -670,6 +672,40 @@ function AdminDogDetailContent() {
     loadAvailableForsters()
   }
 
+  const handleReturnToRescue = async () => {
+    if (!dog) return
+    setIsReturning(true)
+    try {
+      const supabase = createClient()
+      const { error: updateError } = await supabase
+        .from("dogs")
+        .update({ foster_id: null, stage: "intake", status: "available", updated_at: new Date().toISOString() })
+        .eq("id", dogId)
+
+      if (updateError) throw updateError
+
+      const fosterName = dog.foster?.name || dog.foster?.email || "Unknown Foster"
+      await createTimelineEvent({
+        animal_id: dogId,
+        type: "status_change",
+        title: "Returned to rescue care",
+        description: `${dog.name} was returned to rescue care from ${fosterName}`,
+        event_date: new Date().toISOString(),
+        created_by: "Admin",
+        visible_to_foster: true,
+        metadata: { previous_foster_id: dog.foster_id, previous_foster_name: fosterName },
+      })
+
+      toast({ title: "Returned to rescue care", description: `${dog.name} has been returned to rescue care` })
+      setShowReturnConfirmation(false)
+      await refetchDog()
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to return dog to rescue", variant: "destructive" })
+    } finally {
+      setIsReturning(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -730,6 +766,38 @@ function AdminDogDetailContent() {
 
   return (
     <div className="min-h-screen bg-[#FDF8F3]">
+      {showReturnConfirmation && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-amber-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-amber-600" />
+              </div>
+              <h3 className="text-xl font-bold text-[#5A4A42]">Return to Rescue Care</h3>
+            </div>
+            <p className="text-[#5A4A42]/80 mb-6">
+              Are you sure you want to return <strong>{dog?.name}</strong> to rescue care? This will remove them from{" "}
+              <strong>{dog?.foster?.name || dog?.foster?.email}</strong>&apos;s care.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowReturnConfirmation(false)}
+                className="flex-1 px-4 py-2 border border-[#E5DED4] rounded-xl text-[#5A4A42] hover:bg-[#FDF8F3] transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReturnToRescue}
+                disabled={isReturning}
+                className="flex-1 px-4 py-2 bg-[#D76B1A] text-white rounded-xl hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
+              >
+                {isReturning ? "Returning..." : "Confirm Return"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showStageConfirmation && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
@@ -996,6 +1064,12 @@ function AdminDogDetailContent() {
                       >
                         {dog.foster.name || dog.foster.email}
                       </Link>
+                      <button
+                        onClick={() => setShowReturnConfirmation(true)}
+                        className="mt-3 w-full px-3 py-2 border border-[#E5DED4] rounded-lg text-sm text-[#5A4A42] hover:bg-[#FDF8F3] transition"
+                      >
+                        Return to Rescue
+                      </button>
                     </div>
                   )}
 

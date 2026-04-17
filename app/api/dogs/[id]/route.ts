@@ -46,7 +46,6 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     const { data: dog, error: dogError } = await supabase.from("dogs").select("*").eq("id", dogId).maybeSingle()
 
     if (dogError) {
-      console.error("[v0] Database error fetching dog:", dogError.message, dogId)
       return NextResponse.json({ error: "Database error", message: dogError.message }, { status: 500 })
     }
 
@@ -84,7 +83,6 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 
     return NextResponse.json(dog)
   } catch (error) {
-    console.error("[v0] Error in dogs API:", error)
     return NextResponse.json(
       {
         error: "Server error",
@@ -122,7 +120,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { data: dog, error: dogError } = await supabase.from("dogs").select("*").eq("id", dogId).maybeSingle()
 
     if (dogError) {
-      console.error("[v0] Error loading dog for PATCH:", dogError.message)
       return NextResponse.json({ error: "Database error", message: dogError.message }, { status: 500 })
     }
 
@@ -149,7 +146,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       .maybeSingle()
 
     if (error) {
-      console.error("[v0] Error updating dog:", error)
       return NextResponse.json({ error: "Failed to update dog", details: error.message }, { status: 400 })
     }
 
@@ -183,7 +179,6 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     return NextResponse.json(updatedDog)
   } catch (error) {
-    console.error("[v0] Unexpected error:", error)
     return NextResponse.json(
       {
         error: "Server error",

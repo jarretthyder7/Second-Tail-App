@@ -66,7 +66,6 @@ export function JourneyTab({ dog }: JourneyTabProps) {
           .order("date", { ascending: false })
 
         if (logsError) {
-          console.error("[v0] Error fetching daily logs:", logsError)
           setEvents([])
           setLoading(false)
           return
@@ -98,7 +97,6 @@ export function JourneyTab({ dog }: JourneyTabProps) {
 
         setEvents(journeyEvents)
       } catch (err) {
-        console.error("[v0] Error in fetchJourneyEvents:", err)
         setEvents([])
       } finally {
         setLoading(false)

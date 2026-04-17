@@ -57,7 +57,6 @@ export async function createTimelineEvent(event: Omit<TimelineEvent, "id" | "cre
     .single()
 
   if (error) {
-    console.error("[v0] Error creating timeline event:", error)
     throw error
   }
 
@@ -81,7 +80,6 @@ export async function fetchTimelineEvents(animalId: string, viewerRole: "admin" 
   const { data, error } = await query
 
   if (error) {
-    console.error("[v0] Error fetching timeline events:", error)
     return []
   }
 

@@ -36,7 +36,7 @@ export function CallTeamModal({ organizationId, onClose }: CallTeamModalProps) {
 
         setTeams(teamsData || [])
       } catch (error) {
-        console.error("[v0] Failed to fetch teams:", error)
+        // Failed to fetch teams
       } finally {
         setLoading(false)
       }

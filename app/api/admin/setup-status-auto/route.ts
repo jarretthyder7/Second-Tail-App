@@ -91,7 +91,6 @@ export async function GET(request: NextRequest) {
       percentage: Math.round((completedSteps.length / SETUP_STEPS.length) * 100),
     })
   } catch (error) {
-    console.error("[v0] Error auto-detecting setup status:", error)
     return NextResponse.json({ error: "Failed to detect setup status" }, { status: 500 })
   }
 }

@@ -71,7 +71,6 @@ export default function ForgotPasswordPage() {
       setSuccess(true)
       setIsLoading(false)
     } catch (err) {
-      console.error("[v0] Password reset exception:", err)
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)
     }

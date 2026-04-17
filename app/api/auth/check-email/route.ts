@@ -15,7 +15,6 @@ export async function POST(request: Request) {
     const { data, error } = await supabase.auth.admin.listUsers()
 
     if (error) {
-      console.error("[v0] Failed to list users:", error.message)
       return NextResponse.json({ error: "Failed to check email" }, { status: 500 })
     }
 
@@ -25,7 +24,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ exists })
   } catch (err) {
-    console.error("[v0] check-email error:", err)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

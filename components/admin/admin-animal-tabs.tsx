@@ -165,7 +165,6 @@ export function AdminDogTabs({
       setShowAddLogForm(false)
       onDataUpdate?.()
     } catch (error) {
-      console.error("[v0] Error adding rescue note:", error)
       toast({
         title: "Error",
         description: "Failed to add rescue note.",
@@ -251,7 +250,6 @@ export function AdminDogTabs({
         description: "The care plan has been saved successfully.",
       })
     } catch (error: any) {
-      console.error("[v0] Error saving care plan:", error)
       toast({
         title: "Error",
         description: error?.message || "Failed to save care plan. Please try again.",

@@ -11,7 +11,6 @@ export async function GET() {
       .select("id, name, city, state")
 
     if (error) {
-      console.error("[v0] Error fetching public organizations:", error)
       return NextResponse.json(
         { error: "Failed to fetch organizations" },
         { status: 500 }
@@ -20,7 +19,6 @@ export async function GET() {
 
     return NextResponse.json(organizations)
   } catch (error) {
-    console.error("[v0] Unexpected error in GET /api/public/organizations:", error)
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

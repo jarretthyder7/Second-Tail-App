@@ -49,7 +49,6 @@ export function DocumentUploadSection({ dogId, onUploadComplete }: DocumentUploa
       // Reset file input
       event.target.value = ""
     } catch (error: any) {
-      console.error("[v0] Error uploading document:", error)
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload document. Please try again.",

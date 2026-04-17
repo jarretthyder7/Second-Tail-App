@@ -134,7 +134,7 @@ function OrgTeamsContent() {
 
       setStaffMembers(staff || [])
     } catch (error) {
-      console.error("[v0] Error loading teams data:", error)
+      console.error("Error loading teams data:", error)
     }
     setIsLoading(false)
   }
@@ -159,7 +159,7 @@ function OrgTeamsContent() {
         })
         window.dispatchEvent(new CustomEvent("setup-step-completed", { detail: { stepId: "create_team" } }))
       } catch (err) {
-        console.error("[v0] Error marking create_team setup step:", err)
+        console.error("Error marking create_team setup step:", err)
       }
 
       // Reset form
@@ -171,7 +171,7 @@ function OrgTeamsContent() {
       setShowCreateTeam(false)
       loadData()
     } catch (error) {
-      console.error("[v0] Error creating team:", error)
+      console.error("Error creating team:", error)
       alert("Failed to create team. Please try again.")
     }
   }
@@ -190,7 +190,7 @@ function OrgTeamsContent() {
       setSelectedTeam(null)
       loadData()
     } catch (error) {
-      console.error("[v0] Error updating team:", error)
+      console.error("Error updating team:", error)
       alert("Failed to update team. Please try again.")
     }
   }
@@ -202,7 +202,7 @@ function OrgTeamsContent() {
       await deleteTeam(teamId)
       loadData()
     } catch (error) {
-      console.error("[v0] Error archiving team:", error)
+      console.error("Error archiving team:", error)
       alert("Failed to archive team. Please try again.")
     }
   }
@@ -216,7 +216,7 @@ function OrgTeamsContent() {
       setSelectedTeam(null)
       loadData()
     } catch (error) {
-      console.error("[v0] Error adding member:", error)
+      console.error("Error adding member:", error)
       alert("Failed to add member. Please try again.")
     }
   }
@@ -231,7 +231,7 @@ function OrgTeamsContent() {
       setSelectedMember(null)
       loadData()
     } catch (error) {
-      console.error("[v0] Error removing member:", error)
+      console.error("Error removing member:", error)
       alert("Failed to remove member. Please try again.")
     }
   }
@@ -253,7 +253,7 @@ function OrgTeamsContent() {
       setShowInviteStaff(false)
       loadData()
     } catch (error: any) {
-      console.error("[v0] Error inviting staff:", error)
+      console.error("Error inviting staff:", error)
       alert(error.message || "Failed to send invitation. Please try again.")
     }
   }
@@ -265,7 +265,7 @@ function OrgTeamsContent() {
       await cancelStaffInvitation(invitationId)
       loadData()
     } catch (error) {
-      console.error("[v0] Error cancelling invitation:", error)
+      console.error("Error cancelling invitation:", error)
     }
   }
 

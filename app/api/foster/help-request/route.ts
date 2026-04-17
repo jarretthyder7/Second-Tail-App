@@ -60,7 +60,6 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (createError) {
-      console.error("[v0] Error creating help request:", createError)
       return NextResponse.json({ error: "Failed to create help request" }, { status: 500 })
     }
 
@@ -89,7 +88,7 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (convError) {
-        console.error("[v0] Error creating conversation:", convError)
+        // Error creating conversation
       } else {
         conversationId = newConversation?.id
       }
@@ -138,7 +137,6 @@ export async function POST(request: NextRequest) {
           `,
         })
       } catch (emailError) {
-        console.error("[v0] Error sending email:", emailError)
         // Don't fail the request if email fails
       }
     }
@@ -150,7 +148,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
-    console.error("[v0] Help request API error:", error)
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }

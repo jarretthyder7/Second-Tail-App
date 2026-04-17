@@ -227,7 +227,7 @@ function CommunicationsContent() {
         alert(`Error: ${data.error || 'Failed to send newsletter'}`)
       }
     } catch (error) {
-      console.error('[v0] Newsletter send error:', error)
+      console.error('Newsletter send error:', error)
       alert('Failed to send newsletter. Please try again.')
     } finally {
       setSending(false)
@@ -298,7 +298,7 @@ function CommunicationsContent() {
         alert(`Error: ${data.error || 'Failed to schedule newsletter'}`)
       }
     } catch (error) {
-      console.error('[v0] Newsletter schedule error:', error)
+      console.error('Newsletter schedule error:', error)
       alert('Failed to schedule newsletter. Please try again.')
     } finally {
       setSending(false)

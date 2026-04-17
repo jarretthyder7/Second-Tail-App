@@ -40,7 +40,6 @@ export async function POST(request: Request) {
     }
 
     if (!confirmationUrl) {
-      console.error("[v0] Failed to generate any confirmation link")
       return NextResponse.json({ error: "Failed to generate confirmation link" }, { status: 400 })
     }
 
@@ -48,13 +47,11 @@ export async function POST(request: Request) {
     const { success, error: emailError } = await sendWelcomeEmailFoster(email, name, undefined, confirmationUrl)
 
     if (!success) {
-      console.error("[v0] Failed to send welcome email:", emailError)
       return NextResponse.json({ error: "Failed to send confirmation email" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, message: "Confirmation email sent" })
   } catch (err) {
-    console.error("[v0] create-foster-profile error:", err)
     return NextResponse.json({ error: "Failed to process request" }, { status: 500 })
   }
 }

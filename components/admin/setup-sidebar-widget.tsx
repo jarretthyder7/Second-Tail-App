@@ -25,7 +25,7 @@ export function SetupSidebarWidget({ orgId, initialCompletedSteps = [] }: SetupW
         const data = await response.json()
         setCompletedSteps(data.completedSteps)
       } catch (error) {
-        console.error("[v0] Error fetching setup status:", error)
+        // Error fetching setup status
       } finally {
         setIsLoading(false)
       }

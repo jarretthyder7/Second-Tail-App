@@ -109,7 +109,7 @@ export default function AdminFostersPage() {
             }),
           })
         } catch (emailError) {
-          console.warn("[v0] Failed to send assignment email:", emailError)
+          console.warn("Failed to send assignment email:", emailError)
         }
       }
 
@@ -127,7 +127,7 @@ export default function AdminFostersPage() {
       ])
 
       if (eventError) {
-        console.warn("[v0] Warning: Failed to create journey event:", eventError)
+        console.warn("Warning: Failed to create journey event:", eventError)
         // Don't fail the assignment if journey event fails to create
       } else {
         console.log("Journey event created for dog assignment")
@@ -196,7 +196,7 @@ export default function AdminFostersPage() {
             }),
           })
         } catch (emailError) {
-          console.warn("[v0] Invitation email failed to send:", emailError)
+          console.warn("Invitation email failed to send:", emailError)
         }
       }
 

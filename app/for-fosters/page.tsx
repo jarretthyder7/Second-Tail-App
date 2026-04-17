@@ -41,6 +41,30 @@ export default function ForFostersPage() {
         </div>
       </section>
 
+      {/* Demo Section - Foster Mobile Dashboard */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+            Designed for fostering on the go
+          </h2>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
+            Your full foster dashboard, right from your phone.
+          </p>
+        </div>
+        <div className="flex justify-center">
+          <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[9/19] rounded-[2.5rem] border-[10px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
+            <img
+              src="/demo/foster-mobile.png"
+              alt="Foster dashboard on mobile"
+              className="w-full h-full object-cover object-top"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.svg"
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 bg-[#FDF6EC] rounded-2xl">
         <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-gray-900 mb-8 sm:mb-12 text-center px-2">
           What you can do with Second Tail

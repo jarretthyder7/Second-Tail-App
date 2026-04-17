@@ -286,6 +286,58 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Demo Section - Built for both sides */}
+      <section className="bg-white py-12 sm:py-16 lg:py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10 sm:mb-14">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+              Built for both sides of fostering
+            </h2>
+            <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
+              A mobile-first foster experience and a powerful desktop dashboard for rescue teams.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center">
+            {/* Foster Mobile Preview */}
+            <div className="flex flex-col items-center">
+              <div className="relative w-full max-w-[240px] sm:max-w-[260px] aspect-[9/19] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-xl overflow-hidden">
+                <img
+                  src="/demo/foster-mobile.png"
+                  alt="Foster dashboard on mobile"
+                  className="w-full h-full object-cover object-top"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg"
+                  }}
+                />
+              </div>
+              <p className="text-sm sm:text-base font-semibold text-gray-900 mt-4">For Fosters</p>
+              <p className="text-xs sm:text-sm text-gray-600">On the go, on your phone</p>
+            </div>
+
+            {/* Rescue Desktop Preview */}
+            <div className="flex flex-col items-center">
+              <div className="relative w-full aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-xl overflow-hidden">
+                <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                </div>
+                <img
+                  src="/demo/rescue-desktop.png"
+                  alt="Rescue admin dashboard on desktop"
+                  className="w-full h-full object-cover object-top pt-4"
+                  onError={(e) => {
+                    e.currentTarget.src = "/placeholder.svg"
+                  }}
+                />
+              </div>
+              <p className="text-sm sm:text-base font-semibold text-gray-900 mt-4">For Rescues</p>
+              <p className="text-xs sm:text-sm text-gray-600">Full admin control on desktop</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Decorative divider */}
       <div className="max-w-4xl mx-auto px-8 py-8 sm:py-12">
         <div className="flex items-center gap-4">

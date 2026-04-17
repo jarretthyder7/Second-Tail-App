@@ -35,6 +35,35 @@ export default function ForRescueOrganizationsPage() {
         </div>
       </section>
 
+      {/* Demo Section - Rescue Desktop Onboarding */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 px-2">
+            From setup to first foster, in minutes
+          </h2>
+          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-2">
+            A guided welcome flow gets your rescue up and running fast.
+          </p>
+        </div>
+        <div className="flex justify-center">
+          <div className="relative w-full max-w-4xl aspect-[16/10] rounded-xl border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-5 bg-gray-800 flex items-center gap-1.5 px-2">
+              <div className="w-2 h-2 rounded-full bg-red-500"></div>
+              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            </div>
+            <img
+              src="/demo/rescue-desktop.png"
+              alt="Rescue admin onboarding flow on desktop"
+              className="w-full h-full object-cover object-top pt-5"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.svg"
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
       <section className="py-16 sm:py-20 lg:py-24" style={{ backgroundColor: "#FDF6EC" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12 sm:mb-16 lg:mb-20">

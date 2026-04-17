@@ -135,19 +135,29 @@ export default function FosterAppointmentsPage() {
 
   return (
     <div className="h-full overflow-auto bg-[#FBF8F4]">
-      <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[#2E2E2E]">My Appointments</h1>
-          {dog && (
-            <Button
-              onClick={() => setShowRequestModal(true)}
-              className="flex items-center gap-2 bg-primary hover:bg-primary/90"
-            >
-              <Plus className="w-4 h-4" />
-              Request Appointment
-            </Button>
-          )}
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+        {/* Page header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--brand-accent, #F7E2BD)" }}>
+            <CalendarIcon className="w-5 h-5" style={{ color: "var(--brand-primary, #D76B1A)" }} />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 leading-tight">My Appointments</h1>
+            <p className="text-sm text-gray-500">Upcoming and past visits</p>
+          </div>
         </div>
+
+        {/* Request button — full width, only shown when foster has a dog */}
+        {dog && (
+          <button
+            onClick={() => setShowRequestModal(true)}
+            className="w-full py-3 rounded-xl font-semibold text-sm text-white flex items-center justify-center gap-2 mb-6 transition hover:opacity-90"
+            style={{ backgroundColor: "var(--brand-primary, #D76B1A)" }}
+          >
+            <Plus className="w-4 h-4" />
+            Request Appointment
+          </button>
+        )}
 
         {/* Pending Requests */}
         {pendingRequests.length > 0 && (

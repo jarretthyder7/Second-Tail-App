@@ -184,26 +184,19 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
 
       if (authData.user) {
-        // Profile creation + confirmation email are handled together in the API route
-        const profileResponse = await fetch("/api/auth/create-foster-profile", {
+        // Send welcome email with confirmation link (profile created in auth callback)
+        // Don't block on email failure - user can still complete signup
+        fetch("/api/auth/create-foster-profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: authData.user.id,
             email,
             name: fullName,
-            city,
-            state,
-            livingSituation,
-            pets,
-            dogSizes,
           }),
+        }).catch(() => {
+          // Email send failed silently - Supabase will still send its own confirmation
         })
-
-        if (!profileResponse.ok) {
-          const data = await profileResponse.json()
-          throw new Error(data.error || "Failed to create profile")
-        }
       }
 
       router.push(`/auth/sign-up-success?type=foster&email=${encodeURIComponent(email)}`)

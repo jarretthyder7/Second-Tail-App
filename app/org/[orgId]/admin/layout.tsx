@@ -566,7 +566,7 @@ export default function OrgAdminLayout({
                       {userName?.charAt(0).toUpperCase() || "U"}
                     </div>
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="text-sm font-semibold text-primary-bark truncate leading-tight">{userName || "User"}</p>
+                      <p className="text-sm font-semibold text-primary-bark truncate leading-tight">{userName?.split(" ")[0] || "User"}</p>
                       <p className="text-xs text-primary-bark/50 mt-0.5">
                         {profile?.org_role
                           ? profile.org_role

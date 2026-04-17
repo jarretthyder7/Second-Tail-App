@@ -25,6 +25,9 @@ import {
   Check,
   AlertTriangle,
   PawPrint,
+  DollarSign,
+  Stethoscope,
+  ArrowRight,
 } from "lucide-react"
 
 // New consolidated widget types following the Command Center philosophy
@@ -709,23 +712,23 @@ function OrgAdminDashboardContent() {
                 <>
                   {/* 3 metrics row */}
                   <div className="grid grid-cols-3 gap-2 mb-3">
-                    <div className="p-3 rounded-lg bg-gray-50 text-center">
-                      <div className={`text-xl font-bold ${animalsWithoutFoster > 0 ? "text-blue-600" : "text-gray-400"}`}>
-                        {animalsWithoutFoster || "—"}
+                    <div className="p-3 rounded-lg bg-blue-50/60 border border-blue-100 text-center">
+                      <div className={`text-xl font-bold ${animalsWithoutFoster > 0 ? "text-blue-600" : "text-gray-300"}`}>
+                        {animalsWithoutFoster}
                       </div>
-                      <div className="text-[10px] text-gray-500">Needing placement</div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">Needing placement</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-gray-50 text-center">
-                      <div className={`text-xl font-bold ${medicalFlags > 0 ? "text-red-600" : "text-gray-400"}`}>
-                        {medicalFlags || "—"}
+                    <div className="p-3 rounded-lg bg-red-50/60 border border-red-100 text-center">
+                      <div className={`text-xl font-bold ${medicalFlags > 0 ? "text-red-600" : "text-gray-300"}`}>
+                        {medicalFlags}
                       </div>
-                      <div className="text-[10px] text-gray-500">Medical follow-ups</div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">Medical follow-ups</div>
                     </div>
-                    <div className="p-3 rounded-lg bg-gray-50 text-center">
-                      <div className={`text-xl font-bold ${behaviorAlerts > 0 ? "text-amber-600" : "text-gray-400"}`}>
-                        {behaviorAlerts || "—"}
+                    <div className="p-3 rounded-lg bg-amber-50/60 border border-amber-100 text-center">
+                      <div className={`text-xl font-bold ${behaviorAlerts > 0 ? "text-amber-600" : "text-gray-300"}`}>
+                        {behaviorAlerts}
                       </div>
-                      <div className="text-[10px] text-gray-500">Behavior flags</div>
+                      <div className="text-[10px] text-gray-500 mt-0.5">Behavior flags</div>
                     </div>
                   </div>
                   
@@ -1538,12 +1541,19 @@ function OrgAdminDashboardContent() {
       )}
 
       <div className="max-w-[1600px] mx-auto px-6 md:px-8 lg:px-10 py-6 md:py-8 lg:py-10 relative z-10">
-        <div className="mb-8 flex items-end justify-between">
+        {/* ── Greeting + actions row ── */}
+        <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1.5 tracking-tight">Command Center</h1>
-            <p className="text-sm text-gray-600">Daily operations overview</p>
+            <p className="text-sm font-medium text-[#D76B1A] mb-1">
+              {new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening"}
+              {profile?.name ? `, ${profile.name.split(" ")[0]}` : ""}! 👋
+            </p>
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1 tracking-tight">Command Center</h1>
+            <p className="text-sm text-gray-400">
+              {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-shrink-0 pt-1">
             {isCustomizing && isOrgAdmin && (
               <button
                 onClick={() => setShowAddModal(true)}
@@ -1556,9 +1566,7 @@ function OrgAdminDashboardContent() {
             {isOrgAdmin && (
               <button
                 onClick={() => {
-                  if (isCustomizing) {
-                    saveDashboardConfig()
-                  }
+                  if (isCustomizing) saveDashboardConfig()
                   setIsCustomizing(!isCustomizing)
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 ${
@@ -1573,57 +1581,107 @@ function OrgAdminDashboardContent() {
           </div>
         </div>
 
-        {/* ── Stats Summary Bar ───────────────────── */}
+        {/* ── Quick Actions ── */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          <Link
+            href={`/org/${orgId}/admin/animals`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D76B1A] text-white rounded-lg text-xs font-semibold hover:bg-[#D76B1A]/90 transition shadow-sm"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Animal
+          </Link>
+          <Link
+            href={`/org/${orgId}/admin/communications`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
+          >
+            <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+            Message Foster
+          </Link>
+          <Link
+            href={`/org/${orgId}/admin/appointments`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
+          >
+            <CalendarIcon className="w-3.5 h-3.5 text-purple-500" />
+            Appointments
+          </Link>
+          <Link
+            href={`/org/${orgId}/admin/reimbursements`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
+          >
+            <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
+            Reimbursements
+          </Link>
+          <Link
+            href={`/org/${orgId}/admin/request-supplies`}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:border-gray-300 hover:shadow-sm transition"
+          >
+            <Stethoscope className="w-3.5 h-3.5 text-rose-500" />
+            Supply Requests
+          </Link>
+        </div>
+
+        {/* ── Stats Summary Bar ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          {[
-            {
-              label: "Animals in Care",
-              value: totalAnimalsInCare,
-              icon: PawPrint,
-              iconColor: "text-primary-orange",
-              iconBg: "bg-orange-50",
-              highlight: false,
-            },
-            {
-              label: "Active Fosters",
-              value: activeFosters,
-              icon: Users,
-              iconColor: "text-blue-600",
-              iconBg: "bg-blue-50",
-              highlight: false,
-            },
-            {
-              label: "Need Response",
-              value: totalInboxItems,
-              icon: Inbox,
-              iconColor: totalInboxItems > 0 ? "text-red-600" : "text-emerald-600",
-              iconBg: totalInboxItems > 0 ? "bg-red-50" : "bg-emerald-50",
-              highlight: totalInboxItems > 0,
-            },
-            {
-              label: "Appts (48h)",
-              value: todaysAppointments.length,
-              icon: CalendarIcon,
-              iconColor: "text-purple-600",
-              iconBg: "bg-purple-50",
-              highlight: false,
-            },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className={`bg-white rounded-xl border p-4 shadow-sm ${stat.highlight ? "border-red-200" : "border-gray-100"}`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-500">{stat.label}</span>
-                <div className={`w-7 h-7 rounded-lg ${stat.iconBg} flex items-center justify-center`}>
-                  <stat.icon className={`w-3.5 h-3.5 ${stat.iconColor}`} />
-                </div>
-              </div>
-              <div className={`text-2xl font-bold ${stat.highlight ? "text-red-600" : "text-gray-900"}`}>
-                {stat.value}
+          {/* Animals in Care */}
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100/60 rounded-xl border border-orange-200/70 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold text-orange-700/70 uppercase tracking-wide">Animals in Care</span>
+              <div className="w-8 h-8 rounded-lg bg-white/70 border border-orange-200/60 flex items-center justify-center">
+                <PawPrint className="w-4 h-4 text-[#D76B1A]" />
               </div>
             </div>
-          ))}
+            <div className="text-3xl font-bold text-orange-900">{totalAnimalsInCare}</div>
+            <p className="text-xs text-orange-700/50 mt-1">Active placements</p>
+          </div>
+
+          {/* Active Fosters */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100/60 rounded-xl border border-blue-200/70 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold text-blue-700/70 uppercase tracking-wide">Active Fosters</span>
+              <div className="w-8 h-8 rounded-lg bg-white/70 border border-blue-200/60 flex items-center justify-center">
+                <Users className="w-4 h-4 text-blue-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-blue-900">{activeFosters}</div>
+            <p className="text-xs text-blue-700/50 mt-1">Registered fosters</p>
+          </div>
+
+          {/* Need Response */}
+          {totalInboxItems > 0 ? (
+            <div className="bg-gradient-to-br from-red-50 to-red-100/60 rounded-xl border border-red-200/70 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-semibold text-red-700/70 uppercase tracking-wide">Need Response</span>
+                <div className="w-8 h-8 rounded-lg bg-white/70 border border-red-200/60 flex items-center justify-center">
+                  <Inbox className="w-4 h-4 text-red-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-red-700">{totalInboxItems}</div>
+              <p className="text-xs text-red-600/60 mt-1">Awaiting reply</p>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/60 rounded-xl border border-emerald-200/70 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-semibold text-emerald-700/70 uppercase tracking-wide">Need Response</span>
+                <div className="w-8 h-8 rounded-lg bg-white/70 border border-emerald-200/60 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-emerald-700">0</div>
+              <p className="text-xs text-emerald-700/50 mt-1">All caught up ✓</p>
+            </div>
+          )}
+
+          {/* Appointments */}
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100/60 rounded-xl border border-purple-200/70 p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[11px] font-semibold text-purple-700/70 uppercase tracking-wide">Appts (48h)</span>
+              <div className="w-8 h-8 rounded-lg bg-white/70 border border-purple-200/60 flex items-center justify-center">
+                <CalendarIcon className="w-4 h-4 text-purple-600" />
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-purple-900">{todaysAppointments.length}</div>
+            <p className="text-xs text-purple-700/50 mt-1">Upcoming visits</p>
+          </div>
         </div>
 
         <div

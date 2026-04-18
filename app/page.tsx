@@ -233,7 +233,7 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
-                <div className="pt-2 sm:pt-4 pl-0 sm:pl-[68px]">
+                <div className="pt-2 sm:pt-4 flex justify-center sm:justify-start sm:pl-[68px]">
                   <Link
                     href="/sign-up/rescue"
                     className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
@@ -283,7 +283,7 @@ export default function Home() {
                     </div>
                   </div>
                 ))}
-                <div className="pt-2 sm:pt-4 pl-0 sm:pl-[68px]">
+                <div className="pt-2 sm:pt-4 flex justify-center sm:justify-start sm:pl-[68px]">
                   <Link
                     href="/sign-up/foster"
                     className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
@@ -296,7 +296,7 @@ export default function Home() {
 
               {/* Phone frame */}
               <div className="flex justify-center order-1 lg:order-2">
-                <div className="float-slow relative w-full max-w-[240px] sm:max-w-[260px] aspect-[9/19] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden">
+                <div className="float-slow relative w-[220px] h-[464px] sm:w-[260px] sm:h-[548px] rounded-[2rem] border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
                   <img
                     src="/demo/foster-mobile.png"
                     alt="Foster dashboard on mobile"

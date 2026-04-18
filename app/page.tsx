@@ -75,7 +75,7 @@ export default function Home() {
           {/* Device mockups */}
           <div className="mt-10 sm:mt-14 flex items-end justify-center gap-4 sm:gap-6 lg:gap-10 px-2">
             {/* Laptop — rescue dashboard */}
-            <div className="float-slower hidden sm:block relative w-full max-w-[460px] lg:max-w-[580px] aspect-[16/10] rounded-lg border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
+            <div className="float-slower relative w-full max-w-[280px] sm:max-w-[460px] lg:max-w-[580px] aspect-[16/10] rounded-lg border-[4px] sm:border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
               <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>

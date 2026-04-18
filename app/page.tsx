@@ -73,10 +73,10 @@ export default function Home() {
           </div>
 
           {/* Device mockups */}
-          <div className="mt-10 sm:mt-14 flex items-end justify-center gap-4 sm:gap-6 lg:gap-10 px-2">
+          <div className="mt-10 sm:mt-14 flex items-end justify-center gap-3 sm:gap-6 lg:gap-10 px-4 overflow-hidden">
             {/* Laptop — rescue dashboard */}
-            <div className="float-slower relative w-full max-w-[280px] sm:max-w-[460px] lg:max-w-[580px] aspect-[16/10] rounded-lg border-[4px] sm:border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
-              <div className="absolute top-0 left-0 right-0 h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
+            <div className="float-slower relative w-[62%] sm:w-full sm:max-w-[460px] lg:max-w-[580px] aspect-[16/10] rounded-lg border-[3px] sm:border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
+              <div className="absolute top-0 left-0 right-0 h-3 sm:h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500"></div>
                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
@@ -84,13 +84,13 @@ export default function Home() {
               <img
                 src="/demo/rescue-desktop.png"
                 alt="Rescue admin dashboard"
-                className="w-full h-full object-cover object-top pt-4"
+                className="w-full h-full object-cover object-top pt-3 sm:pt-4"
                 onError={(e) => { e.currentTarget.src = "/placeholder.svg" }}
               />
             </div>
 
             {/* Phone — foster dashboard */}
-            <div className="float-slow relative w-full max-w-[130px] sm:max-w-[150px] lg:max-w-[180px] aspect-[9/19] rounded-[1.75rem] border-[6px] sm:border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
+            <div className="float-slow relative w-[27%] sm:w-full sm:max-w-[150px] lg:max-w-[180px] aspect-[9/19] rounded-[1.25rem] sm:rounded-[1.75rem] border-[4px] sm:border-[8px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
               <img
                 src="/demo/foster-mobile.png"
                 alt="Foster dashboard on mobile"

@@ -73,7 +73,7 @@ export default function Home() {
           </div>
 
           {/* Device mockups */}
-          <div className="mt-10 sm:mt-14 flex items-end justify-center gap-3 sm:gap-6 lg:gap-10 px-4 overflow-hidden">
+          <div className="mt-10 sm:mt-14 flex items-center justify-center gap-3 sm:gap-6 lg:gap-10 px-4 pt-6 overflow-x-hidden">
             {/* Laptop — rescue dashboard */}
             <div className="float-slower relative w-[62%] sm:w-full sm:max-w-[460px] lg:max-w-[580px] aspect-[16/10] rounded-lg border-[3px] sm:border-[6px] border-gray-900 bg-gray-900 shadow-2xl overflow-hidden flex-shrink-0">
               <div className="absolute top-0 left-0 right-0 h-3 sm:h-4 bg-gray-800 flex items-center gap-1 px-2 z-10">

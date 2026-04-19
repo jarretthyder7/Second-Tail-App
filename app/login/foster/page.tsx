@@ -52,6 +52,7 @@ function FosterLoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const inviteCode = searchParams.get("code")
+  const message = searchParams.get("message")
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
@@ -128,6 +129,12 @@ function FosterLoginContent() {
               Log in to your foster dashboard
             </p>
           </div>
+
+          {message && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-xl text-sm">
+              {message}
+            </div>
+          )}
 
           {inviteCode && (
             <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-sm">

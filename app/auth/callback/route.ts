@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@supabase/ssr"
 import { createServiceRoleClient } from "@/lib/supabase/server"
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { cookies } from "next/headers"
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/"
@@ -18,14 +18,32 @@ export async function GET(request: Request) {
     } catch { /* malformed — ignore */ }
   }
 
-  const supabase = await createClient()
+  // ── Build Supabase auth client that writes session cookies DIRECTLY onto the
+  //    final redirect response (not via next/headers which doesn't auto-merge). ──
+  const sessionCookies: Array<{ name: string; value: string; options: Record<string, unknown> }> = []
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          // Capture instead of writing to next/headers — we'll copy them to the
+          // redirect response ourselves so they actually survive the redirect.
+          cookiesToSet.forEach((c) => sessionCookies.push(c as typeof sessionCookies[number]))
+        },
+      },
+    },
+  )
+
   const svc = createServiceRoleClient() // service role bypasses all RLS
 
   // Supabase sends email confirmation links in two possible formats:
   // 1. PKCE flow (?code=...) — requires the code_verifier stored in the SAME browser
   // 2. OTP flow  (?token_hash=...&type=...) — works cross-device (email opened on phone etc.)
-  // We handle both so confirmations never fail just because the user opened the link
-  // on a different device than where they signed up.
   const token_hash = searchParams.get("token_hash")
   const type = searchParams.get("type")
 
@@ -53,15 +71,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/auth/auth-code-error`)
   }
 
-  // Password reset — redirect immediately
+  // Password reset — redirect immediately (session cookies still needed)
   if (next && next !== "/") {
-    return clearAndRedirect(buildUrl(origin, request, next))
+    return buildRedirect(buildUrl(origin, request, next), sessionCookies)
   }
 
   // ── Step 1: Read whatever profile exists ──
-  // The handle_new_user DB trigger fires on every auth.users insert (including Google OAuth)
-  // and creates a minimal profile with role='foster'. We read it first with maybeSingle
-  // so we never crash on "expected 1 row, got 0".
   const { data: existingProfile } = await svc
     .from("profiles")
     .select("id, role, organization_id, name, phone, city, state, experience_level, dog_size_preference, availability")
@@ -74,9 +89,7 @@ export async function GET(request: Request) {
   let finalProfile = existingProfile
 
   // ── Step 2: Handle rescue Google signup ──
-  // The trigger created a foster profile. We need to upsert it to rescue + create the org.
   if (isRescueSignup) {
-    // Only create a new org if the profile doesn't already have one
     let orgId = existingProfile?.organization_id ?? null
 
     if (!orgId) {
@@ -93,7 +106,6 @@ export async function GET(request: Request) {
       }
     }
 
-    // Upsert handles both "trigger already created a row" and "no row yet"
     const { data: upserted, error: upsertError } = await svc
       .from("profiles")
       .upsert({
@@ -111,7 +123,6 @@ export async function GET(request: Request) {
       console.error("Auth callback: rescue profile upsert failed", upsertError)
     } else {
       finalProfile = upserted
-      // Send welcome email (fire and forget)
       fetch(`${origin}/api/email/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -121,7 +132,6 @@ export async function GET(request: Request) {
 
   // ── Step 3: Handle foster Google signup (no profile yet, or trigger missed) ──
   } else if (!existingProfile) {
-    // Check for a pending invitation
     const { data: invitation } = await svc
       .from("invitations")
       .select("id, organization_id")
@@ -146,14 +156,12 @@ export async function GET(request: Request) {
     } else {
       finalProfile = upserted
 
-      // Welcome email
       fetch(`${origin}/api/email/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "welcome-foster", email: user.email, name: meta.name || user.email?.split("@")[0] }),
       }).catch(() => {})
 
-      // Accept invitation
       if (invitation) {
         await svc.from("invitations")
           .update({ status: "accepted", updated_at: new Date().toISOString() })
@@ -200,7 +208,7 @@ export async function GET(request: Request) {
   if (!finalProfile) {
     console.error("Auth callback: no profile after all attempts for user", user.id)
     const fallback = isRescueSignup ? `/sign-up/rescue?error=setup-incomplete` : `/login/rescue`
-    return clearAndRedirect(buildUrl(origin, request, fallback))
+    return buildRedirect(buildUrl(origin, request, fallback), sessionCookies)
   }
 
   // ── Step 7: Route by role ──
@@ -216,12 +224,12 @@ export async function GET(request: Request) {
       : `/foster/dashboard`
   }
 
-  return clearAndRedirect(buildUrl(origin, request, redirectPath))
+  return buildRedirect(buildUrl(origin, request, redirectPath), sessionCookies)
 }
 
 // ── Helpers ──
 
-function buildUrl(origin: string, request: Request, path: string): string {
+function buildUrl(origin: string, request: NextRequest, path: string): string {
   const forwardedHost = request.headers.get("x-forwarded-host")
   const isLocal = process.env.NODE_ENV === "development"
   if (isLocal) return `${origin}${path}`
@@ -229,8 +237,28 @@ function buildUrl(origin: string, request: Request, path: string): string {
   return `${origin}${path}`
 }
 
-function clearAndRedirect(destination: string): NextResponse {
+/**
+ * Create a redirect response that:
+ * 1. Carries all Supabase session cookies captured during auth exchange
+ * 2. Clears the oauth_signup_intent cookie
+ *
+ * This is critical — using NextResponse.redirect() alone would drop the session
+ * cookies because they were captured in our own array rather than being written
+ * to next/headers (which doesn't auto-merge onto a custom NextResponse).
+ */
+function buildRedirect(
+  destination: string,
+  sessionCookies: Array<{ name: string; value: string; options: Record<string, unknown> }>,
+): NextResponse {
   const response = NextResponse.redirect(destination)
+
+  // Copy Supabase auth session cookies onto the redirect response
+  sessionCookies.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
+  })
+
+  // Clear the signup intent cookie
   response.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
+
   return response
 }

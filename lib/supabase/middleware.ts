@@ -40,14 +40,15 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect org and foster routes — redirect to login if unauthenticated
-  const isProtectedPath =
-    request.nextUrl.pathname.startsWith("/org/") ||
-    request.nextUrl.pathname.startsWith("/foster/")
+  // Protect org and foster routes — redirect to the right login if unauthenticated
+  const isFosterPath = request.nextUrl.pathname.startsWith("/foster/")
+  const isOrgPath = request.nextUrl.pathname.startsWith("/org/")
 
-  if (isProtectedPath && !user) {
+  if ((isFosterPath || isOrgPath) && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = "/"
+    // Send to the relevant login page with context instead of silently dumping on homepage
+    url.pathname = isFosterPath ? "/login/foster" : "/login/rescue"
+    url.searchParams.set("message", "Please sign in to continue")
     return NextResponse.redirect(url)
   }
 

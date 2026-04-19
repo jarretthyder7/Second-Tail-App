@@ -186,7 +186,7 @@ export default function RescueSignUpPage() {
                     type="text"
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
-                    placeholder="Happy Paws Rescue"
+                    placeholder="Second Tail Rescue"
                     className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/30 focus:border-[#D76B1A] transition"
                   />
                 </div>

@@ -8,8 +8,8 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/"
 
-  // Parse rescue signup intent from the cookie set before OAuth was triggered.
-  // (Supabase does not reliably preserve custom query params through its redirect chain.)
+  // Read rescue signup intent from the cookie set just before Google OAuth was triggered.
+  // We can't use query params because Supabase drops custom params during its redirect chain.
   const cookieStore = await cookies()
   const intentCookie = cookieStore.get("oauth_signup_intent")
   let signupIntent: { role?: string; org_role?: string; orgName?: string; adminName?: string } | null = null
@@ -21,221 +21,192 @@ export async function GET(request: Request) {
     }
   }
 
-  if (code) {
-    const supabase = await createClient()
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+  if (!code) {
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  }
 
-    if (!error && data.user) {
-      // If a ?next= param was provided (e.g. password reset), redirect there immediately
-      if (next && next !== "/") {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
+  const supabase = await createClient()
+  const serviceClient = createServiceRoleClient()
 
-      let { data: profile } = await supabase
-        .from("profiles")
-        .select("role, organization_id, name, phone, city, state, experience_level, dog_size_preference, availability")
-        .eq("id", data.user.id)
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (error || !data.user) {
+    console.error("Auth callback: code exchange failed", error)
+    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  }
+
+  const user = data.user
+
+  // Password reset flow — just redirect immediately
+  if (next && next !== "/") {
+    const dest = buildUrl(origin, request, next)
+    return clearIntentAndRedirect(dest)
+  }
+
+  // ── 1. Look up existing profile ──
+  // Try service role to bypass any RLS issues on the select
+  const { data: profile, error: profileSelectError } = await serviceClient
+    .from("profiles")
+    .select("role, organization_id, name, phone, city, state, experience_level, dog_size_preference, availability")
+    .eq("id", user.id)
+    .single()
+
+  if (profileSelectError && profileSelectError.code !== "PGRST116") {
+    // PGRST116 = "not found" — anything else is a real DB error
+    console.error("Auth callback: profile select error", profileSelectError)
+  }
+
+  // ── 2. First-time email confirmation welcome email ──
+  const emailConfirmedAt = user.email_confirmed_at ? new Date(user.email_confirmed_at) : null
+  const isRecentConfirmation = emailConfirmedAt && (Date.now() - emailConfirmedAt.getTime() < 60000)
+  if (profile && profile.role === "foster" && isRecentConfirmation) {
+    fetch(`${origin}/api/email/send`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "welcome-foster", email: user.email, name: profile.name || user.email?.split("@")[0] }),
+    }).catch(() => {})
+  }
+
+  // ── 3. No profile yet — create one ──
+  let finalProfile = profile
+
+  if (!finalProfile) {
+    const isRescueSignup = signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin"
+
+    if (isRescueSignup && signupIntent?.orgName) {
+      // ── Rescue admin Google signup ──
+      // Use service role for ALL inserts to bypass RLS on new unconfirmed users
+      const { data: newOrg, error: orgError } = await serviceClient
+        .from("organizations")
+        .insert({ name: signupIntent.orgName })
+        .select()
         .single()
 
-      // Check if this is a first-time email confirmation (user just confirmed their email)
-      // email_confirmed_at being set recently means they just clicked the confirmation link
-      const emailConfirmedAt = data.user.email_confirmed_at ? new Date(data.user.email_confirmed_at) : null
-      const isRecentConfirmation = emailConfirmedAt && (Date.now() - emailConfirmedAt.getTime() < 60000) // within 1 minute
-
-      // If profile exists but this is a first-time email confirmation, send welcome email
-      if (profile && profile.role === "foster" && isRecentConfirmation) {
-        try {
-          await fetch(`${origin}/api/email/send`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "welcome-foster",
-              email: data.user.email,
-              name: profile.name || data.user.email?.split("@")[0],
-            }),
-          })
-        } catch {
-          // Welcome email failed but confirmation succeeded
-        }
+      if (orgError) {
+        console.error("Auth callback: org creation failed", orgError)
       }
 
-      // If no profile exists (Google OAuth signup), create one
-      if (!profile) {
-        const isRescueAdminSignup = signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin"
+      const { data: newProfile, error: profileError } = await serviceClient
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email: user.email,
+          name: signupIntent.adminName || user.user_metadata?.name || user.email?.split("@")[0],
+          role: "rescue",
+          org_role: "org_admin",
+          organization_id: newOrg?.id ?? null,
+        })
+        .select()
+        .single()
 
-        if (isRescueAdminSignup && signupIntent?.orgName) {
-          // Create the organization first
-          const { data: newOrg, error: orgError } = await supabase
-            .from("organizations")
-            .insert({
-              name: signupIntent.orgName,
-            })
-            .select()
-            .single()
+      if (profileError) {
+        console.error("Auth callback: rescue profile creation failed", profileError)
+      } else {
+        finalProfile = newProfile
+        // Send welcome email to the new rescue admin
+        fetch(`${origin}/api/email/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "welcome-rescue", email: user.email, orgName: signupIntent.orgName, adminName: signupIntent.adminName }),
+        }).catch(() => {})
+      }
 
-          if (orgError) {
-            // Organization creation failed
-          }
+    } else {
+      // ── Foster Google / email signup ──
+      const meta = user.user_metadata || {}
 
-          // Create rescue admin profile linked to the new org
-          const { data: newProfile, error: profileError } = await supabase
-            .from("profiles")
-            .insert({
-              id: data.user.id,
-              email: data.user.email,
-              name: signupIntent.adminName || data.user.user_metadata?.name || data.user.email?.split("@")[0],
-              role: "rescue",
-              org_role: "org_admin",
-              organization_id: newOrg?.id ?? null,
-            })
-            .select()
-            .single()
+      // Check for a pending invitation
+      const { data: invitation } = await serviceClient
+        .from("invitations")
+        .select("id, organization_id")
+        .eq("email", user.email!)
+        .eq("status", "pending")
+        .maybeSingle()
 
-          if (profileError) {
-            // Profile creation failed
-          } else {
-            profile = newProfile
-          }
-        } else {
-          // Standard foster OAuth/email signup path
-          const meta = data.user.user_metadata || {}
+      const { data: newProfile, error: profileError } = await serviceClient
+        .from("profiles")
+        .insert({
+          id: user.id,
+          email: user.email,
+          name: meta.name || user.email?.split("@")[0],
+          role: "foster",
+          organization_id: invitation?.organization_id || null,
+        })
+        .select()
+        .single()
 
-          // Check for pending invitation by email
-          const { data: invitation } = await supabase
+      if (profileError) {
+        console.error("Auth callback: foster profile creation failed", profileError)
+      } else {
+        finalProfile = newProfile
+
+        // Welcome email
+        fetch(`${origin}/api/email/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "welcome-foster", email: user.email, name: meta.name || user.email?.split("@")[0] }),
+        }).catch(() => {})
+
+        // Foster profile row
+        await serviceClient.from("foster_profiles").insert({
+          user_id: user.id,
+          city: meta.city || "",
+          state: meta.state || "",
+          housing_type: meta.living_situation || "",
+          has_yard: meta.has_yard || false,
+          has_pets: meta.has_pets || false,
+          existing_pets_description: meta.pets || "",
+          preferred_dog_sizes: meta.dog_sizes || [],
+          onboarding_completed: false,
+        })
+
+        // Accept invitation
+        if (invitation) {
+          await serviceClient
             .from("invitations")
-            .select("id, organization_id")
-            .eq("email", data.user.email!)
-            .eq("status", "pending")
-            .maybeSingle()
-
-          const organizationId = invitation?.organization_id || null
-
-          // Use service role client to bypass RLS for new unconfirmed users
-          const serviceClient = createServiceRoleClient()
-
-          const { data: newProfile, error: profileError } = await serviceClient
-            .from("profiles")
-            .insert({
-              id: data.user.id,
-              email: data.user.email,
-              name: meta.name || data.user.email?.split("@")[0],
-              role: "foster",
-              organization_id: organizationId,
-            })
-            .select()
-            .single()
-
-          if (profileError) {
-            console.error("Error creating foster profile:", profileError)
-          } else {
-            profile = newProfile
-
-            // Send welcome email now that email is confirmed
-            try {
-              await fetch(`${origin}/api/email/send`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  type: "welcome-foster",
-                  email: data.user.email,
-                  name: meta.name || data.user.email?.split("@")[0],
-                }),
-              })
-            } catch {
-              // Welcome email failed but signup succeeded
-            }
-
-            // Create foster_profiles row using vetting data from signup metadata
-            await serviceClient.from("foster_profiles").insert({
-              user_id: data.user.id,
-              city: meta.city || "",
-              state: meta.state || "",
-              housing_type: meta.living_situation || "",
-              has_yard: meta.has_yard || false,
-              has_pets: meta.has_pets || false,
-              existing_pets_description: meta.pets || "",
-              preferred_dog_sizes: meta.dog_sizes || [],
-              onboarding_completed: false,
-            })
-
-            // Accept invitation if one exists
-            if (invitation) {
-              await serviceClient
-                .from("invitations")
-                .update({ status: "accepted", updated_at: new Date().toISOString() })
-                .eq("id", invitation.id)
-            }
-          }
+            .update({ status: "accepted", updated_at: new Date().toISOString() })
+            .eq("id", invitation.id)
         }
       }
-
-      // If profile lookup/creation failed entirely, send to the appropriate login
-      if (!profile) {
-        const forwardedHost = request.headers.get("x-forwarded-host")
-        const isLocalEnv = process.env.NODE_ENV === "development"
-        const isRescue = signupIntent?.role === "rescue"
-        const fallback = isRescue
-          ? `/sign-up/rescue?error=setup-incomplete`
-          : `/login/foster?error=auth-failed`
-        const dest = isLocalEnv
-          ? `${origin}${fallback}`
-          : forwardedHost
-          ? `https://${forwardedHost}${fallback}`
-          : `${origin}${fallback}`
-        const r = NextResponse.redirect(dest)
-        r.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
-        return r
-      }
-
-      let redirectPath = next
-
-      const isProfileIncomplete =
-        !profile.name ||
-        !profile.phone ||
-        !profile.city ||
-        !profile.state ||
-        !profile.experience_level ||
-        !profile.dog_size_preference?.length ||
-        !profile.availability
-
-      // Redirect rescue admin users
-      if (profile.role === "rescue") {
-        if (profile.organization_id) {
-          // New users start at setup wizard; existing (complete) users go to dashboard
-          redirectPath = `/org/${profile.organization_id}/admin/setup-wizard`
-        } else {
-          // Rescue user with no org — something went wrong during signup
-          redirectPath = `/sign-up/rescue?error=setup-incomplete`
-        }
-      }
-      // Redirect fosters: new signups go to dashboard, returning users go to their dashboard
-      else if (profile.role === "foster") {
-        if (isProfileIncomplete) {
-          // New foster completing email verification — send to dashboard
-          redirectPath = "/foster/dashboard"
-        } else if (profile.organization_id) {
-          redirectPath = `/org/${profile.organization_id}/foster/dashboard`
-        } else {
-          redirectPath = "/foster/dashboard"
-        }
-      }
-
-      const forwardedHost = request.headers.get("x-forwarded-host")
-      const isLocalEnv = process.env.NODE_ENV === "development"
-
-      const destination = isLocalEnv
-        ? `${origin}${redirectPath}`
-        : forwardedHost
-        ? `https://${forwardedHost}${redirectPath}`
-        : `${origin}${redirectPath}`
-
-      const redirectResponse = NextResponse.redirect(destination)
-      // Clear the signup intent cookie now that we've used it
-      redirectResponse.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
-      return redirectResponse
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+  // ── 4. Still no profile — send them somewhere useful ──
+  if (!finalProfile) {
+    console.error("Auth callback: no profile after all attempts for user", user.id)
+    const isRescue = signupIntent?.role === "rescue"
+    const fallback = isRescue ? `/sign-up/rescue?error=setup-incomplete` : `/login/foster?error=auth-failed`
+    return clearIntentAndRedirect(buildUrl(origin, request, fallback))
+  }
+
+  // ── 5. Route based on role ──
+  let redirectPath = "/"
+
+  if (finalProfile.role === "rescue") {
+    redirectPath = finalProfile.organization_id
+      ? `/org/${finalProfile.organization_id}/admin/setup-wizard`
+      : `/sign-up/rescue?error=setup-incomplete`
+  } else if (finalProfile.role === "foster") {
+    redirectPath = finalProfile.organization_id
+      ? `/org/${finalProfile.organization_id}/foster/dashboard`
+      : `/foster/dashboard`
+  }
+
+  return clearIntentAndRedirect(buildUrl(origin, request, redirectPath))
 }
 
+// ── Helpers ──
+
+function buildUrl(origin: string, request: Request, path: string): string {
+  const forwardedHost = request.headers.get("x-forwarded-host")
+  const isLocal = process.env.NODE_ENV === "development"
+  if (isLocal) return `${origin}${path}`
+  if (forwardedHost) return `https://${forwardedHost}${path}`
+  return `${origin}${path}`
+}
+
+function clearIntentAndRedirect(destination: string): NextResponse {
+  const response = NextResponse.redirect(destination)
+  response.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
+  return response
+}

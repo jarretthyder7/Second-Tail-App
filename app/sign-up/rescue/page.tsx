@@ -119,7 +119,7 @@ export default function RescueSignUpPage() {
                 <span className="text-[#D76B1A]">finally organized.</span>
               </h1>
               <p className="text-lg text-gray-600 leading-relaxed">
-                Stop managing fosters over text threads and spreadsheets. Second Tail gives your team one place to track every dog, every foster, and every update — so you can focus on saving lives.
+                Stop managing fosters over text threads and spreadsheets. Second Tail gives fosters a dedicated app to view their dog, submit requests, and log updates — and gives you one place to see everything.
               </p>
             </div>
 
@@ -128,11 +128,21 @@ export default function RescueSignUpPage() {
               <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
                 <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-3">
                   <svg className="w-5 h-5 text-[#D76B1A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h10" />
                   </svg>
                 </div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">Instant messaging</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Chat with every foster directly — no more text threads</p>
+                <h3 className="font-bold text-gray-900 text-sm mb-1">Foster dog profiles</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">Every foster sees a live profile for their dog — care notes, history, and updates the moment you add them</p>
+              </div>
+
+              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-3">
+                  <svg className="w-5 h-5 text-[#D76B1A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="font-bold text-gray-900 text-sm mb-1">Requests handled in-app</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">Fosters submit supply requests, vet appointments, and reimbursements — you approve, done. No more texts</p>
               </div>
 
               <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
@@ -141,18 +151,8 @@ export default function RescueSignUpPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                 </div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">Care tracking</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Daily logs, vet records, and behavior notes — all organized</p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
-                <div className="w-10 h-10 bg-orange-50 rounded-xl flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-[#D76B1A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">Foster matching</h3>
-                <p className="text-xs text-gray-500 leading-relaxed">Find the right home for every dog, fast</p>
+                <h3 className="font-bold text-gray-900 text-sm mb-1">Complete care tracking</h3>
+                <p className="text-xs text-gray-500 leading-relaxed">Daily logs, vet records, and behavior notes organized automatically for every dog in your program</p>
               </div>
             </div>
 

@@ -24,7 +24,6 @@ export default function RescueSignUpPage() {
     setIsLoading(true)
     setError("")
     try {
-      const supabase = createClient()
       const intent = btoa(
         JSON.stringify({
           role: "rescue",
@@ -33,10 +32,21 @@ export default function RescueSignUpPage() {
           adminName: adminName.trim(),
         })
       )
+
+      // Store intent in a server-side cookie BEFORE triggering OAuth.
+      // Supabase does not reliably preserve custom query params through
+      // the OAuth redirect chain, so the cookie is the safest carrier.
+      await fetch("/api/auth/store-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ intent }),
+      })
+
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?signupIntent=${intent}`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       })
       if (error) throw error

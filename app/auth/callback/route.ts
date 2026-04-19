@@ -1,21 +1,23 @@
 import { createClient } from "@/lib/supabase/server"
 import { createServiceRoleClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/"
 
-  // Parse rescue signup intent — passed as ?signupIntent= in the redirectTo URL
-  // (previously tried via OAuth state param, but Supabase uses state for CSRF internally)
-  const intentParam = searchParams.get("signupIntent") || searchParams.get("state")
+  // Parse rescue signup intent from the cookie set before OAuth was triggered.
+  // (Supabase does not reliably preserve custom query params through its redirect chain.)
+  const cookieStore = await cookies()
+  const intentCookie = cookieStore.get("oauth_signup_intent")
   let signupIntent: { role?: string; org_role?: string; orgName?: string; adminName?: string } | null = null
-  if (intentParam) {
+  if (intentCookie?.value) {
     try {
-      signupIntent = JSON.parse(atob(intentParam))
+      signupIntent = JSON.parse(atob(intentCookie.value))
     } catch {
-      // Not a valid intent — ignore (could be a regular login state)
+      // Malformed cookie — ignore
     }
   }
 
@@ -167,14 +169,22 @@ export async function GET(request: Request) {
         }
       }
 
-      // If profile lookup failed entirely, send to login
+      // If profile lookup/creation failed entirely, send to the appropriate login
       if (!profile) {
         const forwardedHost = request.headers.get("x-forwarded-host")
         const isLocalEnv = process.env.NODE_ENV === "development"
-        const fallback = `/?message=please-sign-in`
-        if (isLocalEnv) return NextResponse.redirect(`${origin}${fallback}`)
-        if (forwardedHost) return NextResponse.redirect(`https://${forwardedHost}${fallback}`)
-        return NextResponse.redirect(`${origin}${fallback}`)
+        const isRescue = signupIntent?.role === "rescue"
+        const fallback = isRescue
+          ? `/sign-up/rescue?error=setup-incomplete`
+          : `/login/foster?error=auth-failed`
+        const dest = isLocalEnv
+          ? `${origin}${fallback}`
+          : forwardedHost
+          ? `https://${forwardedHost}${fallback}`
+          : `${origin}${fallback}`
+        const r = NextResponse.redirect(dest)
+        r.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
+        return r
       }
 
       let redirectPath = next
@@ -213,13 +223,16 @@ export async function GET(request: Request) {
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
 
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${redirectPath}`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${redirectPath}`)
-      } else {
-        return NextResponse.redirect(`${origin}${redirectPath}`)
-      }
+      const destination = isLocalEnv
+        ? `${origin}${redirectPath}`
+        : forwardedHost
+        ? `https://${forwardedHost}${redirectPath}`
+        : `${origin}${redirectPath}`
+
+      const redirectResponse = NextResponse.redirect(destination)
+      // Clear the signup intent cookie now that we've used it
+      redirectResponse.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
+      return redirectResponse
     }
   }
 

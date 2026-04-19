@@ -7,12 +7,13 @@ export async function GET(request: Request) {
   const code = searchParams.get("code")
   const next = searchParams.get("next") ?? "/"
 
-  // Parse rescue signup intent from OAuth state parameter (base64-encoded JSON)
-  const stateParam = searchParams.get("state")
+  // Parse rescue signup intent — passed as ?signupIntent= in the redirectTo URL
+  // (previously tried via OAuth state param, but Supabase uses state for CSRF internally)
+  const intentParam = searchParams.get("signupIntent") || searchParams.get("state")
   let signupIntent: { role?: string; org_role?: string; orgName?: string; adminName?: string } | null = null
-  if (stateParam) {
+  if (intentParam) {
     try {
-      signupIntent = JSON.parse(atob(stateParam))
+      signupIntent = JSON.parse(atob(intentParam))
     } catch {
       // Not a valid intent — ignore (could be a regular login state)
     }

@@ -33,7 +33,7 @@ function FosterSignUpForm() {
   // Step 3: Availability (displayed as step 2)
   const [childrenInHome, setChildrenInHome] = useState("")
   const [dogSizes, setDogSizes] = useState<string[]>([])
-  const [restrictions, setRestrictions] = useState<string[]>([])
+  const [fosterDuration, setFosterDuration] = useState("")
   const [whyFoster, setWhyFoster] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
@@ -70,8 +70,8 @@ function FosterSignUpForm() {
       setError("Please select at least one dog size")
       return false
     }
-    if (restrictions.length === 0) {
-      setError("Please select any breed restrictions")
+    if (!fosterDuration) {
+      setError("Please select how long you can typically foster")
       return false
     }
     return true
@@ -144,11 +144,6 @@ function FosterSignUpForm() {
     )
   }
 
-  const toggleRestrictionCheckbox = (restriction: string) => {
-    setRestrictions(prev =>
-      prev.includes(restriction) ? prev.filter(r => r !== restriction) : [...prev, restriction]
-    )
-  }
 
   const handleGoogleSignUp = async () => {
     setIsLoading(true)
@@ -191,7 +186,7 @@ function FosterSignUpForm() {
             has_pets: pets.length > 0 && !pets.includes("None"),
             has_yard: livingSituation.toLowerCase().includes("yard"),
             dog_sizes: dogSizes,
-            restrictions: restrictions.join(", "),
+            foster_duration: fosterDuration,
             why_foster: whyFoster,
             foster_count: fosterCount,
           },
@@ -371,20 +366,26 @@ function FosterSignUpForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Are there any situations your home can&apos;t accommodate? *</label>
+                    <label className="block text-sm font-medium text-foreground mb-3">How long can you typically foster a dog? *</label>
                     <div className="flex flex-wrap gap-2">
-                      {["No other dogs", "No cats", "No young children", "None"].map(restriction => (
+                      {[
+                        "1–2 weeks",
+                        "2–4 weeks",
+                        "1–3 months",
+                        "3+ months",
+                        "Open to anything",
+                      ].map(option => (
                         <button
-                          key={restriction}
+                          key={option}
                           type="button"
-                          onClick={() => toggleRestrictionCheckbox(restriction)}
+                          onClick={() => setFosterDuration(option)}
                           className={`px-4 py-2.5 rounded-full text-sm font-medium border-2 transition-colors min-h-[44px] ${
-                            restrictions.includes(restriction)
+                            fosterDuration === option
                               ? "border-primary bg-primary text-primary-foreground"
                               : "border-input bg-background text-foreground hover:border-primary/50"
                           }`}
                         >
-                          {restriction}
+                          {option}
                         </button>
                       ))}
                     </div>

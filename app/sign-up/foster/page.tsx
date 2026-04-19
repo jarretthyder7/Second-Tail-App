@@ -371,7 +371,7 @@ function FosterSignUpForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-3">Are there any dogs that wouldn&apos;t be a good fit for your home? *</label>
+                    <label className="block text-sm font-medium text-foreground mb-3">Are there any situations your home can&apos;t accommodate? *</label>
                     <div className="flex flex-wrap gap-2">
                       {["No other dogs", "No cats", "No young children", "None"].map(restriction => (
                         <button

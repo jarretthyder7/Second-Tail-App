@@ -18,20 +18,40 @@ export async function GET(request: Request) {
     } catch { /* malformed — ignore */ }
   }
 
-  if (!code) {
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
-  }
-
   const supabase = await createClient()
   const svc = createServiceRoleClient() // service role bypasses all RLS
 
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-  if (error || !data.user) {
-    console.error("Auth callback: code exchange failed", error)
+  // Supabase sends email confirmation links in two possible formats:
+  // 1. PKCE flow (?code=...) — requires the code_verifier stored in the SAME browser
+  // 2. OTP flow  (?token_hash=...&type=...) — works cross-device (email opened on phone etc.)
+  // We handle both so confirmations never fail just because the user opened the link
+  // on a different device than where they signed up.
+  const token_hash = searchParams.get("token_hash")
+  const type = searchParams.get("type")
+
+  let user: { id: string; email?: string; email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> } | null = null
+
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (error || !data.user) {
+      console.error("Auth callback: PKCE code exchange failed", error?.message)
+      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    }
+    user = data.user
+  } else if (token_hash && type) {
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash,
+      type: type as "email" | "signup" | "recovery" | "invite" | "email_change" | "phone_change",
+    })
+    if (error || !data.user) {
+      console.error("Auth callback: OTP verification failed", error?.message)
+      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    }
+    user = data.user
+  } else {
+    // No code and no token_hash — nothing to work with
     return NextResponse.redirect(`${origin}/auth/auth-code-error`)
   }
-
-  const user = data.user
 
   // Password reset — redirect immediately
   if (next && next !== "/") {

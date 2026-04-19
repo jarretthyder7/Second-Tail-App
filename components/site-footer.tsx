@@ -33,9 +33,17 @@ export function SiteFooter() {
             <a href="mailto:hello@getsecondtail.com" className="text-white/90 hover:text-white transition-colors text-sm">
               hello@getsecondtail.com
             </a>
-            <p className="text-xs sm:text-sm text-white/80">
-              © 2026 Second Tail. Made with care for rescues and fosters.
-            </p>
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+              <Link href="/privacy" className="text-xs text-white/70 hover:text-white transition-colors">
+                Privacy Policy
+              </Link>
+              <Link href="/terms" className="text-xs text-white/70 hover:text-white transition-colors">
+                Terms of Service
+              </Link>
+              <p className="text-xs sm:text-sm text-white/80">
+                © 2026 Second Tail. Made with care for rescues and fosters.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -6,6 +6,7 @@ import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { fosterLogin } from "./actions"
+import { createClient } from "@/lib/supabase/client"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -56,24 +57,13 @@ function FosterLoginContent() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     setError("")
-    
     try {
-      // Use server-side OAuth initiation to ensure PKCE cookies are set correctly
-      const response = await fetch("/api/auth/google", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+      const supabase = createClient()
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
       })
-      
-      const data = await response.json()
-      
-      if (!response.ok || !data.url) {
-        throw new Error(data.error || "Failed to initiate Google sign-in")
-      }
-      
-      // Redirect to Google OAuth
-      window.location.href = data.url
-    } catch (err) {
+    } catch {
       setError("Could not sign in with Google. Please try again.")
       setIsLoading(false)
     }

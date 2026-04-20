@@ -11,7 +11,20 @@ export async function GET(request: NextRequest) {
   // Read rescue signup intent from the cookie set just before Google OAuth was triggered.
   const cookieStore = await cookies()
   const intentCookie = cookieStore.get("oauth_signup_intent")
-  let signupIntent: { role?: string; org_role?: string; orgName?: string; adminName?: string } | null = null
+  let signupIntent: {
+    role?: string
+    org_role?: string
+    orgName?: string
+    adminName?: string
+    // Foster Google signup fields
+    livingSituation?: string
+    pets?: string[]
+    fosterCount?: string
+    childrenInHome?: string
+    dogSizes?: string[]
+    fosterDuration?: string
+    whyFoster?: string
+  } | null = null
   if (intentCookie?.value) {
     try {
       signupIntent = JSON.parse(atob(intentCookie.value))
@@ -84,6 +97,7 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   const isRescueSignup = signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin" && !!signupIntent?.orgName
+  const isFosterGoogleSignup = signupIntent?.role === "foster"
   const meta = user.user_metadata || {}
 
   let finalProfile = existingProfile
@@ -130,8 +144,8 @@ export async function GET(request: NextRequest) {
       }).catch(() => {})
     }
 
-  // ── Step 3: Handle foster Google signup (no profile yet, or trigger missed) ──
-  } else if (!existingProfile) {
+  // ── Step 3: Handle foster signup — either Google (with intent) or no profile yet ──
+  } else if (isFosterGoogleSignup || !existingProfile) {
     const { data: invitation } = await svc
       .from("invitations")
       .select("id, organization_id")
@@ -178,18 +192,35 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .maybeSingle()
 
+    // Build profile data — prefer intent (Google signup with form answers) over meta (email signup)
+    const si = isFosterGoogleSignup ? signupIntent : null
+    const profileData = {
+      housing_type: si?.livingSituation || meta.living_situation || "",
+      has_yard: si?.livingSituation
+        ? si.livingSituation.toLowerCase().includes("yard")
+        : (meta.has_yard || false),
+      has_pets: si?.pets
+        ? Array.isArray(si.pets) && si.pets.length > 0 && !si.pets.includes("None")
+        : (meta.has_pets || false),
+      existing_pets_description: si?.pets
+        ? (Array.isArray(si.pets) ? si.pets.join(", ") : "")
+        : (meta.pets || ""),
+      preferred_dog_sizes: si?.dogSizes || meta.dog_sizes || [],
+    }
+
     if (!fp) {
       await svc.from("foster_profiles").insert({
         user_id: user.id,
         city: meta.city || "",
         state: meta.state || "",
-        housing_type: meta.living_situation || "",
-        has_yard: meta.has_yard || false,
-        has_pets: meta.has_pets || false,
-        existing_pets_description: meta.pets || "",
-        preferred_dog_sizes: meta.dog_sizes || [],
+        ...profileData,
         onboarding_completed: false,
       }).catch((e: unknown) => console.error("Auth callback: foster_profiles insert failed", e))
+    } else if (si) {
+      // Google signup with form answers — update the row the trigger already created
+      await svc.from("foster_profiles").update(profileData)
+        .eq("user_id", user.id)
+        .catch((e: unknown) => console.error("Auth callback: foster_profiles update failed", e))
     }
   }
 
@@ -207,7 +238,7 @@ export async function GET(request: NextRequest) {
   // ── Step 6: No profile at all — send somewhere useful ──
   if (!finalProfile) {
     console.error("Auth callback: no profile after all attempts for user", user.id)
-    const fallback = isRescueSignup ? `/sign-up/rescue?error=setup-incomplete` : `/login/rescue`
+    const fallback = isRescueSignup ? `/sign-up/rescue?error=setup-incomplete` : `/login/foster`
     return buildRedirect(buildUrl(origin, request, fallback), sessionCookies)
   }
 

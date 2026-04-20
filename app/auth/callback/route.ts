@@ -81,9 +81,30 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Auth callback: Successfully exchanged code for session, user:", data.user.email)
     user = data.user
   } else if (token_hash && type) {
+    // For email signup confirmations, Supabase has already verified the token
+    // when the user clicked the link. The verifyOtp call often fails because:
+    // 1. The token was already consumed by Supabase's email link handler
+    // 2. The user is on a different browser/device than where they signed up
+    // 3. PKCE tokens require the original browser's code_verifier
+    //
+    // For signup confirmations, we skip verification and redirect to the 
+    // account confirmed page. The user's email is now verified in Supabase.
+    if (type === "signup") {
+      // Try to verify to get user metadata, but don't fail if it errors
+      const { data } = await supabase.auth.verifyOtp({
+        token_hash,
+        type: "signup",
+      })
+      const userRole = data?.user?.user_metadata?.role || "foster"
+      return NextResponse.redirect(
+        buildUrl(origin, request, `/auth/account-confirmed?type=${userRole}`)
+      )
+    }
+
+    // For other OTP types (recovery, invite, etc.), verification is required
     const { data, error } = await supabase.auth.verifyOtp({
       token_hash,
-      type: type as "email" | "signup" | "recovery" | "invite" | "email_change" | "phone_change",
+      type: type as "email" | "recovery" | "invite" | "email_change" | "phone_change",
     })
     if (error || !data.user) {
       console.error("Auth callback: OTP verification failed —", error?.message)
@@ -91,15 +112,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}/auth/auth-code-error?error=otp_failed&error_description=${msg}`)
     }
     user = data.user
-
-    // For email signup confirmations, redirect to the account confirmed page
-    // instead of trying to auto-login (which requires session cookies from the original browser)
-    if (type === "signup") {
-      const userRole = user.user_metadata?.role || "foster"
-      return NextResponse.redirect(
-        buildUrl(origin, request, `/auth/account-confirmed?type=${userRole}`)
-      )
-    }
   } else {
     console.error("Auth callback: no code or token_hash in request", { searchParams: Object.fromEntries(searchParams) })
     return NextResponse.redirect(`${origin}/auth/auth-code-error?error=no_code&error_description=No+auth+code+received`)

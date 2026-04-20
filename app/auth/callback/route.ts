@@ -69,8 +69,9 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error || !data.user) {
-      console.error("Auth callback: PKCE code exchange failed", error?.message)
-      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+      console.error("Auth callback: PKCE code exchange failed —", error?.message, "| status:", error?.status, "| code:", code?.slice(0, 8))
+      const msg = encodeURIComponent(error?.message || "Code exchange failed")
+      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=pkce_failed&error_description=${msg}`)
     }
     user = data.user
   } else if (token_hash && type) {
@@ -79,13 +80,14 @@ export async function GET(request: NextRequest) {
       type: type as "email" | "signup" | "recovery" | "invite" | "email_change" | "phone_change",
     })
     if (error || !data.user) {
-      console.error("Auth callback: OTP verification failed", error?.message)
-      return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+      console.error("Auth callback: OTP verification failed —", error?.message)
+      const msg = encodeURIComponent(error?.message || "OTP verification failed")
+      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=otp_failed&error_description=${msg}`)
     }
     user = data.user
   } else {
-    // No code and no token_hash — nothing to work with
-    return NextResponse.redirect(`${origin}/auth/auth-code-error`)
+    console.error("Auth callback: no code or token_hash in request", { searchParams: Object.fromEntries(searchParams) })
+    return NextResponse.redirect(`${origin}/auth/auth-code-error?error=no_code&error_description=No+auth+code+received`)
   }
 
   // Password reset — redirect immediately (session cookies still needed)

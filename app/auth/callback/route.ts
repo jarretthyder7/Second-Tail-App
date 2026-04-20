@@ -67,6 +67,10 @@ export async function GET(request: NextRequest) {
   let user: { id: string; email?: string; email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> } | null = null
 
   if (code) {
+    // Debug: log all cookie names present so we can see if the verifier is missing
+    const allCookieNames = request.cookies.getAll().map(c => c.name)
+    console.log("Auth callback cookies present:", allCookieNames)
+
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error || !data.user) {
       console.error("Auth callback: PKCE code exchange failed —", error?.message, "| status:", error?.status, "| code:", code?.slice(0, 8))

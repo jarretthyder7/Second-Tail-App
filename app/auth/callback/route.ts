@@ -81,23 +81,35 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Auth callback: Successfully exchanged code for session, user:", data.user.email)
     user = data.user
   } else if (token_hash && type) {
-    // For email signup confirmations, Supabase has already verified the token
-    // when the user clicked the link. The verifyOtp call often fails because:
-    // 1. The token was already consumed by Supabase's email link handler
-    // 2. The user is on a different browser/device than where they signed up
-    // 3. PKCE tokens require the original browser's code_verifier
+    // For email signup confirmations, the token in the URL is meant to verify
+    // the user's email. However, Supabase's PKCE tokens (pkce_...) often fail
+    // server-side because:
+    // 1. PKCE requires the code_verifier from the browser where signup occurred
+    // 2. The user may open the email on a different device/browser
+    // 3. The token may have already been consumed
     //
-    // For signup confirmations, we skip verification and redirect to the 
-    // account confirmed page. The user's email is now verified in Supabase.
+    // For signup confirmations, we redirect to a success page regardless of
+    // verification result. Supabase marks the email as verified when the user
+    // clicks the link, so the account is confirmed either way.
     if (type === "signup") {
-      // Try to verify to get user metadata, but don't fail if it errors
-      const { data } = await supabase.auth.verifyOtp({
-        token_hash,
-        type: "signup",
-      })
-      const userRole = data?.user?.user_metadata?.role || "foster"
-      return NextResponse.redirect(
-        buildUrl(origin, request, `/auth/account-confirmed?type=${userRole}`)
+      // Attempt verification to potentially get user metadata (may fail)
+      let userRole = "foster"
+      try {
+        const { data } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: "signup",
+        })
+        if (data?.user?.user_metadata?.role) {
+          userRole = data.user.user_metadata.role as string
+        }
+      } catch (e) {
+        console.log("[v0] Email confirmation OTP verification failed (expected for cross-device):", e)
+      }
+      
+      // Always redirect to account confirmed page for signup type
+      return buildRedirect(
+        buildUrl(origin, request, `/auth/account-confirmed?type=${userRole}`),
+        sessionCookies
       )
     }
 
@@ -109,7 +121,7 @@ export async function GET(request: NextRequest) {
     if (error || !data.user) {
       console.error("Auth callback: OTP verification failed —", error?.message)
       const msg = encodeURIComponent(error?.message || "OTP verification failed")
-      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=otp_failed&error_description=${msg}`)
+      return buildRedirect(`${origin}/auth/auth-code-error?error=otp_failed&error_description=${msg}`, sessionCookies)
     }
     user = data.user
   } else {

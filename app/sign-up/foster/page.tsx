@@ -163,32 +163,32 @@ function FosterSignUpForm() {
     try {
       // Store the form answers collected in steps 1 & 2 so the callback can
       // save them to the foster profile even though Google bypasses the form submit.
-      const intent = btoa(
-        JSON.stringify({
-          role: "foster",
-          livingSituation,
-          pets,
-          fosterCount,
-          childrenInHome,
-          dogSizes,
-          fosterDuration,
-          whyFoster,
-        })
-      )
-      await fetch("/api/auth/store-intent", {
+      const intent = {
+        role: "foster",
+        livingSituation,
+        pets,
+        fosterCount,
+        childrenInHome,
+        dogSizes,
+        fosterDuration,
+        whyFoster,
+      }
+
+      // Use server-side OAuth initiation to ensure PKCE cookies are set correctly
+      const response = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ intent }),
       })
-
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) throw error
+      
+      const data = await response.json()
+      
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Failed to initiate Google sign-up")
+      }
+      
+      // Redirect to Google OAuth
+      window.location.href = data.url
     } catch {
       setError("Could not sign up with Google. Please try again.")
       setIsLoading(false)

@@ -69,14 +69,20 @@ export async function GET(request: NextRequest) {
   if (code) {
     // Debug: log all cookie names present so we can see if the verifier is missing
     const allCookieNames = request.cookies.getAll().map(c => c.name)
-    console.log("Auth callback cookies present:", allCookieNames)
+    const codeVerifierCookie = request.cookies.getAll().find(c => c.name.includes("code_verifier"))
+    console.log("[v0] Auth callback cookies present:", allCookieNames)
+    console.log("[v0] Code verifier cookie found:", codeVerifierCookie ? "yes" : "NO - this is the problem!")
+    console.log("[v0] Request origin:", origin)
+    console.log("[v0] Full URL:", request.url)
 
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error || !data.user) {
-      console.error("Auth callback: PKCE code exchange failed —", error?.message, "| status:", error?.status, "| code:", code?.slice(0, 8))
+      console.error("[v0] Auth callback: PKCE code exchange failed —", error?.message, "| status:", error?.status, "| code:", code?.slice(0, 8))
+      console.error("[v0] Full error object:", JSON.stringify(error, null, 2))
       const msg = encodeURIComponent(error?.message || "Code exchange failed")
       return NextResponse.redirect(`${origin}/auth/auth-code-error?error=pkce_failed&error_description=${msg}`)
     }
+    console.log("[v0] Auth callback: Successfully exchanged code for session, user:", data.user.email)
     user = data.user
   } else if (token_hash && type) {
     const { data, error } = await supabase.auth.verifyOtp({

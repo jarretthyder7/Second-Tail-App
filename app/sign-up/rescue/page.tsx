@@ -66,32 +66,31 @@ export default function RescueSignUpPage() {
     setIsLoading(true)
     setError("")
     try {
-      const intent = btoa(
-        JSON.stringify({
-          role: "rescue",
-          org_role: "org_admin",
-          orgName: orgName.trim(),
-          adminName: adminName.trim(),
-          city: city.trim(),
-          state: orgState.trim(),
-          zip: zip.trim(),
-        })
-      )
+      const intent = {
+        role: "rescue",
+        org_role: "org_admin",
+        orgName: orgName.trim(),
+        adminName: adminName.trim(),
+        city: city.trim(),
+        state: orgState.trim(),
+        zip: zip.trim(),
+      }
 
-      await fetch("/api/auth/store-intent", {
+      // Use server-side OAuth initiation to ensure PKCE cookies are set correctly
+      const response = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ intent }),
       })
-
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) throw error
+      
+      const data = await response.json()
+      
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Failed to initiate Google sign-up")
+      }
+      
+      // Redirect to Google OAuth
+      window.location.href = data.url
     } catch (err) {
       setError("Could not sign up with Google. Please try again.")
       setIsLoading(false)

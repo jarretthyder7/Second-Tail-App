@@ -67,20 +67,16 @@ export async function GET(request: NextRequest) {
   let user: { id: string; email?: string; email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> } | null = null
 
   if (code) {
-    // Debug: log all cookie names present so we can see if the verifier is missing
-    const allCookieNames = request.cookies.getAll().map(c => c.name)
-    const codeVerifierCookie = request.cookies.getAll().find(c => c.name.includes("code_verifier"))
-    console.log("[v0] Auth callback cookies present:", allCookieNames)
-    console.log("[v0] Code verifier cookie found:", codeVerifierCookie ? "yes" : "NO - this is the problem!")
-    console.log("[v0] Request origin:", origin)
-    console.log("[v0] Full URL:", request.url)
-
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error || !data.user) {
-      console.error("[v0] Auth callback: PKCE code exchange failed —", error?.message, "| status:", error?.status, "| code:", code?.slice(0, 8))
-      console.error("[v0] Full error object:", JSON.stringify(error, null, 2))
-      const msg = encodeURIComponent(error?.message || "Code exchange failed")
-      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=pkce_failed&error_description=${msg}`)
+      // PKCE verifier is missing server-side (stored in browser localStorage by the
+      // plain supabase-js client). Forward the code to the client-side callback page
+      // where localStorage is accessible and the exchange can succeed.
+      // The OAuth code is NOT consumed by a failed client-side PKCE validation.
+      return buildRedirect(
+        `${buildUrl(origin, request, "/auth/google-callback")}?code=${encodeURIComponent(code)}`,
+        sessionCookies
+      )
     }
     console.log("[v0] Auth callback: Successfully exchanged code for session, user:", data.user.email)
     user = data.user

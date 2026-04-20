@@ -184,7 +184,7 @@ function FosterSignUpForm() {
       const supabase = createClient()
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${window.location.origin}/auth/google-callback` },
       })
     } catch {
       setError("Could not sign up with Google. Please try again.")

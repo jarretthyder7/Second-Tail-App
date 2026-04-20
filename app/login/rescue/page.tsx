@@ -6,7 +6,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { rescueLogin } from "./actions"
-import { createClient } from "@/lib/supabase/client"
+import { createOAuthClient } from "@/lib/supabase/client"
 
 const ArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -58,7 +58,7 @@ export default function RescueLoginPage() {
     setIsLoading(true)
     setError("")
     try {
-      const supabase = createClient()
+      const supabase = createOAuthClient()
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: `${window.location.origin}/auth/google-callback` },

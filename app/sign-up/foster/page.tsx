@@ -3,7 +3,7 @@
 import type React from "react"
 import { Suspense, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, createOAuthClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
@@ -180,8 +180,9 @@ function FosterSignUpForm() {
       })
       if (!res.ok) throw new Error("Failed to store signup intent")
 
-      // Initiate OAuth from the browser — browser SDK stores PKCE verifier reliably
-      const supabase = createClient()
+      // Initiate OAuth from the browser — plain client stores PKCE verifier in
+      // localStorage which survives the cross-origin Google redirect.
+      const supabase = createOAuthClient()
       await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: `${window.location.origin}/auth/google-callback` },

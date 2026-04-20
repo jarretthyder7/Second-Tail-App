@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
+import { createClient, createOAuthClient } from "@/lib/supabase/client"
 
 function GoogleCallbackContent() {
   const router = useRouter()
@@ -21,19 +21,28 @@ function GoogleCallbackContent() {
 
     ;(async () => {
       try {
-        // Exchange the code in the browser — the PKCE verifier is in browser
-        // storage here (where signInWithOAuth put it), not server cookies.
-        const supabase = createClient()
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        if (error) {
+        // Exchange the code using the plain supabase-js client, which stored
+        // the PKCE verifier in localStorage (survives cross-origin redirects).
+        const oauthClient = createOAuthClient()
+        const { data, error } = await oauthClient.auth.exchangeCodeForSession(code)
+
+        if (error || !data.session) {
           router.replace(
-            `/auth/auth-code-error?error=exchange_failed&error_description=${encodeURIComponent(error.message)}`
+            `/auth/auth-code-error?error=exchange_failed&error_description=${encodeURIComponent(error?.message ?? "Exchange failed")}`
           )
           return
         }
 
-        // Session is now in browser cookies. Server reads it to create the
-        // profile and return the correct dashboard URL.
+        // Sync the session into SSR cookies so server components and the
+        // middleware can read the authenticated user going forward.
+        const ssrClient = createClient()
+        await ssrClient.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        })
+
+        // Server reads session from cookies, creates the profile if needed,
+        // and returns the correct dashboard URL.
         const res = await fetch("/api/auth/finalize-google", { method: "POST" })
         const json = await res.json().catch(() => ({}))
         router.replace(json.redirectTo || "/")

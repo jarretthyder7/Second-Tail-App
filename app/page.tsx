@@ -63,7 +63,7 @@ export default function Home() {
                 href="/for-fosters"
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
               >
-                I'm a foster parent →
+                Become a foster parent →
               </Link>
             </div>
 

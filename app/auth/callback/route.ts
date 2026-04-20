@@ -258,8 +258,12 @@ export async function GET(request: NextRequest) {
   // ── Step 6: No profile at all — send somewhere useful ──
   if (!finalProfile) {
     console.error("Auth callback: no profile after all attempts for user", user.id)
-    const fallback = isRescueSignup ? `/sign-up/rescue?error=setup-incomplete` : `/login/foster`
-    return buildRedirect(buildUrl(origin, request, fallback), sessionCookies)
+    const fallback = isRescueSignup
+      ? `/sign-up/rescue?error=setup-incomplete`
+      : existingProfile?.role === "rescue"
+        ? `/login/rescue`
+        : `/login/foster`
+    return buildRedirect(buildUrl(origin, request, fallback), sessionCookies, cookieStore)
   }
 
   // ── Step 7: Route by role ──
@@ -275,7 +279,7 @@ export async function GET(request: NextRequest) {
       : `/foster/dashboard`
   }
 
-  return buildRedirect(buildUrl(origin, request, redirectPath), sessionCookies)
+  return buildRedirect(buildUrl(origin, request, redirectPath), sessionCookies, cookieStore)
 }
 
 // ── Helpers ──
@@ -289,27 +293,40 @@ function buildUrl(origin: string, request: NextRequest, path: string): string {
 }
 
 /**
- * Create a redirect response that:
- * 1. Carries all Supabase session cookies captured during auth exchange
- * 2. Clears the oauth_signup_intent cookie
+ * Create a redirect response that carries the Supabase session cookies.
  *
- * This is critical — using NextResponse.redirect() alone would drop the session
- * cookies because they were captured in our own array rather than being written
- * to next/headers (which doesn't auto-merge onto a custom NextResponse).
+ * Belt-and-suspenders approach: write cookies via BOTH the next/headers
+ * cookie store AND directly onto the NextResponse. This covers both the
+ * case where Next.js auto-merges cookie store cookies into any response,
+ * and the case where it doesn't (which varies by Next.js/Vercel version).
  */
 function buildRedirect(
   destination: string,
   sessionCookies: Array<{ name: string; value: string; options: Record<string, unknown> }>,
+  cookieStore?: Awaited<ReturnType<typeof import("next/headers")["cookies"]>>,
 ): NextResponse {
+  const isProd = process.env.NODE_ENV === "production"
   const response = NextResponse.redirect(destination)
 
-  // Copy Supabase auth session cookies onto the redirect response
   sessionCookies.forEach(({ name, value, options }) => {
-    response.cookies.set(name, value, options as Parameters<typeof response.cookies.set>[2])
+    const cookieOptions = {
+      ...(options as object),
+      httpOnly: true,
+      secure: isProd,
+      sameSite: "lax" as const,
+      path: "/",
+    } as Parameters<typeof response.cookies.set>[2]
+
+    // Write to the redirect response directly
+    response.cookies.set(name, value, cookieOptions)
+
+    // Also write via next/headers cookie store as a fallback
+    try { cookieStore?.set(name, value, cookieOptions) } catch {}
   })
 
   // Clear the signup intent cookie
   response.cookies.set("oauth_signup_intent", "", { maxAge: 0, path: "/" })
+  try { cookieStore?.set("oauth_signup_intent", "", { maxAge: 0, path: "/" }) } catch {}
 
   return response
 }

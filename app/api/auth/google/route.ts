@@ -1,4 +1,3 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 import { cookies } from "next/headers"
 
@@ -23,52 +22,20 @@ export async function POST(request: NextRequest) {
     ? `https://${forwardedHost}` 
     : new URL(request.url).origin
   
+  // Use the hash-based callback for implicit flow (handles access_token in URL hash)
   const redirectTo = `${origin}/auth/callback`
 
-  // Create Supabase client that can set cookies for PKCE
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, {
-                ...options,
-                // Ensure these settings for cross-site cookie persistence
-                path: "/",
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-              })
-            })
-          } catch {
-            // Can fail if called from Server Component
-          }
-        },
-      },
-    },
-  )
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  // Build the OAuth URL manually using implicit flow (no PKCE)
+  // This avoids the code_verifier cookie issue entirely
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  
+  const params = new URLSearchParams({
     provider: "google",
-    options: {
-      redirectTo,
-      skipBrowserRedirect: true, // We'll handle the redirect ourselves
-    },
+    redirect_to: redirectTo,
   })
 
-  if (error || !data.url) {
-    console.error("[v0] OAuth initiation failed:", error?.message)
-    return NextResponse.json(
-      { error: error?.message || "Failed to initiate OAuth" },
-      { status: 500 }
-    )
-  }
+  const oauthUrl = `${supabaseUrl}/auth/v1/authorize?${params.toString()}`
 
   // Return the OAuth URL - the client will redirect to it
-  return NextResponse.json({ url: data.url })
+  return NextResponse.json({ url: oauthUrl })
 }

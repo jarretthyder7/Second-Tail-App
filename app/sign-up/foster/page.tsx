@@ -9,15 +9,6 @@ import { AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-  "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
-  "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
-  "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
-  "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-  "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
-  "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-]
 
 function FosterSignUpForm() {
   const [step, setStep] = useState(1)
@@ -42,8 +33,29 @@ function FosterSignUpForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [zip, setZip] = useState("")
   const [city, setCity] = useState("")
   const [state, setState] = useState("")
+  const [zipLoading, setZipLoading] = useState(false)
+
+  const handleZipChange = async (value: string) => {
+    setZip(value)
+    if (value.length === 5 && /^\d{5}$/.test(value)) {
+      setZipLoading(true)
+      try {
+        const res = await fetch(`https://api.zippopotam.us/us/${value}`)
+        if (res.ok) {
+          const data = await res.json()
+          const place = data.places?.[0]
+          if (place) {
+            setCity(place["place name"])
+            setState(place["state abbreviation"] || "")
+          }
+        }
+      } catch {}
+      setZipLoading(false)
+    }
+  }
 
   const validateStep1 = () => {
     if (!livingSituation) {
@@ -99,11 +111,11 @@ function FosterSignUpForm() {
       return false
     }
     if (!city.trim()) {
-      setError("City is required")
+      setError("City is required — enter your ZIP code to auto-fill")
       return false
     }
-    if (!state) {
-      setError("Please select a state")
+    if (!state.trim()) {
+      setError("State is required — enter your ZIP code to auto-fill")
       return false
     }
     return true
@@ -485,30 +497,40 @@ function FosterSignUpForm() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">City *</label>
-                    <input
-                      type="text"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Los Angeles"
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">State *</label>
-                    <select
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
-                      required
-                    >
-                      <option value="">Select a state</option>
-                      {US_STATES.map(s => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
+                    <label className="block text-sm font-medium text-foreground mb-2">Location *</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={zip}
+                          onChange={(e) => handleZipChange(e.target.value)}
+                          placeholder="ZIP"
+                          maxLength={5}
+                          className="w-full rounded-lg border border-input bg-background px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                        />
+                        {zipLoading && (
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                            <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="City"
+                        className="rounded-lg border border-input bg-background px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      />
+                      <input
+                        type="text"
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
+                        placeholder="State"
+                        maxLength={2}
+                        className="rounded-lg border border-input bg-background px-3 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition uppercase"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Enter ZIP to auto-fill city and state</p>
                   </div>
                 </div>
               )}

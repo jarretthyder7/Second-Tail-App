@@ -16,6 +16,10 @@ export async function GET(request: NextRequest) {
     org_role?: string
     orgName?: string
     adminName?: string
+    // Rescue address fields
+    city?: string
+    state?: string
+    zip?: string
     // Foster Google signup fields
     livingSituation?: string
     pets?: string[]
@@ -96,25 +100,41 @@ export async function GET(request: NextRequest) {
     .eq("id", user.id)
     .maybeSingle()
 
-  const isRescueSignup = signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin" && !!signupIntent?.orgName
-  const isFosterGoogleSignup = signupIntent?.role === "foster"
+  // user_metadata holds data from email signup options.data
   const meta = user.user_metadata || {}
+
+  // Support both Google OAuth (intent cookie) and email signup (user_metadata) for rescue
+  const isRescueSignup =
+    (signupIntent?.role === "rescue" && signupIntent?.org_role === "org_admin" && !!signupIntent?.orgName) ||
+    (meta.role === "rescue" && meta.org_role === "org_admin" && !!meta.org_name)
+
+  const isFosterGoogleSignup = signupIntent?.role === "foster"
+
+  // Resolve rescue org fields — prefer intent cookie (Google), fall back to metadata (email)
+  const rescueOrgName = (signupIntent?.orgName || (meta.org_name as string) || "").trim()
+  const rescueAdminName = (signupIntent?.adminName || (meta.name as string) || user.email?.split("@")[0] || "").trim()
+  const rescueCity = (signupIntent?.city || (meta.city as string) || "").trim()
+  const rescueState = (signupIntent?.state || (meta.state as string) || "").trim()
 
   let finalProfile = existingProfile
 
-  // ── Step 2: Handle rescue Google signup ──
+  // ── Step 2: Handle rescue signup (Google or email) ──
   if (isRescueSignup) {
     let orgId = existingProfile?.organization_id ?? null
 
     if (!orgId) {
       const { data: newOrg, error: orgError } = await svc
         .from("organizations")
-        .insert({ name: signupIntent!.orgName })
+        .insert({
+          name: rescueOrgName,
+          city: rescueCity || null,
+          state: rescueState || null,
+        })
         .select("id")
         .single()
 
       if (orgError) {
-        console.error("Auth callback: org creation failed", orgError)
+        console.error("Auth callback: org creation failed", orgError.message, orgError.details)
       } else {
         orgId = newOrg.id
       }
@@ -125,7 +145,7 @@ export async function GET(request: NextRequest) {
       .upsert({
         id: user.id,
         email: user.email,
-        name: signupIntent!.adminName || meta.name || user.email?.split("@")[0],
+        name: rescueAdminName,
         role: "rescue",
         org_role: "org_admin",
         organization_id: orgId,
@@ -134,13 +154,13 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (upsertError) {
-      console.error("Auth callback: rescue profile upsert failed", upsertError)
+      console.error("Auth callback: rescue profile upsert failed", upsertError.message)
     } else {
       finalProfile = upserted
       fetch(`${origin}/api/email/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "welcome-rescue", email: user.email, orgName: signupIntent!.orgName, adminName: signupIntent!.adminName }),
+        body: JSON.stringify({ type: "welcome-rescue", email: user.email, orgName: rescueOrgName, adminName: rescueAdminName }),
       }).catch(() => {})
     }
 

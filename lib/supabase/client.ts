@@ -9,7 +9,9 @@ export function createClient() {
     throw new Error("Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.")
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: { flowType: "implicit" },
+  })
 }
 
 // Use this client ONLY for Google OAuth signInWithOAuth and exchangeCodeForSession.

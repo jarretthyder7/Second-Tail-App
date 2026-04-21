@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { rescueLogin } from "./actions"
 
@@ -45,13 +45,15 @@ const Users = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-export default function RescueLoginPage() {
+function RescueLoginContent() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const message = searchParams.get("message")
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -112,6 +114,12 @@ export default function RescueLoginPage() {
               Access your organization dashboard
             </p>
           </div>
+
+          {message && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-800 rounded-xl text-sm">
+              {message}
+            </div>
+          )}
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8">
 
@@ -213,5 +221,13 @@ export default function RescueLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function RescueLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <RescueLoginContent />
+    </Suspense>
   )
 }

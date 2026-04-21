@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type")
 
   let user: { id: string; email?: string; email_confirmed_at?: string | null; user_metadata?: Record<string, unknown> } | null = null
+  let isEmailConfirmation = false
 
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
@@ -87,10 +88,9 @@ export async function GET(request: NextRequest) {
     })
     if (otpError || !otpData.user) {
       console.error("Auth callback: OTP verification failed —", otpError?.message)
-      // For signup confirmations, fall back to account-confirmed page so the user knows to log in
       if (type === "signup") {
         return buildRedirect(
-          buildUrl(origin, request, `/auth/account-confirmed?type=foster`),
+          buildUrl(origin, request, `/login/foster?message=Email+confirmed!+Please+log+in.`),
           sessionCookies
         )
       }
@@ -98,6 +98,7 @@ export async function GET(request: NextRequest) {
       return buildRedirect(`${origin}/auth/auth-code-error?error=otp_failed&error_description=${msg}`, sessionCookies)
     }
     user = otpData.user
+    if (type === "signup") isEmailConfirmation = true
   } else {
     console.error("Auth callback: no code or token_hash in request", { searchParams: Object.fromEntries(searchParams) })
     return NextResponse.redirect(`${origin}/auth/auth-code-error?error=no_code&error_description=No+auth+code+received`)
@@ -282,6 +283,17 @@ export async function GET(request: NextRequest) {
   }
 
   // ── Step 7: Route by role ──
+  // Email confirmations go to login with a success message — simpler and more reliable
+  // than trying to auto-login from the confirmation link.
+  if (isEmailConfirmation) {
+    const loginPath = finalProfile.role === "rescue" ? "/login/rescue" : "/login/foster"
+    return buildRedirect(
+      buildUrl(origin, request, `${loginPath}?message=Email+confirmed!+You+can+now+log+in.`),
+      sessionCookies,
+      cookieStore
+    )
+  }
+
   let redirectPath = "/"
 
   if (finalProfile.role === "rescue") {

@@ -1,7 +1,7 @@
 "use server"
 
 import { createServiceRoleClient } from "@/lib/supabase/server"
-import { headers } from "next/headers"
+import { sendWelcomeEmailFoster, sendWelcomeEmailRescue } from "@/lib/email/send"
 
 /**
  * Runs immediately after a successful supabase.auth.signUp() call from the
@@ -28,11 +28,7 @@ export async function createProfileAfterSignup(userId: string) {
   const user = userData.user
   const meta = (user.user_metadata || {}) as Record<string, unknown>
   const email = user.email!
-
-  const h = await headers()
-  const host = h.get("host") || "www.getsecondtail.com"
-  const protocol = host.includes("localhost") ? "http" : "https"
-  const origin = `${protocol}://${host}`
+  const phone = ((meta.phone as string) || "").trim() || null
 
   const isRescue =
     meta.role === "rescue" &&
@@ -67,6 +63,7 @@ export async function createProfileAfterSignup(userId: string) {
           id: user.id,
           email,
           name: adminName,
+          phone,
           role: "rescue",
           org_role: "org_admin",
           organization_id: newOrg.id,
@@ -79,12 +76,10 @@ export async function createProfileAfterSignup(userId: string) {
       return { error: "Unable to create your profile. Please try again." }
     }
 
-    // Fire-and-forget welcome email
-    fetch(`${origin}/api/email/send`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ type: "welcome-rescue", email, orgName, adminName }),
-    }).catch(() => {})
+    // Fire-and-forget welcome email (call directly — avoids the /api/email/send auth gate)
+    sendWelcomeEmailRescue(email, orgName, adminName).catch((err) =>
+      console.error("createProfileAfterSignup: welcome-rescue email failed", err),
+    )
 
     return { redirectTo: `/org/${newOrg.id}/admin/setup-wizard` }
   }
@@ -106,6 +101,7 @@ export async function createProfileAfterSignup(userId: string) {
         id: user.id,
         email,
         name: fosterName,
+        phone,
         role: "foster",
         organization_id: invitation?.organization_id ?? null,
       },
@@ -150,12 +146,10 @@ export async function createProfileAfterSignup(userId: string) {
       .eq("id", invitation.id)
   }
 
-  // Fire-and-forget welcome email
-  fetch(`${origin}/api/email/send`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "welcome-foster", email, name: fosterName }),
-  }).catch(() => {})
+  // Fire-and-forget welcome email (call directly — avoids the /api/email/send auth gate)
+  sendWelcomeEmailFoster(email, fosterName).catch((err) =>
+    console.error("createProfileAfterSignup: welcome-foster email failed", err),
+  )
 
   return {
     redirectTo: invitation?.organization_id

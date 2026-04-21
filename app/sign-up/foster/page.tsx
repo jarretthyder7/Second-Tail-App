@@ -31,6 +31,7 @@ function FosterSignUpForm() {
 
   // Step 1: Basic Info (displayed as step 3)
   const [fullName, setFullName] = useState("")
+  const [phone, setPhone] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -93,6 +94,11 @@ function FosterSignUpForm() {
   const validateStep3 = () => {
     if (!fullName.trim()) {
       setError("Full name is required")
+      return false
+    }
+    const phoneDigits = phone.replace(/\D/g, "")
+    if (phoneDigits.length < 10) {
+      setError("Please enter a valid phone number")
       return false
     }
     if (!email.trim()) {
@@ -175,6 +181,7 @@ function FosterSignUpForm() {
           data: {
             name: fullName,
             full_name: fullName,
+            phone,
             role: "foster",
             city,
             state,
@@ -398,6 +405,19 @@ function FosterSignUpForm() {
                       className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
                       required
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">Phone Number *</label>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="(555) 123-4567"
+                      className="w-full rounded-lg border border-input bg-background px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-ring transition"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1.5">Rescues may text or call you about urgent updates.</p>
                   </div>
 
                   <div>

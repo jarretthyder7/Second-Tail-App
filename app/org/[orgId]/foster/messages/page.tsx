@@ -88,6 +88,33 @@ export default function OrgFosterMessages() {
     loadData()
   }, [orgId])
 
+  // Realtime: refresh list when a new message lands or a read receipt updates.
+  useEffect(() => {
+    if (!orgId) return
+    let timer: any = null
+    const scheduleReload = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => loadData(), 350)
+    }
+    const channel = supabase
+      .channel(`foster-messages-list:${orgId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        scheduleReload
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        scheduleReload
+      )
+      .subscribe()
+    return () => {
+      if (timer) clearTimeout(timer)
+      supabase.removeChannel(channel)
+    }
+  }, [orgId])
+
   async function loadData() {
     try {
       const {
@@ -125,6 +152,31 @@ export default function OrgFosterMessages() {
           .in("dog_id", fosterDogIds)
           .order("updated_at", { ascending: false })
         convs = convsData || []
+      }
+
+      // Enrich each conversation with last message + unread count
+      if (convs.length > 0 && authUser) {
+        const convIds = convs.map((c: any) => c.id)
+        const { data: allMessages } = await supabase
+          .from("messages")
+          .select("id, conversation_id, content, sender_id, read_at, created_at")
+          .in("conversation_id", convIds)
+          .order("created_at", { ascending: false })
+
+        const byConv: Record<string, any[]> = {}
+        for (const m of allMessages || []) {
+          if (!byConv[m.conversation_id]) byConv[m.conversation_id] = []
+          byConv[m.conversation_id].push(m)
+        }
+
+        convs = convs.map((c: any) => {
+          const msgs = byConv[c.id] || []
+          const last = msgs[0] || null
+          const unread = msgs.filter(
+            (m: any) => !m.read_at && m.sender_id !== authUser.id
+          ).length
+          return { ...c, last_message: last, unread_count: unread }
+        })
       }
 
       setConversations(convs)
@@ -327,28 +379,66 @@ export default function OrgFosterMessages() {
           ) : (
             conversations.map((conversation) => {
               const dog = conversation.dog
+              const unread = Number(conversation.unread_count || 0)
+              const lastMsg = conversation.last_message
+              const ts = lastMsg?.created_at || conversation.updated_at
+              const d = ts ? new Date(ts) : null
+              let timeLabel = ""
+              if (d) {
+                const diff = Date.now() - d.getTime()
+                const m = Math.floor(diff / 60000)
+                const h = Math.floor(diff / 3600000)
+                const days = Math.floor(diff / 86400000)
+                if (m < 1) timeLabel = "Now"
+                else if (m < 60) timeLabel = `${m}m`
+                else if (h < 24) timeLabel = `${h}h`
+                else if (days < 7) timeLabel = `${days}d`
+                else timeLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+              }
+              const preview = lastMsg?.content
+                ? (lastMsg.content.length > 90 ? lastMsg.content.slice(0, 87) + "..." : lastMsg.content)
+                : "No messages yet"
+              const isOwnLast = lastMsg && user?.id && lastMsg.sender_id === user.id
 
               return (
                 <Link key={conversation.id} href={`/org/${orgId}/foster/messages/${conversation.id}`}>
-                  <div className="bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition cursor-pointer">
+                  <div className={`bg-white rounded-2xl shadow-sm p-5 hover:shadow-md transition cursor-pointer ${unread > 0 ? "ring-1 ring-[#D76B1A]/30" : ""}`}>
                     <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#D76B1A] flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-sm">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        unread > 0 ? "bg-[#D76B1A] text-white" : "bg-[#F7E2BD] text-[#5A4A42]"
+                      }`}>
+                        <span className="font-bold text-sm">
                           {organization?.name?.charAt(0).toUpperCase()}
                         </span>
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-[#5A4A42]">{organization?.name}</h3>
+                          <div className="flex items-center gap-2 flex-wrap min-w-0">
+                            <h3 className={`truncate ${unread > 0 ? "font-bold text-[#2E2E2E]" : "font-semibold text-[#5A4A42]"}`}>
+                              {organization?.name}
+                            </h3>
+                            {dog && (
+                              <span className="text-xs text-[#5A4A42]/70 bg-[#FBF8F4] px-2 py-0.5 rounded-full flex-shrink-0">
+                                {dog.name}
+                              </span>
+                            )}
                           </div>
-                          <span className="text-xs text-[#2E2E2E]/40 flex-shrink-0">
-                            {new Date(conversation.updated_at).toLocaleDateString()}
-                          </span>
+                          <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                            <span className={`text-xs ${unread > 0 ? "text-[#D76B1A] font-semibold" : "text-[#2E2E2E]/40"}`}>
+                              {timeLabel}
+                            </span>
+                            {unread > 0 && (
+                              <span className="bg-[#D76B1A] text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                                {unread > 99 ? "99+" : unread}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
-                        {dog && <p className="text-sm text-[#2E2E2E]/60">About: {dog.name}</p>}
+                        <p className={`text-sm truncate ${unread > 0 ? "text-[#2E2E2E] font-medium" : "text-[#2E2E2E]/60"}`}>
+                          {isOwnLast ? "You: " : ""}{preview}
+                        </p>
                       </div>
                     </div>
                   </div>

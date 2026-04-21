@@ -98,41 +98,64 @@ export default function OrgAdminLayout({
       setProfile(profileData)
       setLoading(false)
 
-      // Fetch unread message count for rescue admin
-      // Count messages in org conversations sent by fosters (not rescue staff) that are unread
-      const { data: conversations } = await supabase.from("conversations").select("id").eq("organization_id", orgId)
-
-      if (conversations && conversations.length > 0) {
-        const conversationIds = conversations.map((c) => c.id)
-
-        // Get rescue staff IDs to exclude their messages
-        const { data: rescueStaff } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("organization_id", orgId)
-          .eq("role", "rescue")
-
-        const rescueStaffIds = rescueStaff?.map((s) => s.id) || []
-
-        // Count unread messages not sent by rescue staff
-        let query = supabase
-          .from("messages")
-          .select("*", { count: "exact", head: true })
-          .in("conversation_id", conversationIds)
-          .is("read_at", null)
-
-        // Exclude messages from rescue staff
-        if (rescueStaffIds.length > 0) {
-          query = query.not("sender_id", "in", `(${rescueStaffIds.join(",")})`)
-        }
-
-        const { count } = await query
-        setUnreadMessageCount(count || 0)
-      }
+      await refreshUnreadCount()
     }
 
     loadUserProfile()
   }, [router, orgId])
+
+  const refreshUnreadCount = async () => {
+    try {
+      const supabase = createClient()
+      const { data: conversations } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("organization_id", orgId)
+      if (!conversations || conversations.length === 0) {
+        setUnreadMessageCount(0)
+        return
+      }
+      const conversationIds = conversations.map((c) => c.id)
+      const { data: rescueStaff } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("organization_id", orgId)
+        .eq("role", "rescue")
+      const rescueStaffIds = rescueStaff?.map((s) => s.id) || []
+      let query = supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .in("conversation_id", conversationIds)
+        .is("read_at", null)
+      if (rescueStaffIds.length > 0) {
+        query = query.not("sender_id", "in", `(${rescueStaffIds.join(",")})`)
+      }
+      const { count } = await query
+      setUnreadMessageCount(count || 0)
+    } catch (err) {
+      console.warn("Failed to refresh unread count:", err)
+    }
+  }
+
+  // Realtime: refresh sidebar unread badge when messages change
+  useEffect(() => {
+    if (!orgId) return
+    const supabase = createClient()
+    let timer: any = null
+    const schedule = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => refreshUnreadCount(), 500)
+    }
+    const channel = supabase
+      .channel(`admin-sidebar-unread:${orgId}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages" }, schedule)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages" }, schedule)
+      .subscribe()
+    return () => {
+      if (timer) clearTimeout(timer)
+      supabase.removeChannel(channel)
+    }
+  }, [orgId])
 
   useEffect(() => {
     async function loadOrg() {

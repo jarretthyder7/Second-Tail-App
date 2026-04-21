@@ -48,12 +48,55 @@ export default function OrgMessagesPage() {
   const [conversationStaff, setConversationStaff] = useState<Map<string, Array<{ id: string; name: string }>>>(
     new Map(),
   )
+  const [searchQuery, setSearchQuery] = useState("")
+
+  const filteredConversations = conversations.filter((conv) => {
+    if (!searchQuery.trim()) return true
+    const q = searchQuery.toLowerCase()
+    const fosterName = (conv.foster?.name || conv.foster?.email || "").toLowerCase()
+    const dogName = (conv.dog?.name || "").toLowerCase()
+    return fosterName.includes(q) || dogName.includes(q)
+  })
 
   const supabase = createClient()
 
   useEffect(() => {
     loadData()
     loadAvailableStaff()
+  }, [orgId])
+
+  // Realtime: refresh list when any new message lands in any org conversation,
+  // or when a message is marked read. Debounced so a burst of updates only
+  // triggers one reload.
+  useEffect(() => {
+    if (!orgId) return
+    let timer: any = null
+    const scheduleReload = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(() => loadData(), 350)
+    }
+    const channel = supabase
+      .channel(`admin-messages-list:${orgId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        scheduleReload
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages" },
+        scheduleReload
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "conversations", filter: `organization_id=eq.${orgId}` },
+        scheduleReload
+      )
+      .subscribe()
+    return () => {
+      if (timer) clearTimeout(timer)
+      supabase.removeChannel(channel)
+    }
   }, [orgId])
 
   async function loadData() {
@@ -111,36 +154,20 @@ export default function OrgMessagesPage() {
 
       setTeams(teamsData || [])
 
-      const { data: convs, error: convsError } = await supabase
-        .from("conversations")
-        .select(`
-          id,
-          created_at,
-          updated_at,
-          organization_id,
-          dog_id,
-          team,
-          recipient_id,
-          dogs!conversations_dog_id_fkey (
-            id,
-            name,
-            foster_id,
-            foster:foster_id (
-              id,
-              name,
-              email
-            )
-          )
-        `)
-        .eq("organization_id", orgId)
-        .order("updated_at", { ascending: false })
+      // Load conversations with unread counts + last message via the admin API
+      const res = await fetch(`/api/admin/conversations?orgId=${orgId}`)
+      const apiJson = await res.json().catch(() => ({}))
+      const apiConvs: any[] = Array.isArray(apiJson?.conversations) ? apiJson.conversations : []
 
-      const transformedConvs =
-        convs?.map((conv) => ({
-          ...conv,
-          dog: conv.dogs,
-          foster: conv.dogs?.foster || { name: "Unknown Foster", email: "" },
-        })) || []
+      // The API returns recipient (foster) + dog + last_message + unread_count.
+      // Normalize to the shape the existing render code expects.
+      const transformedConvs = apiConvs.map((conv) => ({
+        ...conv,
+        dog: conv.dog || null,
+        foster: conv.recipient || { name: "Unknown Foster", email: "" },
+        last_message: conv.last_message || null,
+        unread_count: conv.unread_count || 0,
+      }))
 
       setConversations(transformedConvs)
       setLoading(false)
@@ -448,93 +475,144 @@ export default function OrgMessagesPage() {
           </Dialog>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        {/* Search */}
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#5A4A42]/50" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by foster or dog name..."
+              className="w-full pl-9 pr-3 py-2 text-sm rounded-full bg-white border border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/20"
+            />
+          </div>
+        </div>
+
+        {/* Conversation list */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {loading ? (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
               <p className="text-[#2E2E2E]/60">Loading conversations...</p>
             </div>
-          ) : conversations.length === 0 ? (
-            <div className="text-center py-8">
-              <MessageSquare className="w-12 h-12 mx-auto text-[#2E2E2E]/40 mb-4" />
-              <p className="text-[#2E2E2E]/60">No conversations yet</p>
-              <p className="text-sm text-[#2E2E2E]/40 mt-1">
-                Click "New Message" to start a conversation with a foster
+          ) : filteredConversations.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <div className="w-14 h-14 mx-auto rounded-full bg-[#FDF6EC] flex items-center justify-center mb-4">
+                <MessageSquare className="w-7 h-7 text-[#D76B1A]" />
+              </div>
+              <p className="text-[#5A4A42] font-medium">
+                {searchQuery ? "No matches" : "No conversations yet"}
+              </p>
+              <p className="text-sm text-[#2E2E2E]/50 mt-1">
+                {searchQuery ? "Try a different search term." : "Click \"New Message\" to start one."}
               </p>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {conversations.map((conv) => {
+            <ul className="divide-y divide-[#F7E2BD]/60">
+              {filteredConversations.map((conv) => {
                 const fosterName = conv.foster?.name || conv.foster?.email || "Unknown Foster"
                 const dogName = conv.dog?.name
-                let teamMembers: string[] = []
-                if (conv.team) {
-                  try {
-                    const parsed = JSON.parse(conv.team)
-                    teamMembers = Array.isArray(parsed) ? parsed : []
-                  } catch {
-                    // team is a plain string (team name), not a JSON array — treat as no staff members
-                    teamMembers = []
-                  }
+                const unread = Number(conv.unread_count || 0)
+                const lastMsg = conv.last_message
+                const isFromFoster = lastMsg && conv.foster?.id && lastMsg.sender_id === conv.foster.id
+
+                // Last-updated label: "Now" / "12m" / "3h" / "2d" / "Mar 14"
+                const ts = lastMsg?.created_at || conv.updated_at
+                const d = ts ? new Date(ts) : null
+                const diffMs = d ? Date.now() - d.getTime() : 0
+                let timeLabel = ""
+                if (d) {
+                  const m = Math.floor(diffMs / 60000)
+                  const h = Math.floor(diffMs / 3600000)
+                  const days = Math.floor(diffMs / 86400000)
+                  if (m < 1) timeLabel = "Now"
+                  else if (m < 60) timeLabel = `${m}m`
+                  else if (h < 24) timeLabel = `${h}h`
+                  else if (days < 7) timeLabel = `${days}d`
+                  else timeLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
                 }
-                const teamDisplay =
-                  teamMembers.length > 0 ? (
-                    <span className="bg-[#F7E2BD] text-[#5A4A42] text-xs px-2.5 py-1 rounded-full font-medium">
-                      {teamMembers.length} staff member{teamMembers.length !== 1 ? "s" : ""}
-                    </span>
-                  ) : (
-                    <span className="bg-[#FBF8F4] border border-[#E8DDD1] text-[#2E2E2E]/60 text-xs px-2.5 py-1 rounded-full font-medium">
-                      Unassigned
-                    </span>
-                  )
+
+                // Avatar initial: prefer foster name, fall back to email
+                const initial = (fosterName || "?").trim().charAt(0).toUpperCase()
+
+                // Truncate message preview
+                const preview = lastMsg?.content
+                  ? (lastMsg.content.length > 80 ? lastMsg.content.slice(0, 77) + "..." : lastMsg.content)
+                  : "No messages yet"
 
                 return (
-                  <div key={conv.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="h-5 w-5 text-primary" />
-                        <h3 className="font-semibold">{dogName || "Unknown Dog"}</h3>
+                  <li key={conv.id} className="relative group">
+                    <Link
+                      href={`/org/${orgId}/admin/messages/${conv.id}`}
+                      className="flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-[#FBF8F4] transition-colors"
+                    >
+                      {/* Avatar */}
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        unread > 0 ? "bg-[#D76B1A] text-white" : "bg-[#F7E2BD] text-[#5A4A42]"
+                      }`}>
+                        <span className="font-semibold">{initial}</span>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedConversationForStaff(conv.id)
-                              setShowAddStaffDialog(true)
-                            }}
-                          >
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Add Staff Members
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link href={`/org/${orgId}/admin/messages/${conv.id}`}>View Conversation</Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
 
-                    <p className="text-sm text-muted-foreground mb-3">Foster: {fosterName}</p>
+                      {/* Main content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className={`truncate ${unread > 0 ? "font-bold text-[#2E2E2E]" : "font-semibold text-[#5A4A42]"}`}>
+                            {fosterName}
+                          </span>
+                          {dogName && (
+                            <span className="text-xs text-[#5A4A42]/60 bg-[#FBF8F4] px-1.5 py-0.5 rounded-full flex-shrink-0">
+                              {dogName}
+                            </span>
+                          )}
+                        </div>
+                        <p className={`text-sm truncate ${unread > 0 ? "text-[#2E2E2E] font-medium" : "text-[#2E2E2E]/60"}`}>
+                          {isFromFoster ? "" : "You: "}{preview}
+                        </p>
+                      </div>
 
-                    {teamMembers.length > 0 && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                        <Users className="h-3 w-3" />
-                        <span>
-                          {teamMembers.length} staff member{teamMembers.length !== 1 ? "s" : ""} involved
+                      {/* Right side: timestamp + unread badge */}
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className={`text-xs ${unread > 0 ? "text-[#D76B1A] font-semibold" : "text-[#2E2E2E]/50"}`}>
+                          {timeLabel}
                         </span>
+                        {unread > 0 ? (
+                          <span className="bg-[#D76B1A] text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                            {unread > 99 ? "99+" : unread}
+                          </span>
+                        ) : (
+                          <span className="w-5 h-5" />
+                        )}
                       </div>
-                    )}
+                    </Link>
 
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>Last updated: {new Date(conv.updated_at).toLocaleDateString()}</span>
+                    {/* Three-dot menu overlay */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                      <div className="pointer-events-auto">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="bg-white/90 backdrop-blur-sm shadow-sm" onClick={(e) => { e.preventDefault(); e.stopPropagation() }}>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setSelectedConversationForStaff(conv.id)
+                                setShowAddStaffDialog(true)
+                              }}
+                            >
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Add Staff Members
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  </div>
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           )}
         </div>
 

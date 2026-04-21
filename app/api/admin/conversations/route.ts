@@ -36,7 +36,12 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         recipient:profiles!conversations_recipient_id_fkey(id, name, email, role),
-        dog:dogs!conversations_dog_id_fkey(id, name),
+        dog:dogs!conversations_dog_id_fkey(
+          id,
+          name,
+          foster_id,
+          foster:profiles!dogs_foster_id_fkey(id, name, email)
+        ),
         messages(
           id,
           content,
@@ -61,7 +66,8 @@ export async function GET(request: NextRequest) {
       )[0]
       
       // Check if last message is from foster and unread by rescue
-      const lastMessageSenderRole = lastMessage?.sender_id === conv.recipient?.id ? "foster" : "rescue"
+      const fosterId = conv.recipient?.id || conv.dog?.foster?.id || conv.dog?.foster_id || null
+      const lastMessageSenderRole = lastMessage?.sender_id === fosterId ? "foster" : "rescue"
       const readByRescue = lastMessage?.read_at !== null
 
       return {
@@ -69,7 +75,7 @@ export async function GET(request: NextRequest) {
         last_message: lastMessage,
         last_message_sender_role: lastMessageSenderRole,
         read_by_rescue: readByRescue,
-        unread_count: messages.filter((m: any) => !m.read_at && m.sender_id === conv.recipient?.id).length
+        unread_count: fosterId ? messages.filter((m: any) => !m.read_at && m.sender_id === fosterId).length : 0
       }
     })
 

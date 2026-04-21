@@ -4,7 +4,10 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Mail, Copy, Check, LogOut, MapPin, Heart } from 'lucide-react'
+import {
+  Copy, Check, LogOut, MapPin, Heart, PawPrint, Users, Mail,
+  Sparkles, ArrowRight, Home, ShoppingBag, Clock, MessageCircle
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { InviteRescueModal } from '@/app/components/foster/invite-rescue-modal'
 
@@ -46,7 +49,6 @@ export default function FosterDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Get current user
         const { data: { user: currentUser } } = await supabase.auth.getUser()
         if (!currentUser) {
           router.push('/login/foster')
@@ -54,7 +56,6 @@ export default function FosterDashboard() {
         }
         setUser(currentUser)
 
-        // Get user profile
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -64,13 +65,12 @@ export default function FosterDashboard() {
         if (profileError) throw profileError
         setProfile(profileData)
 
-        // If already connected to an org, redirect
+        // If already connected to an org, redirect to the connected dashboard
         if (profileData?.organization_id) {
           router.push(`/org/${profileData.organization_id}/foster/dashboard`)
           return
         }
 
-        // Get foster profile for city and state
         const { data: fosterData, error: fosterError } = await supabase
           .from('foster_profiles')
           .select('*')
@@ -81,7 +81,6 @@ export default function FosterDashboard() {
         if (fosterData) {
           setFosterProfile(fosterData)
 
-          // Get rescues in the same state
           const { data: rescueData, error: rescueError } = await supabase
             .from('organizations')
             .select('id, name, city, state')
@@ -91,7 +90,6 @@ export default function FosterDashboard() {
           if (rescueError) throw rescueError
           setRescues(rescueData || [])
 
-          // Get available dogs in the same state
           const { data: dogsData, error: dogsError } = await supabase
             .from('dogs')
             .select('id, name, breed, size, organization_id')
@@ -119,16 +117,21 @@ export default function FosterDashboard() {
   }
 
   const handleCopyInviteLink = () => {
-    const link = `https://getsecondtail.com/sign-up/foster`
+    const link = `https://www.getsecondtail.com/sign-up/foster`
     navigator.clipboard.writeText(link)
     setCopied(true)
     toast.success('Invite link copied!')
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleInterestedInDog = (dogName: string) => {
-    toast.success(`We'll let the rescue know you're interested in ${dogName}!`)
+  const scrollToAnimals = () => {
+    document.getElementById('animals-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
+
+  // Support both new (name) and old (full_name) columns
+  const displayName: string = profile?.name || profile?.full_name || ''
+  const firstName = displayName.split(' ')[0] || 'there'
+  const stateLabel = fosterProfile?.state || 'your area'
 
   if (loading) {
     return (
@@ -150,8 +153,8 @@ export default function FosterDashboard() {
             Second Tail
           </Link>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-900">{profile?.full_name}</p>
+            <div className="text-right hidden sm:block">
+              <p className="text-sm font-medium text-gray-900">{displayName}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
             <button
@@ -165,142 +168,222 @@ export default function FosterDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Banner */}
-        <div className="bg-[#D76B1A] text-white rounded-2xl p-8 mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            Welcome, {profile?.full_name?.split(' ')[0]}!
-          </h1>
-          <p className="text-white/90 text-lg">
-            You're on the Second Tail foster network. Connect with a rescue in your area to get started.
-          </p>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#D76B1A] to-[#B85A14] text-white shadow-sm">
+          <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/10 blur-3xl" aria-hidden />
+          <div className="absolute -left-16 -bottom-16 w-72 h-72 rounded-full bg-white/5 blur-3xl" aria-hidden />
+          <div className="relative z-10 p-6 sm:p-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs sm:text-sm font-medium mb-4">
+              <Sparkles className="w-3.5 h-3.5" />
+              You're one step away
+            </div>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 leading-tight">
+              Welcome{firstName !== 'there' ? `, ${firstName}` : ''}!
+            </h1>
+            <p className="text-white/95 text-base sm:text-lg leading-relaxed max-w-2xl">
+              You're part of the Second Tail foster network. Connect with a rescue in {stateLabel} and your first foster could be on their way home soon.
+            </p>
+            {rescues.length > 0 && (
+              <button
+                onClick={() => document.getElementById('rescues-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="mt-6 inline-flex items-center gap-2 px-5 py-3 bg-white text-[#D76B1A] rounded-full font-semibold hover:bg-white/95 transition-colors"
+              >
+                See rescues near you
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Connect with a Rescue Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Connect with a Rescue</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Invite Card */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Invite a Rescue</h3>
-              <p className="text-gray-600 mb-6">
-                Know a rescue that needs better tools? Invite them to Second Tail.
-              </p>
-              <button
-                onClick={() => setShowInviteRescueModal(true)}
-                className="inline-block px-6 py-3 bg-[#D76B1A] text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
-              >
-                Send an Invite
-              </button>
-            </div>
-
-            {/* Invite a Friend Card */}
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Invite a Friend</h3>
-              <p className="text-gray-600 mb-6">
-                Know someone who'd make a great foster? Share the link so they can sign up free.
-              </p>
-              <button
-                onClick={handleCopyInviteLink}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#D76B1A] text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
-              >
-                {copied ? (
-                  <>
-                    <Check className="w-4 h-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-4 h-4" />
-                    Copy Invite Link
-                  </>
-                )}
-              </button>
-            </div>
+        {/* Your Journey */}
+        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your foster journey</h2>
+            <p className="text-sm text-gray-600 mt-1">Here's what's ahead</p>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <JourneyStep number="1" title="Connect" desc="Link up with a rescue" active />
+            <JourneyStep number="2" title="Get matched" desc="Meet a dog who needs you" />
+            <JourneyStep number="3" title="Welcome home" desc="Open your doors" />
+            <JourneyStep number="4" title="Change a life" desc="Help them find forever" />
           </div>
         </section>
 
-        {/* Rescues Near You Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Rescues Near You
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Rescue organizations using Second Tail in {fosterProfile?.state}
-          </p>
+        {/* Action Grid */}
+        <section>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">Take the first step</h2>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <ActionCard
+              icon={<Users className="w-5 h-5" />}
+              title="Invite a rescue"
+              desc="Bring your local rescue onto Second Tail"
+              onClick={() => setShowInviteRescueModal(true)}
+            />
+            <ActionCard
+              icon={<Mail className="w-5 h-5" />}
+              title={copied ? 'Copied!' : 'Invite a friend'}
+              desc="Know someone who'd make a great foster?"
+              onClick={handleCopyInviteLink}
+              icon2={copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            />
+            <ActionCard
+              icon={<PawPrint className="w-5 h-5" />}
+              title="Browse animals"
+              desc={dogs.length > 0 ? `${dogs.length} looking for homes` : 'See who\'s nearby'}
+              onClick={scrollToAnimals}
+            />
+            <ActionCard
+              icon={<MessageCircle className="w-5 h-5" />}
+              title="Questions?"
+              desc="We'd love to hear from you"
+              href="mailto:hello@getsecondtail.com"
+            />
+          </div>
+        </section>
+
+        {/* Rescues Near You */}
+        <section id="rescues-section">
+          <div className="flex items-center justify-between mb-4 gap-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Rescues near you</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Using Second Tail in {stateLabel}
+              </p>
+            </div>
+            {rescues.length > 0 && (
+              <button
+                onClick={() => setShowInviteRescueModal(true)}
+                className="text-sm font-semibold text-[#D76B1A] hover:opacity-80 whitespace-nowrap"
+              >
+                + Invite another
+              </button>
+            )}
+          </div>
           {rescues.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {rescues.map((rescue) => (
-                <div key={rescue.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{rescue.name}</h3>
-                  <div className="flex items-center gap-2 text-gray-600 mb-4">
-                    <MapPin className="w-4 h-4" />
-                    <span className="text-sm">{rescue.city}, {rescue.state}</span>
+                <div key={rescue.id} className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: '#F7E2BD' }}>
+                    <Home className="w-5 h-5" style={{ color: '#D76B1A' }} />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">{rescue.name}</h3>
+                  <div className="flex items-center gap-1.5 text-gray-500 mb-4">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span className="text-xs">{rescue.city}, {rescue.state}</span>
                   </div>
                   <button
-                    onClick={() => toast.info('Rescue profile coming soon!')}
-                    className="inline-block px-4 py-2 border-2 border-[#D76B1A] text-[#D76B1A] rounded-full font-semibold hover:bg-orange-50 transition-colors"
+                    onClick={() => toast.info('Rescue profiles coming soon!')}
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#D76B1A] text-white rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
                   >
-                    View
+                    Say hello
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
-              <p className="text-gray-600">
-                No rescues in your area yet — invite one above!
+            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-gray-100 text-center shadow-sm">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F7E2BD' }}>
+                <PawPrint className="w-8 h-8" style={{ color: '#D76B1A' }} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Be the one who brings a rescue on board
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm sm:text-base">
+                No rescues on Second Tail in {stateLabel} yet. Know one that could use better tools? Send them an invite — you'll be the reason a dog finds their next home.
+              </p>
+              <button
+                onClick={() => setShowInviteRescueModal(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-[#D76B1A] text-white rounded-full font-semibold hover:opacity-90 transition-opacity"
+              >
+                Invite a rescue
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* Animals */}
+        <section id="animals-section">
+          <div className="mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Animals looking for homes</h2>
+            <p className="text-sm text-gray-600 mt-1">Available for fostering near you</p>
+          </div>
+          {dogs.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dogs.map((dog) => (
+                <div key={dog.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="aspect-[4/3] bg-gradient-to-br from-[#F7E2BD] to-[#FDF6EC] flex items-center justify-center">
+                    <PawPrint className="w-12 h-12" style={{ color: '#D76B1A', opacity: 0.4 }} />
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{dog.name}</h3>
+                    <p className="text-xs text-gray-500 mb-4">
+                      {dog.breed || 'Mixed breed'} · {dog.size || 'Size unknown'}
+                    </p>
+                    <button
+                      onClick={() => toast.success(`We'll let the rescue know you're interested in ${dog.name}!`)}
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#D76B1A] text-white rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
+                    >
+                      <Heart className="w-3.5 h-3.5" />
+                      I'm interested
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-gray-100 text-center shadow-sm">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#F7E2BD' }}>
+                <Heart className="w-8 h-8" style={{ color: '#D76B1A' }} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                Your future foster is on their way
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto text-sm sm:text-base">
+                Once rescues in {stateLabel} join Second Tail, you'll see dogs who need homes right here.
               </p>
             </div>
           )}
         </section>
 
-        {/* Animals Available Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Animals Looking for Foster Homes
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Animals available for fostering near you
-          </p>
-          {dogs.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {dogs.map((dog) => (
-                <div key={dog.id} className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{dog.name}</h3>
-                  <div className="space-y-2 text-gray-600 text-sm mb-4">
-                    <p><strong>Breed:</strong> {dog.breed}</p>
-                    <p><strong>Size:</strong> {dog.size}</p>
-                  </div>
-                  <button
-                    onClick={() => handleInterestedInDog(dog.name)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#D76B1A] text-white rounded-full font-semibold hover:opacity-90 transition-opacity w-full justify-center"
-                  >
-                    <Heart className="w-4 h-4" />
-                    I&apos;m Interested
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-2xl p-8 text-center border border-gray-200">
-              <p className="text-gray-600">
-                Check back soon as more rescues join!
-              </p>
-            </div>
-          )}
+        {/* While You Wait */}
+        <section className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-sm">
+          <div className="mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">While you wait</h2>
+            <p className="text-sm text-gray-600 mt-1">A few things that'll make your first foster experience easier</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            <TipCard
+              icon={<Home className="w-5 h-5" />}
+              title="Prepare a cozy space"
+              desc="A quiet corner with a bed, water bowl, and soft blankets goes a long way on day one."
+            />
+            <TipCard
+              icon={<ShoppingBag className="w-5 h-5" />}
+              title="Stock the basics"
+              desc="Leash, collar, and waste bags. Your rescue covers food, meds, and vet care."
+            />
+            <TipCard
+              icon={<Clock className="w-5 h-5" />}
+              title="Be patient"
+              desc="New environments take a few days. Give them space and they'll come to you."
+            />
+          </div>
         </section>
+
       </main>
 
       <InviteRescueModal
         isOpen={showInviteRescueModal}
         onClose={() => setShowInviteRescueModal(false)}
-        fosterName={profile?.full_name || ""}
-        fosterCity={fosterProfile?.city || ""}
-        fosterState={fosterProfile?.state || ""}
+        fosterName={displayName}
+        fosterCity={fosterProfile?.city || ''}
+        fosterState={fosterProfile?.state || ''}
       />
 
-      {/* Footer */}
       <footer className="border-t border-gray-200 bg-[#D76B1A] py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-xs sm:text-sm text-white/80">
@@ -308,6 +391,61 @@ export default function FosterDashboard() {
           </div>
         </div>
       </footer>
+    </div>
+  )
+}
+
+// ── Small presentational components ──
+
+function JourneyStep({ number, title, desc, active }: { number: string; title: string; desc: string; active?: boolean }) {
+  return (
+    <div className={`rounded-2xl p-4 border transition ${active ? 'border-[#D76B1A] bg-[#FFF8F0]' : 'border-gray-100 bg-gray-50'}`}>
+      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mb-3 ${active ? 'bg-[#D76B1A] text-white' : 'bg-gray-200 text-gray-500'}`}>
+        {number}
+      </div>
+      <h3 className={`font-semibold text-sm mb-1 ${active ? 'text-gray-900' : 'text-gray-700'}`}>{title}</h3>
+      <p className="text-xs text-gray-500 leading-snug">{desc}</p>
+    </div>
+  )
+}
+
+function ActionCard({
+  icon, icon2, title, desc, onClick, href,
+}: {
+  icon: React.ReactNode
+  icon2?: React.ReactNode
+  title: string
+  desc: string
+  onClick?: () => void
+  href?: string
+}) {
+  const content = (
+    <>
+      <div className="flex items-start justify-between">
+        <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: '#F7E2BD', color: '#D76B1A' }}>
+          {icon}
+        </div>
+        {icon2 && <div className="text-[#D76B1A]">{icon2}</div>}
+      </div>
+      <h3 className="font-semibold text-sm text-gray-900 mb-1">{title}</h3>
+      <p className="text-xs text-gray-500 leading-snug">{desc}</p>
+    </>
+  )
+  const className = "bg-white rounded-2xl p-4 sm:p-5 border border-gray-100 shadow-sm hover:shadow-md transition text-left block"
+  if (href) {
+    return <a href={href} className={className}>{content}</a>
+  }
+  return <button onClick={onClick} className={className + " w-full"}>{content}</button>
+}
+
+function TipCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+  return (
+    <div className="rounded-2xl p-5 border border-gray-100" style={{ backgroundColor: '#FDF6EC' }}>
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: '#F7E2BD', color: '#D76B1A' }}>
+        {icon}
+      </div>
+      <h3 className="font-semibold text-sm text-gray-900 mb-1.5">{title}</h3>
+      <p className="text-xs text-gray-600 leading-relaxed">{desc}</p>
     </div>
   )
 }

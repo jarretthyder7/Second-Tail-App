@@ -159,12 +159,12 @@ export default function OrgMessagesPage() {
       const apiJson = await res.json().catch(() => ({}))
       const apiConvs: any[] = Array.isArray(apiJson?.conversations) ? apiJson.conversations : []
 
-      // The API returns recipient (foster) + dog + last_message + unread_count.
-      // Normalize to the shape the existing render code expects.
+      // The API returns recipient + dog (with nested foster) + last_message + unread_count.
+      // Normalize so the render code can just use conv.foster.
       const transformedConvs = apiConvs.map((conv) => ({
         ...conv,
         dog: conv.dog || null,
-        foster: conv.recipient || { name: "Unknown Foster", email: "" },
+        foster: conv.recipient || conv.dog?.foster || { name: "Unknown Foster", email: "" },
         last_message: conv.last_message || null,
         unread_count: conv.unread_count || 0,
       }))

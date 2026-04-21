@@ -81,49 +81,23 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Auth callback: Successfully exchanged code for session, user:", data.user.email)
     user = data.user
   } else if (token_hash && type) {
-    // For email signup confirmations, the token in the URL is meant to verify
-    // the user's email. However, Supabase's PKCE tokens (pkce_...) often fail
-    // server-side because:
-    // 1. PKCE requires the code_verifier from the browser where signup occurred
-    // 2. The user may open the email on a different device/browser
-    // 3. The token may have already been consumed
-    //
-    // For signup confirmations, we redirect to a success page regardless of
-    // verification result. Supabase marks the email as verified when the user
-    // clicks the link, so the account is confirmed either way.
-    if (type === "signup") {
-      // Attempt verification to potentially get user metadata (may fail)
-      let userRole = "foster"
-      try {
-        const { data } = await supabase.auth.verifyOtp({
-          token_hash,
-          type: "signup",
-        })
-        if (data?.user?.user_metadata?.role) {
-          userRole = data.user.user_metadata.role as string
-        }
-      } catch (e) {
-        console.log("[v0] Email confirmation OTP verification failed (expected for cross-device):", e)
-      }
-      
-      // Always redirect to account confirmed page for signup type
-      return buildRedirect(
-        buildUrl(origin, request, `/auth/account-confirmed?type=${userRole}`),
-        sessionCookies
-      )
-    }
-
-    // For other OTP types (recovery, invite, etc.), verification is required
-    const { data, error } = await supabase.auth.verifyOtp({
+    const { data: otpData, error: otpError } = await supabase.auth.verifyOtp({
       token_hash,
-      type: type as "email" | "recovery" | "invite" | "email_change" | "phone_change",
+      type: type as "email" | "signup" | "recovery" | "invite" | "email_change" | "phone_change",
     })
-    if (error || !data.user) {
-      console.error("Auth callback: OTP verification failed —", error?.message)
-      const msg = encodeURIComponent(error?.message || "OTP verification failed")
+    if (otpError || !otpData.user) {
+      console.error("Auth callback: OTP verification failed —", otpError?.message)
+      // For signup confirmations, fall back to account-confirmed page so the user knows to log in
+      if (type === "signup") {
+        return buildRedirect(
+          buildUrl(origin, request, `/auth/account-confirmed?type=foster`),
+          sessionCookies
+        )
+      }
+      const msg = encodeURIComponent(otpError?.message || "OTP verification failed")
       return buildRedirect(`${origin}/auth/auth-code-error?error=otp_failed&error_description=${msg}`, sessionCookies)
     }
-    user = data.user
+    user = otpData.user
   } else {
     console.error("Auth callback: no code or token_hash in request", { searchParams: Object.fromEntries(searchParams) })
     return NextResponse.redirect(`${origin}/auth/auth-code-error?error=no_code&error_description=No+auth+code+received`)

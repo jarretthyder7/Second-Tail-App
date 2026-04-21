@@ -76,7 +76,14 @@ export async function GET(req: NextRequest) {
   }
 
   const query = encodeURIComponent(`"${state}" animal rescue`)
-  const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${query}&mode=ArtList&format=json&maxrecords=40&sort=DateDesc&sourcelang=english&sourcecountry=US`
+  // Search last 10 years, most recent first
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const fmt = (d: Date) =>
+    `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}`
+  const tenYearsAgo = new Date(now)
+  tenYearsAgo.setUTCFullYear(tenYearsAgo.getUTCFullYear() - 10)
+  const gdeltUrl = `https://api.gdeltproject.org/api/v2/doc/doc?query=${query}&mode=ArtList&format=json&maxrecords=50&sort=DateDesc&sourcelang=english&sourcecountry=US&startdatetime=${fmt(tenYearsAgo)}&enddatetime=${fmt(now)}`
 
   try {
     const res = await fetch(gdeltUrl, { next: { revalidate: 21600 } })

@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { shouldSendEmailNotification } from "@/lib/messaging/should-notify"
 
 import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -82,6 +83,42 @@ export default function ConversationPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages.length])
+
+  // Realtime: listen for new messages + read receipts on this conversation.
+  useEffect(() => {
+    if (!conversationId) return
+    const channel = supabase
+      .channel(`foster-conversation:${conversationId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        async (payload) => {
+          const newMsg: any = payload.new
+          if (user?.id && newMsg.sender_id === user.id) return
+          const { data: sender } = await supabase
+            .from("profiles")
+            .select("id, name, email")
+            .eq("id", newMsg.sender_id)
+            .maybeSingle()
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === newMsg.id)) return prev
+            return [...prev, { ...newMsg, sender }]
+          })
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          const updated: any = payload.new
+          setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)))
+        }
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [conversationId, user?.id])
 
   useEffect(() => {
     if (user && messages.length > 0) {
@@ -201,29 +238,37 @@ export default function ConversationPage() {
       // Update conversation timestamp
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
-      // Notify org admin via email
+      // Notify ALL org admins via email — with 10-min debounce per admin.
+      // A rescue with 3 admins used to only notify 1 (the .limit(1) bug).
       try {
-        const { data: orgAdmin } = await supabase
-          .from("profiles")
-          .select("email, name")
-          .eq("organization_id", orgId)
-          .eq("role", "rescue")
-          .eq("org_role", "org_admin")
-          .limit(1)
-          .maybeSingle()
+        if (organization) {
+          const { data: admins } = await supabase
+            .from("profiles")
+            .select("id, email, name")
+            .eq("organization_id", orgId)
+            .eq("role", "rescue")
+            .eq("org_role", "org_admin")
 
-        if (orgAdmin && organization) {
-          await fetch("/api/email/send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              type: "message-to-org",
-              orgEmail: orgAdmin.email,
-              orgName: organization.name,
-              fosterName: user.name,
-              dogName: dog?.name || "their foster",
-            }),
-          })
+          for (const admin of admins || []) {
+            if (!admin.email) continue
+            const shouldNotify = await shouldSendEmailNotification(
+              supabase,
+              conversationId,
+              admin.id
+            )
+            if (!shouldNotify) continue
+            await fetch("/api/email/send", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "message-to-org",
+                orgEmail: admin.email,
+                orgName: organization.name,
+                fosterName: user.name,
+                dogName: dog?.name || "their foster",
+              }),
+            })
+          }
         }
       } catch (emailError) {
         console.warn("Failed to send message notification email:", emailError)

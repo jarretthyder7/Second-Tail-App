@@ -84,9 +84,11 @@ function RescueLoginContent() {
     setError("")
     try {
       const supabase = createOAuthClient()
+      // Send directly to the client-side callback so we can handle BOTH
+      // implicit flow (#access_token in hash) and PKCE flow (?code=).
       await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` },
+        options: { redirectTo: `${window.location.origin}/auth/google-callback` },
       })
     } catch {
       setError("Could not sign in with Google. Please try again.")

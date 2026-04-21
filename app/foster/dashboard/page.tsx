@@ -117,7 +117,9 @@ export default function FosterDashboard() {
   }
 
   const handleCopyInviteLink = () => {
-    const link = `https://www.getsecondtail.com/sign-up/foster`
+    // Use the current origin so the link works whether the foster opened the
+    // app via www.getsecondtail.com or getsecondtail.com (bare domain).
+    const link = `${window.location.origin}/sign-up/foster`
     navigator.clipboard.writeText(link)
     setCopied(true)
     toast.success('Invite link copied!')

@@ -100,7 +100,19 @@ export async function GET(request: NextRequest) {
     user = otpData.user
     if (type === "signup") isEmailConfirmation = true
   } else {
-    console.error("Auth callback: no code or token_hash in request", { searchParams: Object.fromEntries(searchParams) })
+    // Capture any OAuth error params Supabase/Google may have passed through
+    // so the error page actually tells us what went wrong instead of "no_code".
+    const oauthError = searchParams.get("error")
+    const oauthErrorCode = searchParams.get("error_code")
+    const oauthErrorDescription = searchParams.get("error_description")
+    const allParams = Object.fromEntries(searchParams)
+    console.error("Auth callback: no code or token_hash in request", allParams)
+
+    if (oauthError || oauthErrorDescription) {
+      const err = encodeURIComponent(oauthError || "oauth_error")
+      const desc = encodeURIComponent(oauthErrorDescription || oauthErrorCode || "OAuth failed")
+      return NextResponse.redirect(`${origin}/auth/auth-code-error?error=${err}&error_description=${desc}`)
+    }
     return NextResponse.redirect(`${origin}/auth/auth-code-error?error=no_code&error_description=No+auth+code+received`)
   }
 

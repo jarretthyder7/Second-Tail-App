@@ -2,33 +2,56 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 import { renderNewsletterTemplate } from '@/lib/email/newsletter-template'
+import { buildUnsubscribeUrl } from '@/lib/email/unsubscribe-token'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
+
+const SEND_DELAY_MS = 150 // ~6.6 sends/sec — stays under Resend's 10/sec free tier
+
+function wait(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms))
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
-    
-    // Verify authentication
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
-    const { 
-      orgId, 
-      sections, 
-      subject, 
+    const {
+      orgId,
+      sections,
+      subject,
       scheduleFor,
-      recipientType = 'all_fosters'
+      recipientType = 'all_fosters',
     } = body
 
     if (!orgId || !sections || !subject) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
+      )
     }
 
-    // Verify the user is an org_admin of the target organization
+    // Scheduling is not implemented — there is no cron worker that picks up
+    // scheduled rows yet. Reject explicitly instead of silently storing.
+    if (scheduleFor && new Date(scheduleFor) > new Date()) {
+      return NextResponse.json(
+        {
+          error:
+            'Scheduled sending is not available yet. Please send now or save a draft.',
+        },
+        { status: 501 }
+      )
+    }
+
     const { data: userProfile } = await supabase
       .from('profiles')
       .select('role, org_role, organization_id')
@@ -40,10 +63,12 @@ export async function POST(request: NextRequest) {
       userProfile.organization_id !== orgId ||
       userProfile.org_role !== 'org_admin'
     ) {
-      return NextResponse.json({ error: 'Forbidden: Not an admin of this organization' }, { status: 403 })
+      return NextResponse.json(
+        { error: 'Forbidden: Not an admin of this organization' },
+        { status: 403 }
+      )
     }
 
-    // Get organization details for branding
     const { data: org, error: orgError } = await supabase
       .from('organizations')
       .select('name, logo_url, primary_color')
@@ -51,37 +76,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (orgError || !org) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 })
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 }
+      )
     }
 
-    // If scheduling for later, just store in database
-    if (scheduleFor && new Date(scheduleFor) > new Date()) {
-      const { data: newsletter, error: insertError } = await supabase
-        .from('newsletters')
-        .insert({
-          organization_id: orgId,
-          subject,
-          sections,
-          status: 'scheduled',
-          scheduled_for: scheduleFor,
-          created_by: user.id,
-        })
-        .select()
-        .single()
-
-      if (insertError) {
-        console.error("Error scheduling newsletter:", insertError)
-        return NextResponse.json({ error: "Failed to schedule newsletter" }, { status: 500 })
-      }
-
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Newsletter scheduled successfully',
-        newsletter 
-      })
-    }
-
-    // Get foster recipients based on recipientType
+    // Fetch recipients
     let fostersQuery = supabase
       .from('profiles')
       .select('id, email, name')
@@ -89,26 +90,55 @@ export async function POST(request: NextRequest) {
       .eq('organization_id', orgId)
 
     if (recipientType === 'active_fosters') {
-      // Only fosters who currently have animals
       const { data: activeFosters } = await supabase
         .from('dogs')
         .select('foster_id')
         .eq('organization_id', orgId)
         .not('foster_id', 'is', null)
 
-      const activeFosterIds = activeFosters?.map(d => d.foster_id) || []
+      const activeFosterIds = activeFosters?.map((d) => d.foster_id) || []
       fostersQuery = fostersQuery.in('id', activeFosterIds)
     }
 
     const { data: fosters, error: fostersError } = await fostersQuery
 
     if (fostersError) {
-      console.error("Error fetching fosters:", fostersError)
-      return NextResponse.json({ error: "Failed to fetch fosters" }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to fetch fosters' },
+        { status: 500 }
+      )
     }
 
     if (!fosters || fosters.length === 0) {
       return NextResponse.json({ error: 'No recipients found' }, { status: 400 })
+    }
+
+    // Filter out unsubscribed emails. Fail open if table doesn't exist yet
+    // (so send still works before migration is run) — we log and proceed.
+    let unsubscribedEmails: Set<string> = new Set()
+    try {
+      const { data: unsubs } = await supabase
+        .from('newsletter_unsubscribes')
+        .select('email')
+        .eq('organization_id', orgId)
+      if (unsubs) {
+        unsubscribedEmails = new Set(
+          unsubs.map((u) => String(u.email).toLowerCase())
+        )
+      }
+    } catch {
+      // table may not exist yet — fail open
+    }
+
+    const recipients = fosters.filter(
+      (f) => f.email && !unsubscribedEmails.has(String(f.email).toLowerCase())
+    )
+
+    if (recipients.length === 0) {
+      return NextResponse.json(
+        { error: 'All potential recipients have unsubscribed.' },
+        { status: 400 }
+      )
     }
 
     // Create newsletter record
@@ -120,60 +150,79 @@ export async function POST(request: NextRequest) {
         sections,
         status: 'sending',
         sent_at: new Date().toISOString(),
-        recipient_count: fosters.length,
+        recipient_count: recipients.length,
         created_by: user.id,
       })
       .select()
       .single()
 
     if (insertError) {
-      console.error("Error creating newsletter:", insertError)
-      return NextResponse.json({ error: "Failed to create newsletter" }, { status: 500 })
+      return NextResponse.json(
+        { error: 'Failed to create newsletter' },
+        { status: 500 }
+      )
     }
 
-    // Render email template
-    const emailHtml = renderNewsletterTemplate({
-      orgName: org.name,
-      orgLogo: org.logo_url,
-      primaryColor: org.primary_color || '#D76B1A',
-      sections,
-      footerText: `You're receiving this because you're part of the ${org.name} foster network.`
-    })
+    // Determine base URL for unsubscribe links
+    const origin =
+      request.headers.get('origin') ||
+      `https://${request.headers.get('host') || 'getsecondtail.com'}`
 
-    // Send emails via Resend
-    const emailPromises = fosters.map(async (foster) => {
+    // Sequential send with delay to respect Resend rate limits.
+    const results: Array<{ success: boolean; email: string; error?: string }> =
+      []
+    for (const foster of recipients) {
       try {
-        const { data, error } = await resend.emails.send({
-          from: process.env.FROM_EMAIL || "noreply@getsecondtail.com",
+        const unsubUrl = buildUnsubscribeUrl(origin, foster.email, orgId)
+        const emailHtml = renderNewsletterTemplate({
+          orgName: org.name,
+          orgLogo: org.logo_url || undefined,
+          primaryColor: org.primary_color || '#D76B1A',
+          sections,
+          footerText: `You're receiving this because you're part of the ${org.name} foster network.`,
+          unsubscribeUrl: unsubUrl,
+        })
+
+        const { error } = await resend.emails.send({
+          from: process.env.FROM_EMAIL || 'noreply@getsecondtail.com',
           to: foster.email,
           subject,
           html: emailHtml,
+          headers: {
+            // RFC 8058 one-click unsubscribe — mail clients honor this.
+            'List-Unsubscribe': `<${unsubUrl}>`,
+            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          },
         })
 
-        // Track recipient status
-        await supabase
-          .from('newsletter_recipients')
-          .insert({
-            newsletter_id: newsletter.id,
-            foster_id: foster.id,
-            email: foster.email,
-            status: error ? 'failed' : 'sent',
-            sent_at: new Date().toISOString(),
-            error_message: error?.message,
-          })
+        await supabase.from('newsletter_recipients').insert({
+          newsletter_id: newsletter.id,
+          foster_id: foster.id,
+          email: foster.email,
+          status: error ? 'failed' : 'sent',
+          sent_at: new Date().toISOString(),
+          error_message: error?.message,
+        })
 
-        return { success: !error, email: foster.email, error }
+        results.push({
+          success: !error,
+          email: foster.email,
+          error: error?.message,
+        })
       } catch (err) {
-        console.error("Error sending to", foster.email, err)
-        return { success: false, email: foster.email, error: err }
+        results.push({
+          success: false,
+          email: foster.email,
+          error: err instanceof Error ? err.message : 'Unknown error',
+        })
       }
-    })
 
-    const results = await Promise.all(emailPromises)
-    const successCount = results.filter(r => r.success).length
+      if (recipients.length > 1) await wait(SEND_DELAY_MS)
+    }
+
+    const successCount = results.filter((r) => r.success).length
     const failureCount = results.length - successCount
 
-    // Update newsletter status
     await supabase
       .from('newsletters')
       .update({
@@ -191,14 +240,16 @@ export async function POST(request: NextRequest) {
         total: results.length,
         success: successCount,
         failed: failureCount,
-      }
+        skipped_unsubscribed: fosters.length - recipients.length,
+      },
     })
-
   } catch (error) {
-    console.error("Newsletter send error:", error)
-    return NextResponse.json({ 
-      error: "Failed to send newsletter",
-      details: error instanceof Error ? error.message : "Unknown error"
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        error: 'Failed to send newsletter',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
   }
 }

@@ -44,15 +44,14 @@ function CommunicationsContent() {
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
-  const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [scheduleDate, setScheduleDate] = useState("")
-  const [scheduleTime, setScheduleTime] = useState("")
-
   // Newsletter content state
   const [subject, setSubject] = useState("")
   const [intro, setIntro] = useState("")
   const [showPreview, setShowPreview] = useState(false)
   const [animalUrls, setAnimalUrls] = useState<Record<string, string>>({})
+  const [previewHtml, setPreviewHtml] = useState<string>("")
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string>("")
 
   useEffect(() => {
     async function loadData() {
@@ -114,58 +113,34 @@ function CommunicationsContent() {
 
   const selectedAnimalDetails = animals.filter((a) => selectedAnimals.includes(a.id))
 
-  const generateNewsletterHTML = () => {
-    return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #FBF8F4;">
-        <div style="text-align: center; padding: 20px 0; border-bottom: 2px solid #F7E2BD;">
-          ${org?.logo_url ? `<img src="${org.logo_url}" alt="${org.name}" style="max-width: 120px; height: auto; margin-bottom: 16px;" />` : ""}
-          <h1 style="color: #5A4A42; margin: 0;">${org?.name || "Animals Need Your Help!"}</h1>
-        </div>
-        
-        <div style="padding: 20px 0;">
-          <p style="color: #5A4A42; font-size: 16px; line-height: 1.6;">
-            ${intro || "We have some wonderful animals looking for temporary foster homes. Can you help?"}
-          </p>
-        </div>
-        
-        ${selectedAnimalDetails
-          .map(
-            (animal) => `
-          <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; border: 1px solid #F7E2BD;">
-            <div style="display: flex; gap: 16px; margin-bottom: 12px;">
-              <img src="${animal.image_url || "/placeholder.svg?height=120&width=120"}" 
-                   alt="${animal.name}" 
-                   style="width: 120px; height: 120px; border-radius: 8px; object-fit: cover;" />
-              <div>
-                <h2 style="color: #5A4A42; margin: 0 0 8px 0;">${animal.name}</h2>
-                <p style="color: #6B5B4F; margin: 0 0 4px 0;"><strong>Breed:</strong> ${animal.breed}</p>
-                <p style="color: #6B5B4F; margin: 0 0 4px 0;"><strong>Age:</strong> ${animal.age} ${animal.age === 1 ? "year" : "years"} old</p>
-                <p style="color: #6B5B4F; margin: 0;"><strong>In shelter since:</strong> ${new Date(animal.intake_date).toLocaleDateString()}</p>
-              </div>
-            </div>
-            ${animalUrls[animal.id] ? `
-            <div style="text-align: center;">
-              <a href="${animalUrls[animal.id]}" style="display: inline-block; background-color: ${org?.primary_color || "#D76B1A"}; color: white; padding: 10px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 14px;">
-                Learn More About ${animal.name}
-              </a>
-            </div>
-            ` : ''}
-          </div>
-        `,
-          )
-          .join("")}
-        
-        <div style="text-align: center; padding: 30px 0;">
-          <a href="#" style="display: inline-block; background-color: ${org?.primary_color || "#D76B1A"}; color: white; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-            Learn More About Fostering
-          </a>
-        </div>
-        
-        <div style="text-align: center; padding-top: 20px; border-top: 1px solid #F7E2BD; color: #6B5B4F; font-size: 12px;">
-          <p>You're receiving this because you're a registered foster with ${org?.name || "our organization"}.</p>
-        </div>
-      </div>
-    `
+  const buildSections = () => {
+    return selectedAnimalDetails.map(animal => ({
+      id: animal.id,
+      type: 'featured_animal' as const,
+      title: animal.name,
+      content: `
+        <p><strong>Breed:</strong> ${animal.breed}</p>
+        <p><strong>Age:</strong> ${animal.age} ${animal.age === 1 ? 'year' : 'years'} old</p>
+        <p><strong>In shelter since:</strong> ${new Date(animal.intake_date).toLocaleDateString()}</p>
+        ${intro ? `<p>${intro}</p>` : ''}
+      `,
+      image_url: animal.image_url || undefined,
+      cta_text: animalUrls[animal.id] ? `Learn More About ${animal.name}` : undefined,
+      cta_url: animalUrls[animal.id] || undefined,
+    }))
+  }
+
+  const fetchRenderedHtml = async (): Promise<string> => {
+    const response = await fetch(`/api/admin/newsletters/render`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId, sections: buildSections() }),
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}))
+      throw new Error(err?.error || 'Failed to render newsletter')
+    }
+    return await response.text()
   }
 
   const handleSendNow = async () => {
@@ -188,20 +163,7 @@ function CommunicationsContent() {
     setSending(true)
 
     try {
-      // Build newsletter sections from selected animals
-      const sections = selectedAnimalDetails.map(animal => ({
-        id: animal.id,
-        type: 'featured_animal' as const,
-        title: animal.name,
-        content: `
-          <p><strong>Breed:</strong> ${animal.breed}</p>
-          <p><strong>Age:</strong> ${animal.age} ${animal.age === 1 ? 'year' : 'years'} old</p>
-          <p><strong>In shelter since:</strong> ${new Date(animal.intake_date).toLocaleDateString()}</p>
-          ${intro ? `<p>${intro}</p>` : ''}
-        `,
-        image_url: animal.image_url || undefined,
-        landing_url: animalUrls[animal.id] || undefined,
-      }))
+      const sections = buildSections()
 
       const response = await fetch(`/api/admin/newsletters/send`, {
         method: 'POST',
@@ -234,86 +196,23 @@ function CommunicationsContent() {
     }
   }
 
-  const handleScheduleSend = async () => {
-    if (!scheduleDate || !scheduleTime) {
-      alert("Please select both date and time")
-      return
-    }
-
+  const handleExportHTML = async () => {
     if (selectedAnimals.length === 0) {
       alert("Please select at least one animal to feature")
       return
     }
-
-    if (!subject) {
-      alert("Please enter a subject line")
-      return
-    }
-
-    setSending(true)
-
     try {
-      const scheduleFor = new Date(`${scheduleDate}T${scheduleTime}`).toISOString()
-
-      // Build newsletter sections from selected animals
-      const sections = selectedAnimalDetails.map(animal => ({
-        id: animal.id,
-        type: 'featured_animal' as const,
-        title: animal.name,
-        content: `
-          <p><strong>Breed:</strong> ${animal.breed}</p>
-          <p><strong>Age:</strong> ${animal.age} ${animal.age === 1 ? 'year' : 'years'} old</p>
-          <p><strong>In shelter since:</strong> ${new Date(animal.intake_date).toLocaleDateString()}</p>
-          ${intro ? `<p>${intro}</p>` : ''}
-        `,
-        image_url: animal.image_url || undefined,
-        landing_url: animalUrls[animal.id] || undefined,
-      }))
-
-      const response = await fetch(`/api/admin/newsletters/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orgId,
-          subject,
-          sections,
-          scheduleFor,
-          recipientType: 'all_fosters'
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        alert(`✓ Newsletter scheduled for ${new Date(scheduleFor).toLocaleString()}!`)
-        setShowScheduleModal(false)
-        setScheduleDate("")
-        setScheduleTime("")
-        // Reset form
-        setSubject("")
-        setIntro("")
-        setSelectedAnimals([])
-        setAnimalUrls({})
-      } else {
-        alert(`Error: ${data.error || 'Failed to schedule newsletter'}`)
-      }
-    } catch (error) {
-      console.error('Newsletter schedule error:', error)
-      alert('Failed to schedule newsletter. Please try again.')
-    } finally {
-      setSending(false)
+      const html = await fetchRenderedHtml()
+      const blob = new Blob([html], { type: "text/html" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `newsletter-${new Date().toISOString().split("T")[0]}.html`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      alert(`Failed to export: ${err instanceof Error ? err.message : "Unknown error"}`)
     }
-  }
-
-  const handleExportHTML = () => {
-    const html = generateNewsletterHTML()
-    const blob = new Blob([html], { type: "text/html" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `newsletter-${new Date().toISOString().split("T")[0]}.html`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   if (loading) {
@@ -520,7 +419,23 @@ function CommunicationsContent() {
           {/* Preview */}
           <div className="bg-white rounded-xl border border-[#F7E2BD] overflow-hidden">
             <button
-              onClick={() => setShowPreview(!showPreview)}
+              onClick={async () => {
+                const next = !showPreview
+                setShowPreview(next)
+                if (next && selectedAnimals.length > 0) {
+                  setPreviewLoading(true)
+                  setPreviewError("")
+                  try {
+                    const html = await fetchRenderedHtml()
+                    setPreviewHtml(html)
+                  } catch (err) {
+                    setPreviewError(err instanceof Error ? err.message : "Preview failed")
+                    setPreviewHtml("")
+                  } finally {
+                    setPreviewLoading(false)
+                  }
+                }
+              }}
               className="w-full p-4 flex items-center justify-between text-left hover:bg-[#FBF8F4] transition"
             >
               <span className="font-semibold text-[#5A4A42] flex items-center gap-2">
@@ -534,10 +449,28 @@ function CommunicationsContent() {
 
             {showPreview && (
               <div className="border-t border-[#F7E2BD] p-4 bg-gray-50">
-                <div
-                  className="bg-white rounded-lg shadow-sm overflow-hidden"
-                  dangerouslySetInnerHTML={{ __html: generateNewsletterHTML() }}
-                />
+                {selectedAnimals.length === 0 ? (
+                  <div className="text-center py-6 text-sm text-[#6B5B4F]">
+                    Select at least one animal to preview.
+                  </div>
+                ) : previewLoading ? (
+                  <div className="text-center py-6 text-sm text-[#6B5B4F]">
+                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                    Rendering preview...
+                  </div>
+                ) : previewError ? (
+                  <div className="text-center py-6 text-sm text-red-600">
+                    {previewError}
+                  </div>
+                ) : (
+                  <iframe
+                    srcDoc={previewHtml}
+                    title="Newsletter preview"
+                    className="w-full bg-white rounded-lg shadow-sm"
+                    style={{ height: 600, border: 'none' }}
+                    sandbox=""
+                  />
+                )}
               </div>
             )}
           </div>
@@ -558,13 +491,13 @@ function CommunicationsContent() {
             Export HTML
           </Button>
           <Button
-            onClick={() => setShowScheduleModal(true)}
             variant="outline"
             className="flex-1 bg-transparent"
-            disabled={selectedAnimals.length === 0 || !subject || sending}
+            disabled
+            title="Scheduled sending is coming soon"
           >
             <Calendar className="w-4 h-4 mr-2" />
-            Schedule Send
+            Schedule Send (coming soon)
           </Button>
           <Button
             onClick={handleSendNow}
@@ -586,61 +519,6 @@ function CommunicationsContent() {
         </div>
       </div>
 
-      {/* Schedule Modal */}
-      {showScheduleModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-semibold text-[#5A4A42] mb-4">Schedule Newsletter</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#5A4A42] mb-1">Date</label>
-                <Input
-                  type="date"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-[#5A4A42] mb-1">Time</label>
-                <Input
-                  type="time"
-                  value={scheduleTime}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={() => {
-                    setShowScheduleModal(false)
-                    setScheduleDate("")
-                    setScheduleTime("")
-                  }}
-                  variant="outline"
-                  className="flex-1 bg-transparent"
-                  disabled={sending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleScheduleSend}
-                  className="flex-1 bg-[#D76B1A] hover:bg-[#C55A10]"
-                  disabled={!scheduleDate || !scheduleTime || sending}
-                >
-                  {sending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Scheduling...
-                    </>
-                  ) : (
-                    "Schedule"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

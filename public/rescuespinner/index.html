@@ -1034,24 +1034,24 @@ function ResultCard({ data, photoUrl, onAgain }) {
             <div className="news-snippet">{data.snippet}</div>
           )}
 
-          {/* Primary CTA — solid orange */}
+          {/* Primary CTA — read full story (solid orange) */}
+          {data.url && (
+            <a href={data.url} target="_blank" rel="noopener noreferrer" className="btn-foster">
+              Read full story →
+            </a>
+          )}
+
+          {/* Secondary — sign up to foster */}
           <a
             href={fosterCTA}
             target="_blank"
-            className="btn-foster"
+            className="btn-rescue"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
             Sign up to foster with Second Tail
           </a>
-
-          {/* Secondary — read full story */}
-          {data.url && (
-            <a href={data.url} target="_blank" rel="noopener noreferrer" className="btn-rescue">
-              Read full story →
-            </a>
-          )}
         </div>
 
         <div className="card-footer">

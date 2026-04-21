@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { createProfileAfterSignup } from "@/app/sign-up/actions"
 import Link from "next/link"
 
 const US_STATE_ABBRS: Record<string, string> = {
@@ -67,7 +68,7 @@ export default function RescueSignUpPage() {
 
     try {
       const supabase = createClient()
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -85,16 +86,20 @@ export default function RescueSignUpPage() {
         },
       })
       if (signUpError) throw signUpError
+      if (!authData.user) throw new Error("Signup returned no user")
 
-      try {
-        await fetch("/api/email/send", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "welcome-rescue", email, orgName, adminName }),
-        })
-      } catch {}
-
-      window.location.href = `/auth/sign-up-success?type=rescue&email=${encodeURIComponent(email)}`
+      // Create the organization + profile + welcome email.
+      // With Supabase "Confirm email" turned off, signUp() returns an active
+      // session so the admin is already logged in at this point.
+      const result = await createProfileAfterSignup(authData.user.id)
+      if (result.error) {
+        setError(result.error)
+        setIsLoading(false)
+        return
+      }
+      if (result.redirectTo) {
+        window.location.href = result.redirectTo
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
       setIsLoading(false)

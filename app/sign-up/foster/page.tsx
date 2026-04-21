@@ -4,6 +4,7 @@ import type React from "react"
 import { Suspense, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { createProfileAfterSignup } from "@/app/sign-up/actions"
 import Link from "next/link"
 import { AlertCircle, ChevronRight, ChevronLeft } from "lucide-react"
 import { SiteHeader } from "@/components/site-header"
@@ -190,8 +191,20 @@ function FosterSignUpForm() {
       })
 
       if (signUpError) throw signUpError
+      if (!authData.user) throw new Error("Signup returned no user")
 
-      router.push(`/auth/sign-up-success?type=foster&email=${encodeURIComponent(email)}`)
+      // Create the profile + foster_profile + welcome email.
+      // With Supabase "Confirm email" turned off, signUp() returns an active
+      // session so the user is already logged in at this point.
+      const result = await createProfileAfterSignup(authData.user.id)
+      if (result.error) {
+        setError(result.error)
+        setIsLoading(false)
+        return
+      }
+      if (result.redirectTo) {
+        window.location.href = result.redirectTo
+      }
     } catch (err) {
       const raw = err instanceof Error ? err.message : ""
       if (raw.includes("already registered") || raw.includes("User already registered")) {

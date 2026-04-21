@@ -272,6 +272,74 @@
       .pet-btn { padding: 5px 8px; font-size: 11px; }
       .header-score { display: none; }
     }
+
+    /* News-story card styling */
+    .news-hero {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      background: #eee;
+      overflow: hidden;
+      border-top-left-radius: inherit;
+      border-top-right-radius: inherit;
+    }
+    .news-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .news-hero-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--warm), var(--amber));
+    }
+    .news-hero-empty {
+      background: linear-gradient(135deg, var(--warm), var(--amber));
+      aspect-ratio: 16 / 8;
+    }
+    .news-hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.78) 100%);
+      pointer-events: none;
+    }
+    .news-hero-title {
+      position: absolute; left: 20px; right: 20px; bottom: 16px;
+      color: white;
+    }
+    .news-hero-title h2 {
+      font-family: 'Lora', serif;
+      font-weight: 700;
+      font-size: 20px;
+      line-height: 1.3;
+      color: white;
+      margin: 0 0 6px 0;
+      text-wrap: pretty;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+      /* Clamp to 3 lines */
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .news-meta {
+      font-family: 'Geist', system-ui, sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.92);
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    }
+    .news-meta-dot { opacity: 0.6; }
+    .status-news {
+      position: absolute; top: 14px; right: 14px;
+      background: var(--amber); color: var(--bark);
+      font-family: 'Geist', system-ui, sans-serif;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px;
+      letter-spacing: 0.02em;
+    }
+    .news-snippet {
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--dark);
+      text-wrap: pretty;
+    }
   </style>
 </head>
 <body>
@@ -694,47 +762,32 @@ function App() {
     }
   }, [phase, target]);
 
-  // ── Load animal data ──
+  // ── Load rescue news story ──
   const loadAnimal = async (tgt, sel) => {
-    const species = sel === 'both' ? (Math.random() > .5 ? 'dog' : 'cat') : sel;
-
-    const prompt = `Generate realistic US animal rescue data for a ${species} in ${tgt.state} that needs fostering. Respond with ONLY a valid JSON object — no markdown, no explanation.
-
-{
-  "rescueName": "realistic local rescue org name",
-  "rescueCity": "real city in ${tgt.state}",
-  "rescueWebsite": "https://their-actual-website.org",
-  "animalName": "a common pet name",
-  "breed": "${species === 'dog' ? 'a realistic dog breed or mix' : 'a cat breed or domestic shorthair/longhair'}",
-  "age": "e.g. 3 years or 7 months",
-  "sex": "Male or Female",
-  "status": "Foster Needed",
-  "story": "2-3 warm, specific sentences about why this animal needs a foster home. Mention something personal about this animal."
-}`;
-
-    let data = {};
+    setPhotoUrl(null);
+    let data;
     try {
-      const raw = await window.claude.complete(prompt);
-      const m   = raw.match(/\{[\s\S]*\}/);
-      data = JSON.parse(m[0]);
-    } catch {
-      data = makeFallback(tgt.state, species);
-    }
-    data.species = species;
-    data.state   = tgt.state;
-    setAnimalData(data);
-
-    try {
-      if (species === 'dog') {
-        const r = await fetch('https://dog.ceo/api/breeds/image/random');
-        const j = await r.json();
-        setPhotoUrl(j.message);
+      const r = await fetch(`/api/rescue-news?state=${encodeURIComponent(tgt.state)}`);
+      const j = await r.json();
+      if (j && j.ok && j.story) {
+        data = {
+          isNews: true,
+          state: tgt.state,
+          headline: j.story.headline || '',
+          snippet: j.story.snippet || '',
+          source: j.story.source || '',
+          date: j.story.date || null,
+          url: j.story.url || '',
+          image: j.story.image || null,
+        };
+        if (j.story.image) setPhotoUrl(j.story.image);
       } else {
-        const r = await fetch('https://api.thecatapi.com/v1/images/search');
-        const j = await r.json();
-        setPhotoUrl(j[0]?.url);
+        data = { isNews: false, noStory: true, state: tgt.state };
       }
-    } catch { setPhotoUrl(null); }
+    } catch {
+      data = { isNews: false, noStory: true, state: tgt.state };
+    }
+    setAnimalData(data);
 
     // ── Update gamification ──
     const isNewState = !discovered.states.has(tgt.state);
@@ -827,7 +880,7 @@ function App() {
         {phase === 'idle' && (
           <div className="map-intro">
             <h1>Grab the {toyLabel} —<br/>find a rescue.</h1>
-            <p>Fling it onto the map. A real animal is waiting.</p>
+            <p>Fling it onto the map. See real rescue stories happening there now.</p>
           </div>
         )}
 
@@ -895,50 +948,95 @@ function App() {
 
 // ── Result Card ──
 function ResultCard({ data, photoUrl, onAgain }) {
-  const rescueSite = data.rescueWebsite && data.rescueWebsite !== 'https://example.org'
-    ? data.rescueWebsite
-    : `https://www.google.com/search?q=${encodeURIComponent(data.rescueName + ' ' + data.rescueCity)}`;
+  const fosterCTA = 'https://getsecondtail.com/for-fosters';
+
+  // No-story fallback card
+  if (data.noStory) {
+    return (
+      <div className="result-overlay">
+        <div className="result-card">
+          <div className="news-hero news-hero-empty">
+            <div className="news-hero-overlay"/>
+            <div className="news-hero-title">
+              <h2>Second Tail is coming to {data.state}</h2>
+              <div className="news-meta">No rescue headlines this week</div>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="news-snippet">
+              We couldn't find a recent rescue news story for {data.state} — but rescues in every state need fosters right now. Sign up and we'll match you with one when Second Tail launches in your area.
+            </div>
+            <a href={fosterCTA} target="_blank" className="btn-foster">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              Sign up to foster with Second Tail
+            </a>
+          </div>
+          <div className="card-footer">
+            <button className="again-btn" onClick={onAgain}>↺ Throw again</button>
+            <span className="footer-brand">Powered by Second Tail</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Format date: "Apr 18, 2026" or "3 days ago"
+  let dateLabel = '';
+  if (data.date) {
+    const d = new Date(data.date);
+    if (!isNaN(d.getTime())) {
+      const diffMs = Date.now() - d.getTime();
+      const diffDays = Math.floor(diffMs / 86400000);
+      if (diffDays < 1) dateLabel = 'Today';
+      else if (diffDays === 1) dateLabel = 'Yesterday';
+      else if (diffDays < 30) dateLabel = `${diffDays} days ago`;
+      else dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  }
+
+  const sourceLabel = data.source
+    ? data.source.replace(/^www\./, '')
+    : '';
 
   return (
     <div className="result-overlay">
       <div className="result-card">
-
-        {/* Photo */}
-        <div className="animal-photo">
+        {/* Hero image + headline */}
+        <div className="news-hero">
           {photoUrl
-            ? <img src={photoUrl} alt={data.animalName} onError={e => { e.target.style.display='none'; }}/>
-            : <div className="photo-placeholder">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#D76B1A" strokeWidth="1.5">
-                  {data.species === 'cat'
-                    ? <path d="M12 2C8 2 4 5 4 9c0 4.5 3 8 8 8s8-3.5 8-8c0-4-4-7-8-7zM9 8.5c0-.8.7-1.5 1.5-1.5S12 7.7 12 8.5M15 8.5c0-.8.7-1.5 1.5-1.5M9 14c1 1.5 5 1.5 6 0M3 6l3 2M21 6l-3 2"/>
-                    : <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2 .352-3.5 2.435-3.5 5.348 0 4.817 3.1 8.652 5.5 8.652C11 17 12 14 12 14s1 3 3.5 3c2.4 0 5.5-3.835 5.5-8.652C21 5.435 19.5 3.352 17.5 3 15.577 2.679 14 3.782 14 5.172"/>}
+            ? <img src={photoUrl} alt="" onError={e => { e.target.style.display='none'; }}/>
+            : <div className="news-hero-placeholder">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#D76B1A" strokeWidth="1.5">
+                  <path d="M4 4h16v16H4z M4 16l4-4 4 4 4-4 4 4"/>
+                  <circle cx="9" cy="9" r="1.5" fill="#D76B1A"/>
                 </svg>
               </div>
           }
-          <div className="animal-photo-overlay"/>
-          <div className="animal-photo-name">
-            <h2>{data.animalName}</h2>
-            <div className="meta">{data.sex} · {data.age} · {data.breed}</div>
+          <div className="news-hero-overlay"/>
+          <div className="news-hero-title">
+            <h2>{data.headline}</h2>
+            <div className="news-meta">
+              {sourceLabel && <span>{sourceLabel}</span>}
+              {sourceLabel && dateLabel && <span className="news-meta-dot">·</span>}
+              {dateLabel && <span>{dateLabel}</span>}
+              <span className="news-meta-dot">·</span>
+              <span>{data.state}</span>
+            </div>
           </div>
-          <div className="status-pill status-foster">Foster needed</div>
-        </div>
-
-        {/* Rescue strip */}
-        <div className="rescue-strip">
-          <div className="rescue-info">
-            <div className="rescue-name">{data.rescueName}</div>
-            <div className="rescue-loc">📍 {data.rescueCity}, {data.state}</div>
-          </div>
-          <a href={rescueSite} target="_blank" className="rescue-link">Visit site →</a>
+          <div className="status-pill status-news">Rescue news</div>
         </div>
 
         {/* Body */}
         <div className="card-body">
-          <div className="animal-story">{data.story}</div>
+          {data.snippet && (
+            <div className="news-snippet">{data.snippet}</div>
+          )}
 
-          {/* Primary CTA */}
+          {/* Primary CTA — solid orange */}
           <a
-            href="https://getsecondtail.com/for-fosters"
+            href={fosterCTA}
             target="_blank"
             className="btn-foster"
           >
@@ -948,10 +1046,12 @@ function ResultCard({ data, photoUrl, onAgain }) {
             Sign up to foster with Second Tail
           </a>
 
-          {/* Secondary — rescue site */}
-          <a href={rescueSite} target="_blank" className="btn-rescue">
-            Visit {data.rescueName} →
-          </a>
+          {/* Secondary — read full story */}
+          {data.url && (
+            <a href={data.url} target="_blank" rel="noopener noreferrer" className="btn-rescue">
+              Read full story →
+            </a>
+          )}
         </div>
 
         <div className="card-footer">

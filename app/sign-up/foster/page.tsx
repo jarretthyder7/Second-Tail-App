@@ -232,23 +232,42 @@ function FosterSignUpForm() {
         <div className="max-w-lg mx-auto">
           <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-5 sm:p-8 space-y-5">
             <div>
-              <h1 className="text-3xl font-bold text-foreground">Join as Foster</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Join as Foster</h1>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                Takes 2 minutes. Helps rescues match you with the right animal.
+              </p>
 
-              {step === 1 ? (
-                <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                  <p className="font-semibold text-foreground">Here&apos;s what happens when you sign up:</p>
-                  <ul className="space-y-2 list-none pl-0">
-                    <li><span className="font-semibold text-foreground">Now (2 min):</span> answer a few questions about your home so rescues can match you with the right dog.</li>
-                    <li><span className="font-semibold text-foreground">When a match comes up:</span> verified rescues in your area reach out with animals that fit. You pick which ones to foster — no pressure, ever.</li>
-                    <li><span className="font-semibold text-foreground">When you say yes:</span> the rescue covers food, vet care, and supplies. You provide a temporary home.</li>
-                  </ul>
-                  <p className="italic">No credit card. No fees. Not a commitment — just joining the pool.</p>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-sm mt-2">
-                  Step {step} of 3 — {step === 2 ? "Availability & Preferences" : "Create Your Account"}
-                </p>
-              )}
+              {/* Progress pills */}
+              <div className="mt-5 flex items-center gap-2">
+                {[
+                  { n: 1, label: "Your Home" },
+                  { n: 2, label: "Availability" },
+                  { n: 3, label: "Account" },
+                ].map((s) => {
+                  const isActive = step === s.n
+                  const isComplete = step > s.n
+                  return (
+                    <div key={s.n} className="flex-1">
+                      <div
+                        className={`h-1.5 rounded-full transition-colors ${
+                          isComplete || isActive ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
+                      <p
+                        className={`text-[11px] font-medium mt-1.5 transition-colors ${
+                          isActive
+                            ? "text-foreground"
+                            : isComplete
+                              ? "text-primary"
+                              : "text-muted-foreground"
+                        }`}
+                      >
+                        {s.n}. {s.label}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
 
 
@@ -256,10 +275,11 @@ function FosterSignUpForm() {
               {/* Step 1: About Your Home */}
               {step === 1 && (
                 <div className="space-y-5">
-                  <p className="text-muted-foreground text-sm">Step 1 of 3 — About Your Home</p>
                   <div className="pb-1">
                     <h2 className="text-lg font-bold text-foreground">About Your Home</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">Let rescues match you with the right dog.</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      Rescues use this to match you with an animal that fits your space.
+                    </p>
                   </div>
 
                   <div>

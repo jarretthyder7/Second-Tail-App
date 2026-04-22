@@ -1,24 +1,14 @@
 import { NextRequest } from 'next/server'
 
-/**
- * Debug probe for the RescueGroups v5 API. Not a production route — we'll
- * delete this once the real /api/rescue-animal is built. For now, hits a
- * few candidate request shapes and dumps whatever comes back so we can
- * learn the actual response schema.
- *
- * Visit: /api/rescue-animal-debug?state=CO
- */
+/** Debug probe round 2 — figure out the state filter + included relations. */
 export const dynamic = 'force-dynamic'
 
 type ProbeResult = {
   label: string
   url: string
   method: string
-  requestHeaders?: Record<string, string>
   requestBody?: any
   status?: number
-  statusText?: string
-  responseHeaders?: Record<string, string>
   responseSnippet?: string
   error?: string
 }
@@ -27,30 +17,24 @@ async function probe(
   label: string,
   url: string,
   method: 'GET' | 'POST',
-  headers: Record<string, string>,
+  key: string,
   body?: any
 ): Promise<ProbeResult> {
-  const result: ProbeResult = {
-    label,
-    url,
-    method,
-    requestHeaders: { ...headers, Authorization: headers.Authorization ? '[redacted]' : '(none)' },
-    requestBody: body,
-  }
+  const result: ProbeResult = { label, url, method, requestBody: body }
   try {
     const res = await fetch(url, {
       method,
-      headers,
+      headers: {
+        Authorization: key,
+        'Content-Type': 'application/vnd.api+json',
+        Accept: 'application/vnd.api+json',
+      },
       body: body ? JSON.stringify(body) : undefined,
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
     })
     result.status = res.status
-    result.statusText = res.statusText
     const text = await res.text()
-    result.responseSnippet = text.slice(0, 3000)
-    const rh: Record<string, string> = {}
-    res.headers.forEach((v, k) => (rh[k] = v))
-    result.responseHeaders = rh
+    result.responseSnippet = text.slice(0, 4000)
   } catch (err: any) {
     result.error = String(err?.message || err)
   }
@@ -61,96 +45,74 @@ export async function GET(req: NextRequest) {
   const state = (req.nextUrl.searchParams.get('state') || 'CO').trim()
   const key = process.env.RESCUEGROUPS_API_KEY
   if (!key) {
-    return Response.json(
-      { ok: false, error: 'RESCUEGROUPS_API_KEY env var not set' },
-      { status: 500 }
-    )
+    return Response.json({ ok: false, error: 'missing key' }, { status: 500 })
   }
 
   const base = 'https://api.rescuegroups.org/v5/public/animals/search/available'
-
-  // Try a few shapes — exactly one should succeed.
   const probes: ProbeResult[] = []
 
-  // Shape 1: POST with JSON:API filters body, Authorization: apikey <KEY>
-  probes.push(
-    await probe(
-      'POST + apikey prefix + filters body',
-      base,
-      'POST',
-      {
-        'Content-Type': 'application/vnd.api+json',
-        Authorization: `apikey ${key}`,
-      },
-      {
-        data: {
-          filters: [
-            {
-              fieldName: 'animals.locationState',
-              operation: 'equal',
-              criteria: state,
-            },
-          ],
-        },
-      }
+  // Filter-field candidates for state
+  const stateFieldCandidates = [
+    'locations.state',
+    'orgs.state',
+    'animals.locations.state',
+    'animals.orgs.state',
+    'state',
+    'animals.stateName',
+    'animals.state',
+  ]
+  for (const fieldName of stateFieldCandidates) {
+    probes.push(
+      await probe(
+        `POST filter: ${fieldName}`,
+        base,
+        'POST',
+        key,
+        {
+          data: {
+            filters: [
+              { fieldName, operation: 'equal', criteria: state },
+            ],
+          },
+        }
+      )
     )
-  )
+  }
 
-  // Shape 2: POST with bare API key (no "apikey" prefix)
+  // GET with include to see shape of related orgs + pictures
   probes.push(
     await probe(
-      'POST + bare key + filters body',
-      base,
-      'POST',
-      {
-        'Content-Type': 'application/vnd.api+json',
-        Authorization: key,
-      },
-      {
-        data: {
-          filters: [
-            {
-              fieldName: 'animals.locationState',
-              operation: 'equal',
-              criteria: state,
-            },
-          ],
-        },
-      }
-    )
-  )
-
-  // Shape 3: GET with Authorization header
-  probes.push(
-    await probe(
-      'GET + bare key + query params',
-      `${base}?limit=3`,
+      'GET /animals/search/available?include=orgs,pictures,statuses&limit=2',
+      `${base}?include=orgs,pictures,statuses&limit=2`,
       'GET',
-      { Authorization: key }
+      key
     )
   )
 
-  // Shape 4: POST with Bearer prefix
+  // Peek at /orgs/search to see what state filter field it uses there
   probes.push(
     await probe(
-      'POST + Bearer prefix + filters body',
-      base,
+      'POST /orgs/search with state filter',
+      'https://api.rescuegroups.org/v5/public/orgs/search',
       'POST',
-      {
-        'Content-Type': 'application/vnd.api+json',
-        Authorization: `Bearer ${key}`,
-      },
+      key,
       {
         data: {
           filters: [
-            {
-              fieldName: 'animals.locationState',
-              operation: 'equal',
-              criteria: state,
-            },
+            { fieldName: 'orgs.state', operation: 'equal', criteria: state },
           ],
         },
       }
+    )
+  )
+
+  // Try the "search" endpoint variants to learn the public filter surface
+  probes.push(
+    await probe(
+      'GET /orgs/search?state=CO&limit=1',
+      `https://api.rescuegroups.org/v5/public/orgs/search?state=${encodeURIComponent(state)}&limit=1`,
+      'GET',
+      key
     )
   )
 

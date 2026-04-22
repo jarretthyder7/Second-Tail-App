@@ -198,9 +198,14 @@ export async function GET(req: NextRequest) {
   if (attrs.energyLevel) traits.energyLevel = String(attrs.energyLevel)
   if (attrs.adoptionFeeString) traits.adoptionFee = String(attrs.adoptionFeeString)
 
-  const listingUrl = orgAttrs.url
-    ? String(orgAttrs.url)
-    : `https://rescuegroups.org/animals/detail?AnimalID=${pick.id}`
+  // Prefer the rescue's own site. Otherwise send the user to a Google search
+  // for the rescue + animal name — more useful than a generic RG detail page.
+  const rescueName = orgAttrs.name ? String(orgAttrs.name) : ''
+  const animalName = attrs.name ? String(attrs.name) : ''
+  const searchFallback = `https://www.google.com/search?q=${encodeURIComponent(
+    `${rescueName} ${animalName}`.trim() || 'animal rescue adoption'
+  )}`
+  const listingUrl = orgAttrs.url ? String(orgAttrs.url) : searchFallback
 
   const resp: any = {
     ok: true,
@@ -223,6 +228,7 @@ export async function GET(req: NextRequest) {
         attrs.descriptionText || attrs.descriptionHtml || ''
       ),
       listingUrl,
+      listingUrlIsFallback: !orgAttrs.url,
     },
     rescue: {
       id: orgId,

@@ -4,9 +4,6 @@ export const runtime = 'edge'
 export const contentType = 'image/png'
 export const size = { width: 1200, height: 630 }
 
-/**
- * Open Graph image for /rescuespinner — just the Second Tail logo, centered.
- */
 export async function GET() {
   return new ImageResponse(
     (
@@ -22,9 +19,9 @@ export async function GET() {
         }}
       >
         <img
-          src="https://getsecondtail.com/logo.svg"
-          width={420}
-          height={420}
+          src="https://getsecondtail.com/logo-dog.png"
+          width={460}
+          height={460}
           alt=""
           style={{ display: 'block' }}
         />

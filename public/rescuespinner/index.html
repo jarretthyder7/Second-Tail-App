@@ -1527,7 +1527,7 @@ function App() {
         </div>
 
         {/* Intro text */}
-        {phase === 'idle' && (
+        {phase === 'idle' && !isDragging && (
           <div className="map-intro">
             <h1>Grab the {toyLabel} —<br/>meet a rescue {petSingular}.</h1>
             <p>Toss onto any state. See real {petPlural} needing fosters or forever homes.</p>

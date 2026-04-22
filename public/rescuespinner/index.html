@@ -941,6 +941,37 @@
       padding: 2px 4px;
     }
     .rg-credit-badge:hover { color: white; text-decoration: underline; }
+
+    /* ── Map zoom controls ── */
+    .map-zoom-controls {
+      position: absolute; bottom: 14px; right: 14px;
+      display: flex; flex-direction: column; gap: 4px;
+      z-index: 20; pointer-events: all;
+    }
+    .map-zoom-btn {
+      width: 34px; height: 34px; border-radius: 9px;
+      background: rgba(255,255,255,0.93);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border); color: var(--bark);
+      font-size: 20px; font-weight: 400; line-height: 1;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+      transition: background 0.12s, transform 0.1s, opacity 0.15s;
+      user-select: none; touch-action: none;
+    }
+    .map-zoom-btn:hover { background: white; transform: scale(1.08); }
+    .map-zoom-btn:active { transform: scale(0.92); }
+    .map-zoom-btn:disabled { opacity: 0.28; cursor: default; transform: none; }
+    .map-zoom-hint {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--bark); opacity: 0.38;
+      pointer-events: none; white-space: nowrap;
+      font-family: 'Geist', sans-serif; user-select: none;
+    }
+    @media (max-width: 600px) {
+      .map-zoom-controls { bottom: 10px; right: 10px; }
+      .map-zoom-btn { width: 38px; height: 38px; font-size: 22px; }
+    }
   </style>
 </head>
 <body>
@@ -1052,6 +1083,18 @@ function makeFallback(state, species) {
   };
 }
 
+// Full-view viewBox (the whole USA)
+const FULL_VIEW = Object.freeze({ x: 0, y: 0, w: MAP_W, h: MAP_H });
+
+// Touch geometry helpers
+function getTouchDist(t0, t1) {
+  const dx = t0.clientX - t1.clientX, dy = t0.clientY - t1.clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+function getTouchMid(t0, t1) {
+  return { x: (t0.clientX + t1.clientX) / 2, y: (t0.clientY + t1.clientY) / 2 };
+}
+
 function lerp(a, b, t)        { return a + (b - a) * t; }
 function bezier2(p0, p1, p2, t) {
   const mt = 1 - t;
@@ -1138,6 +1181,14 @@ function App() {
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
 
+  // ── Map zoom / pan state ──
+  const mapViewRef     = useRef({ ...FULL_VIEW });          // always current, no re-render
+  const [mapView, setMapView] = useState({ ...FULL_VIEW }); // drives SVG viewBox
+  const mapZoomRafRef  = useRef(null);
+  const mapPanRef      = useRef({ active: false, lastX: 0, lastY: 0 });
+  const pinchRef       = useRef({ active: false, dist: 0, midSvgX: 0, midSvgY: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+
   // ── Rest position ──
   const getRestPos = useCallback(() => {
     const isMobile = window.innerWidth <= 600;
@@ -1168,6 +1219,76 @@ function App() {
     applyBoneTransform(pos.x, pos.y, -18, 1);
     setIsResting(true);
   }, [getRestPos, applyBoneTransform]);
+
+  // ── Map zoom / pan helpers ──
+
+  // Write a new viewBox to both the ref (instant) and state (triggers SVG re-render)
+  const applyMapView = useCallback((vb) => {
+    mapViewRef.current = vb;
+    setMapView({ ...vb });
+  }, []);
+
+  // Smooth animated viewBox transition using rAF (ease-out cubic)
+  const animateMapView = useCallback((toVb, duration = 350) => {
+    if (mapZoomRafRef.current) cancelAnimationFrame(mapZoomRafRef.current);
+    const fromVb = { ...mapViewRef.current };
+    const t0 = performance.now();
+    function step(now) {
+      const raw = Math.min((now - t0) / duration, 1);
+      const t   = 1 - (1 - raw) ** 3; // ease-out cubic
+      const cur = {
+        x: lerp(fromVb.x, toVb.x, t), y: lerp(fromVb.y, toVb.y, t),
+        w: lerp(fromVb.w, toVb.w, t), h: lerp(fromVb.h, toVb.h, t),
+      };
+      mapViewRef.current = cur;
+      setMapView({ ...cur });
+      if (raw < 1) { mapZoomRafRef.current = requestAnimationFrame(step); }
+      else          { mapZoomRafRef.current = null; }
+    }
+    mapZoomRafRef.current = requestAnimationFrame(step);
+  }, []);
+
+  // Zoom around an SVG-space center point; factor < 1 = zoom in, > 1 = zoom out
+  const zoomTo = useCallback((factor, svgCx, svgCy) => {
+    const vb   = mapViewRef.current;
+    const newW = Math.max(MAP_W / 8, Math.min(MAP_W, vb.w * factor));
+    const newH = newW * (MAP_H / MAP_W);
+    const cx   = svgCx !== undefined ? svgCx : vb.x + vb.w / 2;
+    const cy   = svgCy !== undefined ? svgCy : vb.y + vb.h / 2;
+    const newX = Math.max(-newW * 0.5, Math.min(MAP_W - newW * 0.5, cx - newW / 2));
+    const newY = Math.max(-newH * 0.5, Math.min(MAP_H - newH * 0.5, cy - newH / 2));
+    applyMapView({ x: newX, y: newY, w: newW, h: newH });
+  }, [applyMapView]);
+
+  // Pan drag handlers (map background, only when zoomed in)
+  const startMapPan = useCallback((clientX, clientY) => {
+    if (mapViewRef.current.w >= MAP_W) return; // full view — nothing to pan
+    mapPanRef.current = { active: true, lastX: clientX, lastY: clientY };
+    setIsPanning(true);
+  }, []);
+
+  const moveMapPan = useCallback((clientX, clientY) => {
+    if (!mapPanRef.current.active || !mapRef.current) return;
+    const dx = clientX - mapPanRef.current.lastX;
+    const dy = clientY - mapPanRef.current.lastY;
+    mapPanRef.current.lastX = clientX;
+    mapPanRef.current.lastY = clientY;
+    const rect = mapRef.current.getBoundingClientRect();
+    const vb   = mapViewRef.current;
+    const rs   = Math.min(rect.width / vb.w, rect.height / vb.h);
+    const newX = Math.max(-vb.w * 0.5, Math.min(MAP_W - vb.w * 0.5, vb.x - dx / rs));
+    const newY = Math.max(-vb.h * 0.5, Math.min(MAP_H - vb.h * 0.5, vb.y - dy / rs));
+    const nv   = { ...vb, x: newX, y: newY };
+    mapViewRef.current = nv;
+    setMapView({ ...nv });
+  }, []);
+
+  const endMapPan = useCallback(() => {
+    if (mapPanRef.current.active) {
+      mapPanRef.current.active = false;
+      setIsPanning(false);
+    }
+  }, []);
 
   // ── Load US map ──
   useEffect(() => {
@@ -1235,22 +1356,27 @@ function App() {
   // ── Pick landing target ──
   // isDrop=true  → user just released slowly; land at release point.
   // isDrop=false → user flung it; project throw arc (capped distance).
+  //
+  // Coordinate strategy: screen → SVG uses the CURRENT zoomed viewBox so the
+  // user can aim precisely. But screenX/screenY on the returned target are
+  // computed in FULL-VIEW space — the map snaps back to full view the moment
+  // the bone is thrown, so the arc animation endpoint must live there.
   const pickTarget = useCallback((releaseX, releaseY, vx, vy, isDrop) => {
     if (!projFn || !mapRef.current) return null;
-    const rect  = mapRef.current.getBoundingClientRect();
-    // SVG uses preserveAspectRatio="xMidYMid meet" — actual rendered scale
-    // is the SMALLER of width/height ratios. That scale applies to both axes,
-    // and the SVG is centered within the container, producing letterbox
-    // whitespace on one axis. Compute the real render rect so screen-to-SVG
-    // conversion is correct (and throws into whitespace snap to the map).
-    const renderScale = Math.min(rect.width / MAP_W, rect.height / MAP_H);
-    const renderedW   = MAP_W * renderScale;
-    const renderedH   = MAP_H * renderScale;
-    const offX        = (rect.width  - renderedW) / 2;
-    const offY        = (rect.height - renderedH) / 2;
-    // sx/sy legacy kept for downstream code that builds screenX/screenY.
-    const sx = renderScale;
-    const sy = renderScale;
+    const rect = mapRef.current.getBoundingClientRect();
+    const vb   = mapViewRef.current; // current (possibly zoomed) viewBox
+
+    // Zoomed-view render params — used to convert screen → SVG coords
+    const rs     = Math.min(rect.width / vb.w, rect.height / vb.h);
+    const rW     = vb.w * rs, rH = vb.h * rs;
+    const offX   = (rect.width  - rW) / 2;
+    const offY   = (rect.height - rH) / 2;
+
+    // Full-view render params — used to convert SVG → screen for the arc endpoint
+    const frs    = Math.min(rect.width / MAP_W, rect.height / MAP_H);
+    const fOffX  = (rect.width  - MAP_W * frs) / 2;
+    const fOffY  = (rect.height - MAP_H * frs) / 2;
+
     const feats = stateFeaturesRef.current;
     if (!feats) return null;
 
@@ -1263,26 +1389,43 @@ function App() {
       return null;
     };
 
+    // Screen → natural SVG coords (accounts for current zoom & letterbox)
+    const toSvg = (sx, sy) => ({
+      x: vb.x + (sx - rect.left - offX) / rs,
+      y: vb.y + (sy - rect.top  - offY) / rs,
+    });
+
+    // Natural SVG coords → full-view screen coords (for post-reset arc endpoint)
+    const toScreen = (nx, ny) => ({
+      x: rect.left + fOffX + nx * frs,
+      y: rect.top  + fOffY + ny * frs,
+    });
+
     let natSvgX, natSvgY;
 
     if (isDrop) {
-      natSvgX = Math.max(30, Math.min(MAP_W - 30, (releaseX - rect.left - offX) / renderScale));
-      natSvgY = Math.max(30, Math.min(MAP_H - 30, (releaseY - rect.top  - offY) / renderScale));
+      const p = toSvg(releaseX, releaseY);
+      natSvgX = Math.max(30, Math.min(MAP_W - 30, p.x));
+      natSvgY = Math.max(30, Math.min(MAP_H - 30, p.y));
     } else {
-      // Cap speed so the bone can't fly too far across the map
-      const speed    = Math.sqrt(vx*vx + vy*vy);
+      // Cap speed so the bone can't fly too far across the map.
+      // arcDist is in screen pixels; dividing by rs converts to SVG units
+      // relative to the current zoom, so a throw feels equally long visually
+      // whether zoomed in or out.
+      const speed     = Math.sqrt(vx*vx + vy*vy);
       const cappedSpd = Math.min(speed, 0.65);
-      const dirX     = vx / speed;
-      const dirY     = vy / speed;
-      // Max arc ~220 screen px — bone stays in a reasonable neighbourhood
-      const arcDist  = Math.max(80, Math.min(220, cappedSpd * 280));
-      natSvgX = Math.max(40, Math.min(MAP_W - 40, ((releaseX + dirX * arcDist) - rect.left - offX) / renderScale));
-      natSvgY = Math.max(40, Math.min(MAP_H - 40, ((releaseY + dirY * arcDist) - rect.top  - offY) / renderScale));
+      const dirX      = vx / speed;
+      const dirY      = vy / speed;
+      const arcDist   = Math.max(80, Math.min(220, cappedSpd * 280));
+      const p = toSvg(releaseX + dirX * arcDist, releaseY + dirY * arcDist);
+      natSvgX = Math.max(40, Math.min(MAP_W - 40, p.x));
+      natSvgY = Math.max(40, Math.min(MAP_H - 40, p.y));
     }
 
     const directState = checkPoint(natSvgX, natSvgY);
     if (directState) {
-      return { svgX: natSvgX, svgY: natSvgY, screenX: rect.left + offX + natSvgX * renderScale, screenY: rect.top + offY + natSvgY * renderScale, state: directState, isOcean: false };
+      const sc = toScreen(natSvgX, natSvgY);
+      return { svgX: natSvgX, svgY: natSvgY, screenX: sc.x, screenY: sc.y, state: directState, isOcean: false };
     }
 
     // Off-land: spiral outward to find nearest state
@@ -1301,7 +1444,8 @@ function App() {
       }
     }
     if (best) {
-      return { svgX: best.px, svgY: best.py, screenX: rect.left + offX + best.px * renderScale, screenY: rect.top + offY + best.py * renderScale, state: best.state, isOcean: true, oceanSvgX: natSvgX, oceanSvgY: natSvgY };
+      const sc = toScreen(best.px, best.py);
+      return { svgX: best.px, svgY: best.py, screenX: sc.x, screenY: sc.y, state: best.state, isOcean: true, oceanSvgX: natSvgX, oceanSvgY: natSvgY };
     }
     return null;
   }, [projFn]);
@@ -1348,6 +1492,9 @@ function App() {
     const tgt = pickTarget(clientX, clientY, vx, vy, isDrop);
     if (!tgt) { resetBone(); return; }
 
+    // Animate map back to full USA view so the throw arc is legible
+    animateMapView(FULL_VIEW, 320);
+
     setTarget(tgt);
     setPhase('throwing');
     if (window.__st_capture) window.__st_capture('spinner_throw', { state: tgt.state, species: selectionRef.current, isOcean: !!tgt.isOcean });
@@ -1386,6 +1533,7 @@ function App() {
             setPhase('idle');
             setTarget(null);
             setRipples([]);
+            applyMapView({ ...FULL_VIEW });
             const pos = getRestPos();
             boneLiveRef.current = { x: pos.x, y: pos.y, rot: -18, scale: 1 };
             if (svgRef.current) { svgRef.current.style.transform = ''; svgRef.current.style.transformOrigin = ''; }
@@ -1401,25 +1549,52 @@ function App() {
       }
     }
     rafRef.current = requestAnimationFrame(animate);
-  }, [pickTarget, resetBone, applyBoneTransform]);
+  }, [pickTarget, resetBone, applyBoneTransform, animateMapView]);
 
-  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
+  useEffect(() => () => {
+    cancelAnimationFrame(rafRef.current);
+    if (mapZoomRafRef.current) cancelAnimationFrame(mapZoomRafRef.current);
+  }, []);
 
-  // Global pointer listeners
+  // Global pointer listeners — handle bone drag, map pan, and pinch-to-zoom
   useEffect(() => {
     const onMove = e => {
-      if (!dragRef.current.active) return;
-      e.preventDefault(); // prevent scroll during drag
-      const pt = e.touches ? e.touches[0] : e;
-      moveDrag(pt.clientX, pt.clientY);
+      // ── Bone drag ──
+      if (dragRef.current.active) {
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        moveDrag(pt.clientX, pt.clientY);
+        return;
+      }
+      // ── Pinch-to-zoom (2-finger touch) ──
+      if (e.touches && e.touches.length === 2 && pinchRef.current.active) {
+        e.preventDefault();
+        const newDist = getTouchDist(e.touches[0], e.touches[1]);
+        const factor  = pinchRef.current.dist / newDist; // >1 = zoom out, <1 = zoom in
+        pinchRef.current.dist = newDist;
+        zoomTo(factor, pinchRef.current.midSvgX, pinchRef.current.midSvgY);
+        return;
+      }
+      // ── Map pan ──
+      if (mapPanRef.current.active) {
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        moveMapPan(pt.clientX, pt.clientY);
+      }
     };
     const onUp = e => {
-      const pt = e.changedTouches ? e.changedTouches[0] : e;
-      endDrag(pt.clientX, pt.clientY);
+      if (dragRef.current.active) {
+        const pt = e.changedTouches ? e.changedTouches[0] : e;
+        endDrag(pt.clientX, pt.clientY);
+      }
+      if (pinchRef.current.active) {
+        pinchRef.current.active = false;
+      }
+      endMapPan();
     };
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup',   onUp);
-    window.addEventListener('touchmove', onMove, { passive: false }); // passive:false so we can preventDefault
+    window.addEventListener('touchmove', onMove, { passive: false });
     window.addEventListener('touchend',  onUp);
     return () => {
       window.removeEventListener('mousemove', onMove);
@@ -1427,7 +1602,29 @@ function App() {
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend',  onUp);
     };
-  }, [moveDrag, endDrag]);
+  }, [moveDrag, endDrag, moveMapPan, endMapPan, zoomTo]);
+
+  // ── Scroll-wheel zoom ──
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el) return;
+    const onWheel = e => {
+      if (phase !== 'idle') return;
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.25 : 0.8; // scroll down = zoom out
+      const rect   = el.getBoundingClientRect();
+      const vb     = mapViewRef.current;
+      const rs     = Math.min(rect.width / vb.w, rect.height / vb.h);
+      const offX   = (rect.width  - vb.w * rs) / 2;
+      const offY   = (rect.height - vb.h * rs) / 2;
+      // Zoom centered on mouse cursor position in SVG space
+      const svgCx  = vb.x + (e.clientX - rect.left - offX) / rs;
+      const svgCy  = vb.y + (e.clientY - rect.top  - offY) / rs;
+      zoomTo(factor, svgCx, svgCy);
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [phase, zoomTo]);
 
   // ── Zoom map on landing ──
   useEffect(() => {
@@ -1512,6 +1709,7 @@ function App() {
     setTarget(null);
     setRipples([]);
     setSplashes([]);
+    applyMapView({ ...FULL_VIEW });
     if (svgRef.current) { svgRef.current.style.transform = ''; svgRef.current.style.transformOrigin = ''; }
     setTimeout(resetBone, 50);
   };
@@ -1565,9 +1763,37 @@ function App() {
       </header>
 
       {/* Map */}
-      <div className="map-wrapper" ref={mapRef}>
+      <div
+        className="map-wrapper"
+        ref={mapRef}
+        style={mapView.w < MAP_W ? { cursor: isPanning ? 'grabbing' : 'grab' } : undefined}
+        onMouseDown={e => {
+          if (phase !== 'idle') return;
+          startMapPan(e.clientX, e.clientY);
+        }}
+        onTouchStart={e => {
+          if (phase !== 'idle') return;
+          if (e.touches.length === 2) {
+            // Pinch-to-zoom: record initial distance + SVG midpoint
+            const mid  = getTouchMid(e.touches[0], e.touches[1]);
+            const rect = mapRef.current.getBoundingClientRect();
+            const vb   = mapViewRef.current;
+            const rs   = Math.min(rect.width / vb.w, rect.height / vb.h);
+            const offX = (rect.width  - vb.w * rs) / 2;
+            const offY = (rect.height - vb.h * rs) / 2;
+            pinchRef.current = {
+              active:  true,
+              dist:    getTouchDist(e.touches[0], e.touches[1]),
+              midSvgX: vb.x + (mid.x - rect.left - offX) / rs,
+              midSvgY: vb.y + (mid.y - rect.top  - offY) / rs,
+            };
+          } else if (e.touches.length === 1) {
+            startMapPan(e.touches[0].clientX, e.touches[0].clientY);
+          }
+        }}
+      >
         <div className="map-svg-container">
-          <svg ref={svgRef} viewBox={`0 0 ${MAP_W} ${MAP_H}`} preserveAspectRatio="xMidYMid meet">
+          <svg ref={svgRef} viewBox={`${mapView.x} ${mapView.y} ${mapView.w} ${mapView.h}`} preserveAspectRatio="xMidYMid meet">
             {ripples.map(r => (
               <g key={r.id} className="ripple-ring">
                 <circle cx={r.x} cy={r.y} r="2" fill="rgba(215,107,26,0.55)">
@@ -1638,6 +1864,48 @@ function App() {
 
         {phase === 'result' && animalData && (
           <ResultCard data={animalData} photoUrl={photoUrl} onAgain={handleAgain}/>
+        )}
+
+        {/* Zoom controls — only visible while idle so they don't interfere with throw */}
+        {phase === 'idle' && (
+          <div className="map-zoom-controls">
+            <button
+              className="map-zoom-btn"
+              title="Zoom in"
+              onMouseDown={e => e.stopPropagation()}
+              onTouchStart={e => { e.stopPropagation(); }}
+              onClick={() => {
+                const vb = mapViewRef.current;
+                zoomTo(0.6, vb.x + vb.w / 2, vb.y + vb.h / 2);
+              }}
+              disabled={mapView.w <= MAP_W / 8}
+            >+</button>
+            <button
+              className="map-zoom-btn"
+              title="Zoom out"
+              onMouseDown={e => e.stopPropagation()}
+              onTouchStart={e => { e.stopPropagation(); }}
+              onClick={() => {
+                const vb = mapViewRef.current;
+                zoomTo(1.667, vb.x + vb.w / 2, vb.y + vb.h / 2);
+              }}
+              disabled={mapView.w >= MAP_W}
+            >−</button>
+            {mapView.w < MAP_W && (
+              <button
+                className="map-zoom-btn"
+                title="Reset view"
+                onMouseDown={e => e.stopPropagation()}
+                onTouchStart={e => { e.stopPropagation(); }}
+                onClick={() => animateMapView(FULL_VIEW, 350)}
+              >⊙</button>
+            )}
+          </div>
+        )}
+
+        {/* Pan hint when zoomed in */}
+        {phase === 'idle' && mapView.w < MAP_W && (
+          <div className="map-zoom-hint">Drag to pan · Scroll or pinch to zoom</div>
         )}
       </div>
 

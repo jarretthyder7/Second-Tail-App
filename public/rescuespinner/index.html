@@ -570,6 +570,80 @@
       .card-ctas { padding: 12px 18px 8px; }
       .card-footer { padding: 10px 18px 14px; }
     }
+
+    /* === Dating-profile card styles === */
+    .meta-pills {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      margin-bottom: 12px;
+    }
+    .meta-pill {
+      background: var(--warm);
+      color: var(--bark);
+      border: 1px solid var(--border);
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      font-family: 'Geist', sans-serif;
+      white-space: nowrap;
+    }
+
+    .rescue-line {
+      display: flex; align-items: flex-start; gap: 6px;
+      padding: 10px 12px;
+      background: var(--amber);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .rescue-pin { font-size: 14px; flex-shrink: 0; line-height: 1.3; }
+    .rescue-text { font-size: 13px; color: var(--bark); line-height: 1.3; }
+    .rescue-name-text { font-weight: 600; }
+    .rescue-loc-text { opacity: 0.75; }
+
+    .trait-pills {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .trait-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #F3FDE8;
+      color: #3d6b2a;
+      border: 1px solid rgba(90, 143, 90, 0.25);
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 500;
+      font-family: 'Geist', sans-serif;
+    }
+    .trait-icon { font-size: 12px; }
+
+    /* === Bigger bone === */
+    .throw-item { filter: drop-shadow(0 8px 20px rgba(90,74,66,0.45)); }
+    .throw-item.resting {
+      animation: boneBreathe 2.4s ease-in-out infinite;
+    }
+    @keyframes boneBreathe {
+      0%, 100% { filter: drop-shadow(0 6px 16px rgba(90,74,66,0.32)); transform-origin: center center; }
+      50% { filter: drop-shadow(0 10px 22px rgba(215,107,26,0.45)); }
+    }
+
+    /* === Floating intro pill on mobile === */
+    @media (max-width: 600px) {
+      .map-intro {
+        top: 38%;
+        padding: 12px 18px;
+        background: rgba(255,255,255,0.85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 18px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        max-width: 84%;
+      }
+      .map-intro h1 { font-size: 17px !important; }
+      .map-intro p  { font-size: 12px !important; margin-top: 4px; }
+
+      /* Pull bottom UI up so less blank space exists below the map */
+      .bottom-ui { padding: 6px 10px 10px; }
+    }
   </style>
 </head>
 <body>
@@ -668,7 +742,7 @@ function bezier2(p0, p1, p2, t) {
 }
 
 // ── SVG Shapes ──
-function BoneSVG({ size = 48 }) {
+function BoneSVG({ size = 64 }) {
   return (
     <svg width={size} height={size * 0.5} viewBox="0 0 80 40" fill="none">
       <rect x="14" y="16" width="52" height="8" rx="4" fill="#5A4A42"/>
@@ -824,8 +898,19 @@ function App() {
   const pickTarget = useCallback((releaseX, releaseY, vx, vy, isDrop) => {
     if (!projFn || !mapRef.current) return null;
     const rect  = mapRef.current.getBoundingClientRect();
-    const sx    = rect.width  / MAP_W;
-    const sy    = rect.height / MAP_H;
+    // SVG uses preserveAspectRatio="xMidYMid meet" — actual rendered scale
+    // is the SMALLER of width/height ratios. That scale applies to both axes,
+    // and the SVG is centered within the container, producing letterbox
+    // whitespace on one axis. Compute the real render rect so screen-to-SVG
+    // conversion is correct (and throws into whitespace snap to the map).
+    const renderScale = Math.min(rect.width / MAP_W, rect.height / MAP_H);
+    const renderedW   = MAP_W * renderScale;
+    const renderedH   = MAP_H * renderScale;
+    const offX        = (rect.width  - renderedW) / 2;
+    const offY        = (rect.height - renderedH) / 2;
+    // sx/sy legacy kept for downstream code that builds screenX/screenY.
+    const sx = renderScale;
+    const sy = renderScale;
     const feats = stateFeaturesRef.current;
     if (!feats) return null;
 
@@ -841,8 +926,8 @@ function App() {
     let natSvgX, natSvgY;
 
     if (isDrop) {
-      natSvgX = Math.max(30, Math.min(MAP_W - 30, (releaseX - rect.left) / sx));
-      natSvgY = Math.max(30, Math.min(MAP_H - 30, (releaseY - rect.top)  / sy));
+      natSvgX = Math.max(30, Math.min(MAP_W - 30, (releaseX - rect.left - offX) / renderScale));
+      natSvgY = Math.max(30, Math.min(MAP_H - 30, (releaseY - rect.top  - offY) / renderScale));
     } else {
       // Cap speed so the bone can't fly too far across the map
       const speed    = Math.sqrt(vx*vx + vy*vy);
@@ -851,13 +936,13 @@ function App() {
       const dirY     = vy / speed;
       // Max arc ~220 screen px — bone stays in a reasonable neighbourhood
       const arcDist  = Math.max(80, Math.min(220, cappedSpd * 280));
-      natSvgX = Math.max(40, Math.min(MAP_W - 40, ((releaseX + dirX * arcDist) - rect.left) / sx));
-      natSvgY = Math.max(40, Math.min(MAP_H - 40, ((releaseY + dirY * arcDist) - rect.top)  / sy));
+      natSvgX = Math.max(40, Math.min(MAP_W - 40, ((releaseX + dirX * arcDist) - rect.left - offX) / renderScale));
+      natSvgY = Math.max(40, Math.min(MAP_H - 40, ((releaseY + dirY * arcDist) - rect.top  - offY) / renderScale));
     }
 
     const directState = checkPoint(natSvgX, natSvgY);
     if (directState) {
-      return { svgX: natSvgX, svgY: natSvgY, screenX: rect.left + natSvgX * sx, screenY: rect.top + natSvgY * sy, state: directState, isOcean: false };
+      return { svgX: natSvgX, svgY: natSvgY, screenX: rect.left + offX + natSvgX * renderScale, screenY: rect.top + offY + natSvgY * renderScale, state: directState, isOcean: false };
     }
 
     // Off-land: spiral outward to find nearest state
@@ -876,7 +961,7 @@ function App() {
       }
     }
     if (best) {
-      return { svgX: best.px, svgY: best.py, screenX: rect.left + best.px * sx, screenY: rect.top + best.py * sy, state: best.state, isOcean: true, oceanSvgX: natSvgX, oceanSvgY: natSvgY };
+      return { svgX: best.px, svgY: best.py, screenX: rect.left + offX + best.px * renderScale, screenY: rect.top + offY + best.py * renderScale, state: best.state, isOcean: true, oceanSvgX: natSvgX, oceanSvgY: natSvgY };
     }
     return null;
   }, [projFn]);
@@ -949,10 +1034,22 @@ function App() {
       } else {
         setPhase('landing');
         if (tgt.isOcean && tgt.oceanSvgX != null) {
+          // Ocean splash — don't load an animal; prompt re-toss instead.
           setSplashes([{ id: Date.now(), x: tgt.oceanSvgX, y: tgt.oceanSvgY }]);
           setSplashToast(true);
           setTimeout(() => setSplashes([]), 1400);
-          setTimeout(() => setSplashToast(false), 1400);
+          setTimeout(() => setSplashToast(false), 1800);
+          setTimeout(() => {
+            // Reset everything and return the bone to resting — user can try again.
+            setPhase('idle');
+            setTarget(null);
+            setRipples([]);
+            const pos = getRestPos();
+            boneLiveRef.current = { x: pos.x, y: pos.y, rot: -18, scale: 1 };
+            if (svgRef.current) { svgRef.current.style.transform = ''; svgRef.current.style.transformOrigin = ''; }
+            setTimeout(resetBone, 50);
+          }, 1200);
+          return;
         }
         setRipples([{ id: Date.now(), x: tgt.svgX, y: tgt.svgY }]);
         setTimeout(() => {
@@ -1146,7 +1243,7 @@ function App() {
         )}
 
         {splashToast && (
-          <div className="new-state-toast splash-toast">🌊 Splash! Bouncing to shore…</div>
+          <div className="new-state-toast splash-toast">🌊 Splash! Toss onto the map.</div>
         )}
 
         {phase === 'loading' && (
@@ -1176,7 +1273,7 @@ function App() {
         >
           {selection === 'cat'  ? <YarnSVG  size={48}/> :
            selection === 'both' ? <TreatSVG size={48}/> :
-                                  <BoneSVG  size={56}/>}
+                                  <BoneSVG  size={72}/>}
         </div>
       )}
 
@@ -1260,7 +1357,26 @@ function ResultCard({ data, photoUrl, onAgain }) {
   if (data.type === 'animal' && data.animal) {
     const a = data.animal;
     const r = data.rescue || {};
-    const metaBits = [a.breed, a.age, a.sex, a.size].filter(Boolean);
+    const tr = a.traits || {};
+    // Dating-profile header: "Name, age" when age known
+    const displayName = a.ageYears != null
+      ? `${a.name}, ${a.ageYears}`
+      : a.name;
+    // Primary meta pills (always shown)
+    const mainMeta = [];
+    if (a.breed) mainMeta.push(a.breed);
+    if (a.ageGroup) mainMeta.push(a.ageGroup);
+    if (a.sex) mainMeta.push(a.sex);
+    if (a.size) mainMeta.push(a.size);
+    // Trait pills (conditional)
+    const traitPills = [];
+    if (tr.housetrained)  traitPills.push({ icon: '🏠', label: 'House-trained' });
+    if (tr.kidsOk)        traitPills.push({ icon: '👶', label: 'Good with kids' });
+    if (tr.dogsOk)        traitPills.push({ icon: '🐕', label: 'Good with dogs' });
+    if (tr.catsOk)        traitPills.push({ icon: '🐈', label: 'Good with cats' });
+    if (tr.vaccinated)    traitPills.push({ icon: '💉', label: 'Vaccinated' });
+    if (tr.specialNeeds)  traitPills.push({ icon: '⭐', label: 'Special needs' });
+    if (tr.activityLevel) traitPills.push({ icon: '⚡', label: tr.activityLevel });
     return (
       <div className="result-overlay">
         <div className="result-card animal-card-v2">
@@ -1279,22 +1395,41 @@ function ResultCard({ data, photoUrl, onAgain }) {
             </div>
           </div>
 
-          {/* Name + rescue, always visible */}
+          {/* Dating-profile identity block */}
           <div className="animal-identity">
-            <h2 className="animal-name-solo">{a.name}</h2>
-            <div className="rescue-strip-new">
-              <div>
-                <div className="rescue-strip-label">Available at</div>
-                <div className="rescue-strip-name">{r.name || 'A local rescue'}</div>
+            <h2 className="animal-name-solo">{displayName}</h2>
+            {mainMeta.length > 0 && (
+              <div className="meta-pills">
+                {mainMeta.map((m, i) => (
+                  <span key={i} className="meta-pill">{m}</span>
+                ))}
               </div>
-              {(r.city || r.state) && (
-                <div className="rescue-strip-loc">📍 {[r.city, r.state].filter(Boolean).join(', ')}</div>
-              )}
-            </div>
+            )}
+            {(r.name || r.city || r.state) && (
+              <div className="rescue-line">
+                <span className="rescue-pin">📍</span>
+                <span className="rescue-text">
+                  <span className="rescue-name-text">{r.name || 'A local rescue'}</span>
+                  {(r.city || r.state) && (
+                    <span className="rescue-loc-text"> · {[r.city, r.state].filter(Boolean).join(', ')}</span>
+                  )}
+                </span>
+              </div>
+            )}
+            {traitPills.length > 0 && (
+              <div className="trait-pills">
+                {traitPills.map((p, i) => (
+                  <span key={i} className="trait-pill">
+                    <span className="trait-icon">{p.icon}</span>
+                    <span>{p.label}</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Expandable details */}
-          {(metaBits.length > 0 || a.description) && (
+          {/* Expandable bio — description only */}
+          {a.description && (
             <div className="details-section">
               <button
                 type="button"
@@ -1302,32 +1437,24 @@ function ResultCard({ data, photoUrl, onAgain }) {
                 onClick={() => setShowDetails(v => !v)}
                 aria-expanded={showDetails}
               >
-                <span>{showDetails ? 'Hide details' : `About ${a.name}`}</span>
+                <span>{showDetails ? `Less about ${a.name}` : `More about ${a.name}`}</span>
                 <span className="details-chevron">{showDetails ? '▲' : '▼'}</span>
               </button>
               {showDetails && (
                 <div className="details-body">
-                  {metaBits.length > 0 && (
-                    <div className="animal-meta-line">{metaBits.join(' · ')}</div>
-                  )}
-                  {a.description && <p className="animal-desc">{a.description}</p>}
+                  <p className="animal-desc">{a.description}</p>
                 </div>
               )}
             </div>
           )}
 
+          {/* Primary CTA only — header already has Become a foster */}
           <div className="card-ctas">
             {a.listingUrl && (
               <a href={a.listingUrl} target="_blank" rel="noopener noreferrer" className="btn-foster">
                 Meet {a.name} →
               </a>
             )}
-            <a href={fosterCTA} target="_blank" className="btn-rescue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-              Sign up to foster with Second Tail
-            </a>
           </div>
 
           <div className="card-footer">

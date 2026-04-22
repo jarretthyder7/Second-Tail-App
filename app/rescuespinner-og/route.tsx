@@ -7,8 +7,36 @@ export const size = { width: 1200, height: 630 }
 /**
  * Dynamic Open Graph image for /rescuespinner.
  * Served at /rescuespinner-og (via the route folder name).
+ * Uses the Second Tail logo from /logo.svg and Lora font for the headline.
  */
+async function loadGoogleFont(family: string, weight: number, text: string) {
+  const url = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+    family
+  )}:wght@${weight}&text=${encodeURIComponent(text)}`
+  const css = await fetch(url, {
+    headers: {
+      // Older UA forces Google Fonts to serve TTF (Satori needs TTF, not woff2).
+      'User-Agent':
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36',
+    },
+  }).then((r) => r.text())
+  const match = css.match(/src: url\(([^)]+)\) format\(('truetype'|'opentype')\)/)
+  if (!match) throw new Error('Could not extract font TTF URL from Google CSS')
+  const fontData = await fetch(match[1]).then((r) => r.arrayBuffer())
+  return fontData
+}
+
 export async function GET() {
+  const headlineText = 'Toss a bone.Meet a rescue dog.'
+  const brandText = 'Second Tail'
+
+  let loraBold: ArrayBuffer | null = null
+  try {
+    loraBold = await loadGoogleFont('Lora', 700, headlineText + brandText)
+  } catch {
+    // Fall back to system fonts if Google Fonts is unreachable
+  }
+
   return new ImageResponse(
     (
       <div
@@ -20,47 +48,38 @@ export async function GET() {
           padding: 80,
           background:
             'radial-gradient(circle at 85% 15%, #F3E0B0 0%, #EBE0CC 45%, #E5D8C0 100%)',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: loraBold
+            ? 'Lora, system-ui, -apple-system, sans-serif'
+            : 'system-ui, -apple-system, sans-serif',
         }}
       >
-        {/* Brand row */}
+        {/* Brand row with Second Tail logo */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 14,
+            gap: 16,
           }}
         >
+          <img
+            src="https://getsecondtail.com/logo.svg"
+            width={64}
+            height={64}
+            alt=""
+            style={{ display: 'block' }}
+          />
           <div
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: 12,
-              background: '#D76B1A',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(215,107,26,0.3)',
-            }}
-          >
-            {/* Paw shape in white */}
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="white">
-              <circle cx="5" cy="9" r="2.2" />
-              <circle cx="9" cy="5.5" r="2.2" />
-              <circle cx="15" cy="5.5" r="2.2" />
-              <circle cx="19" cy="9" r="2.2" />
-              <path d="M12 10.5c-3 0-6 2.5-6 5.5 0 2.2 1.8 3.5 3.8 3.5 1 0 1.7-.5 2.2-.5s1.2.5 2.2.5c2 0 3.8-1.3 3.8-3.5 0-3-3-5.5-6-5.5z" />
-            </svg>
-          </div>
-          <div
-            style={{
-              fontSize: 28,
+              fontSize: 32,
               fontWeight: 700,
               color: '#4A3C36',
               letterSpacing: '-0.01em',
+              fontFamily: loraBold
+                ? 'Lora, serif'
+                : 'system-ui, -apple-system, sans-serif',
             }}
           >
-            Second Tail
+            {brandText}
           </div>
         </div>
 
@@ -76,13 +95,16 @@ export async function GET() {
         >
           <div
             style={{
-              fontSize: 104,
-              fontWeight: 800,
+              fontSize: 108,
+              fontWeight: 700,
               color: '#1F1B18',
               lineHeight: 0.98,
               letterSpacing: '-0.035em',
               display: 'flex',
               flexDirection: 'column',
+              fontFamily: loraBold
+                ? 'Lora, serif'
+                : 'system-ui, -apple-system, sans-serif',
             }}
           >
             <span>Toss a bone.</span>
@@ -93,8 +115,9 @@ export async function GET() {
               fontSize: 32,
               color: '#4A3C36',
               lineHeight: 1.3,
-              maxWidth: 960,
+              maxWidth: 980,
               letterSpacing: '-0.005em',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
             Real dogs from real rescues across the US — looking for a foster
@@ -116,11 +139,11 @@ export async function GET() {
               color: '#D76B1A',
               fontWeight: 600,
               letterSpacing: '-0.005em',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
             }}
           >
             getsecondtail.com/rescuespinner
           </div>
-          {/* Stylized bone */}
           <svg width="130" height="70" viewBox="0 0 130 70">
             <path
               d="M22 15 C14 15 9 20 9 28 C9 32 11 35 14 37 C11 39 9 42 9 46 C9 54 14 60 22 60 C30 60 35 54 35 46 L95 46 C95 54 100 60 108 60 C116 60 121 54 121 46 C121 42 119 39 116 37 C119 35 121 32 121 28 C121 20 116 15 108 15 C100 15 95 20 95 28 L35 28 C35 20 30 15 22 15 Z"
@@ -133,6 +156,16 @@ export async function GET() {
     ),
     {
       ...size,
+      fonts: loraBold
+        ? [
+            {
+              name: 'Lora',
+              data: loraBold,
+              weight: 700,
+              style: 'normal',
+            },
+          ]
+        : undefined,
     }
   )
 }

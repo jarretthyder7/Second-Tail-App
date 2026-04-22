@@ -1406,10 +1406,10 @@ function App() {
       // relative to the current zoom, so a throw feels equally long visually
       // whether zoomed in or out.
       const speed     = Math.sqrt(vx*vx + vy*vy);
-      const cappedSpd = Math.min(speed, 0.65);
+      const cappedSpd = Math.min(speed, 0.5);
       const dirX      = vx / speed;
       const dirY      = vy / speed;
-      const arcDist   = Math.max(80, Math.min(220, cappedSpd * 280));
+      const arcDist   = Math.max(80, Math.min(180, cappedSpd * 260));
       const p = toSvg(releaseX + dirX * arcDist, releaseY + dirY * arcDist);
       natSvgX = Math.max(40, Math.min(MAP_W - 40, p.x));
       natSvgY = Math.max(40, Math.min(MAP_H - 40, p.y));

@@ -74,6 +74,11 @@ function RescueLoginContent() {
       setError(result.error)
       setIsLoading(false)
     } else if (result?.redirectTo) {
+      try {
+        const ph = (window as any).posthog
+        if (ph?.capture) ph.capture('user_login', { role: 'rescue' })
+        await new Promise((r) => setTimeout(r, 150))
+      } catch {}
       window.location.href = result.redirectTo
     }
   }

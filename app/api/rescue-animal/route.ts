@@ -106,6 +106,11 @@ function emptyResponse(state: string, reason: string, debug: any, wantDebug: boo
 export async function GET(req: NextRequest) {
   const state = req.nextUrl.searchParams.get('state')?.trim() || ''
   const wantDebug = req.nextUrl.searchParams.get('debug') === '1'
+  const speciesParam = (req.nextUrl.searchParams.get('species') || 'dog')
+    .trim()
+    .toLowerCase()
+  const species =
+    speciesParam === 'cat' || speciesParam === 'both' ? speciesParam : 'dog'
 
   if (!state) {
     return Response.json({ ok: false, error: 'missing state' }, { status: 400 })
@@ -127,24 +132,31 @@ export async function GET(req: NextRequest) {
 
   const included: any[] = Array.isArray(json.included) ? json.included : []
 
-  // Filter to dogs with usable photos, not adoption-pending.
+  // Filter to species (dog/cat/both) with usable photos, not adoption-pending.
   // Use slug which reliably ends in "-dog" / "-cat" / "-rabbit" / etc.
-  const dogs = (json.data as any[]).filter((a) => {
+  const allowSlug = (slug: string): boolean => {
+    if (species === 'dog') return slug.endsWith('-dog')
+    if (species === 'cat') return slug.endsWith('-cat')
+    return slug.endsWith('-dog') || slug.endsWith('-cat')
+  }
+
+  const matches = (json.data as any[]).filter((a) => {
     const attrs = a?.attributes || {}
     if (!attrs.pictureThumbnailUrl) return false
     if (attrs.isAdoptionPending) return false
-    const slug = String(attrs.slug || '').toLowerCase()
-    return slug.endsWith('-dog')
+    return allowSlug(String(attrs.slug || '').toLowerCase())
   })
 
-  if (dogs.length === 0) {
+  if (matches.length === 0) {
     debug.filteredToZero = true
-    return emptyResponse(state, 'no_dogs_with_photo', debug, wantDebug)
+    return emptyResponse(state, 'no_matches_with_photo', debug, wantDebug)
   }
 
-  // Prefer foster-needed animals; fall back to any adoptable dog.
-  const fosterDogs = dogs.filter((a) => a.attributes?.isNeedingFoster === true)
-  const pool = fosterDogs.length > 0 ? fosterDogs : dogs
+  // Prefer foster-needed animals; fall back to any adoptable match.
+  const fosterMatches = matches.filter(
+    (a) => a.attributes?.isNeedingFoster === true
+  )
+  const pool = fosterMatches.length > 0 ? fosterMatches : matches
   const pickIndex = Math.floor(Math.random() * Math.min(pool.length, 25))
   const pick = pool[pickIndex]
 
@@ -198,10 +210,14 @@ export async function GET(req: NextRequest) {
       phone: orgAttrs.phone || null,
     },
     poolInfo: {
-      totalDogs: dogs.length,
-      fosterNeeded: fosterDogs.length,
+      totalMatches: matches.length,
+      fosterNeeded: fosterMatches.length,
+      species,
     },
   }
+  // Include species on the animal itself so the card can label correctly.
+  const slug = String(attrs.slug || '').toLowerCase()
+  resp.animal.species = slug.endsWith('-cat') ? 'cat' : 'dog'
   if (wantDebug) resp.debug = debug
   return Response.json(resp)
 }

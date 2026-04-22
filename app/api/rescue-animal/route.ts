@@ -165,19 +165,38 @@ export async function GET(req: NextRequest) {
   const org = included.find((r) => r.type === 'orgs' && r.id === orgId)
   const orgAttrs = org?.attributes || {}
 
-  // Full-size photo from the included pictures if available.
+  // Collect ALL full-size photos from included pictures.
   const picIds: string[] = (pick.relationships?.pictures?.data || []).map(
     (p: any) => p.id
   )
-  let heroPhoto = fullSizeImage(attrs.pictureThumbnailUrl)
-  if (picIds.length > 0) {
-    const pic = included.find((r) => r.type === 'pictures' && picIds.includes(r.id))
-    const url =
+  const allPhotos: string[] = []
+  for (const pid of picIds) {
+    const pic = included.find((r) => r.type === 'pictures' && r.id === pid)
+    const u =
       pic?.attributes?.original?.url ||
       pic?.attributes?.large?.url ||
       pic?.attributes?.url
-    if (url) heroPhoto = url
+    if (u && !allPhotos.includes(u)) allPhotos.push(u)
   }
+  let heroPhoto = allPhotos[0] || fullSizeImage(attrs.pictureThumbnailUrl)
+
+  // Parse age — extract years as a number for the "Name, age" header.
+  const ageString = String(attrs.ageString || '')
+  let ageYears: number | null = null
+  const yearMatch = ageString.match(/(\d+)\s*Years?/i)
+  if (yearMatch) ageYears = parseInt(yearMatch[1], 10)
+
+  // Traits — only include ones set to true or with a usable value.
+  const traits: Record<string, any> = {}
+  if (attrs.isHousetrained === true) traits.housetrained = true
+  if (attrs.isKidsOk === true) traits.kidsOk = true
+  if (attrs.isDogsOk === true) traits.dogsOk = true
+  if (attrs.isCatsOk === true) traits.catsOk = true
+  if (attrs.isCurrentVaccinations === true) traits.vaccinated = true
+  if (attrs.isSpecialNeeds === true) traits.specialNeeds = true
+  if (attrs.activityLevel) traits.activityLevel = String(attrs.activityLevel)
+  if (attrs.energyLevel) traits.energyLevel = String(attrs.energyLevel)
+  if (attrs.adoptionFeeString) traits.adoptionFee = String(attrs.adoptionFeeString)
 
   const listingUrl = orgAttrs.url
     ? String(orgAttrs.url)
@@ -192,10 +211,14 @@ export async function GET(req: NextRequest) {
       name: attrs.name || 'A new friend',
       needsFoster: !!attrs.isNeedingFoster,
       breed: attrs.breedString || attrs.breedPrimary || '',
-      age: attrs.ageString || attrs.ageGroup || '',
+      ageString: ageString,
+      ageGroup: attrs.ageGroup || '',
+      ageYears,
       sex: attrs.sex || '',
       size: attrs.sizeGroup || '',
       photo: heroPhoto,
+      photos: allPhotos,
+      traits,
       description: cleanDescription(
         attrs.descriptionText || attrs.descriptionHtml || ''
       ),

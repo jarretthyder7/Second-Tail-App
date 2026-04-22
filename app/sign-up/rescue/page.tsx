@@ -38,6 +38,17 @@ export default function RescueWaitlistPage() {
       })
       if (res.ok) {
         setStatus('success')
+        try {
+          const ph = (window as any).posthog
+          if (ph?.capture) {
+            ph.capture('rescue_waitlist_submitted', {
+              state: form.state,
+              city: form.city,
+              has_website: !!form.website,
+              how_heard: form.howHeard || null,
+            })
+          }
+        } catch {}
       } else {
         const data = await res.json().catch(() => ({}))
         setStatus('error')

@@ -34,9 +34,10 @@
     /* ── Header ── */
     .header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 24px; z-index: 10;
+      padding: 10px 24px; z-index: 100;
       background: var(--warm); border-bottom: 1px solid var(--border);
       flex-shrink: 0; gap: 12px;
+      position: relative;
     }
     .header-logo { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     .header-logo img { height: 22px; }
@@ -163,7 +164,7 @@
 
     /* ── Result overlay ── */
     .result-overlay {
-      position: absolute; inset: 0;
+      position: fixed; inset: 0;
       background: rgba(30,22,18,.5); backdrop-filter: blur(4px);
       z-index: 40; display: flex; align-items: center; justify-content: center; padding: 20px;
       animation: fadeIn .35s ease;
@@ -271,10 +272,7 @@
         animation: sheetUp .45s cubic-bezier(0.34,1.2,0.64,1);
       }
       @keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
-      .result-card::before {
-        content: ''; display: block; width: 34px; height: 4px;
-        background: var(--border); border-radius: 999px; margin: 10px auto 0;
-      }
+      /* grab-handle removed */
       .animal-photo { height: 190px; }
       .animal-photo-name h2 { font-size: 22px; }
       .card-body { padding: 12px 14px 14px; }
@@ -661,6 +659,181 @@
 
       /* Pull bottom UI up so less blank space exists below the map */
       .bottom-ui { padding: 6px 10px 10px; }
+    }
+
+    /* === Profile layout (dating-profile style) === */
+    .profile-layout {
+      display: flex;
+      flex-direction: column;
+    }
+    .close-pill {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: none;
+      color: var(--dark);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .15s;
+      z-index: 5;
+    }
+    .close-pill:hover { transform: scale(1.08); }
+    .close-pill:active { transform: scale(0.95); }
+
+    .profile-body {
+      padding: 18px 20px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .profile-name-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .profile-name {
+      font-family: 'Lora', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--dark);
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+    }
+    .status-tag {
+      font-family: 'Geist', sans-serif;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 999px;
+      letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .tag-foster {
+      background: #D76B1A;
+      color: white;
+      box-shadow: 0 2px 10px rgba(215,107,26,0.3);
+    }
+    .tag-adoptable {
+      background: #5A8F5A;
+      color: white;
+      box-shadow: 0 2px 10px rgba(90,143,90,0.3);
+    }
+    .profile-meta {
+      margin-top: -8px;
+      font-size: 13px;
+      color: var(--bark);
+      opacity: 0.8;
+      font-weight: 500;
+    }
+    .profile-loc {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--bark);
+      line-height: 1.4;
+    }
+    .profile-loc strong { color: var(--dark); font-weight: 600; }
+    .loc-city { opacity: 0.7; }
+    .profile-section { display: flex; flex-direction: column; gap: 8px; }
+    .section-head {
+      font-family: 'Geist', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--bark);
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+    .good-with-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .good-with-badge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: var(--warm);
+      border: 1px solid var(--border);
+      min-width: 64px;
+    }
+    .gw-icon { font-size: 20px; line-height: 1; }
+    .gw-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--bark);
+    }
+    .about-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .about-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--amber);
+      color: var(--dark);
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+    .profile-about-text {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--dark);
+      text-wrap: pretty;
+    }
+    .inline-more {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--orange);
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    .inline-more:hover { text-decoration: underline; }
+    .profile-cta { margin-top: 4px; }
+    .profile-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Mobile — card floats in center leaving header visible */
+    @media (max-width: 600px) {
+      .result-overlay { align-items: center; padding: 64px 10px; }
+      .animal-card-v2.profile-layout {
+        max-height: calc(100vh - 128px);
+        max-height: calc(100dvh - 128px);
+        border-radius: 20px;
+      }
+      .profile-body { padding: 16px 18px 14px; gap: 12px; }
+      .profile-name { font-size: 24px; }
+      .photo-frame { min-height: 180px; max-height: 42vh; }
+      .photo-full { max-height: 42vh; }
     }
   </style>
 </head>
@@ -1376,29 +1549,23 @@ function ResultCard({ data, photoUrl, onAgain }) {
     const a = data.animal;
     const r = data.rescue || {};
     const tr = a.traits || {};
-    // Dating-profile header: "Name, age" when age known
-    const displayName = a.ageYears != null
-      ? `${a.name}, ${a.ageYears}`
-      : a.name;
-    // Primary meta pills (always shown)
-    const mainMeta = [];
-    if (a.breed) mainMeta.push(a.breed);
-    if (a.ageGroup) mainMeta.push(a.ageGroup);
-    if (a.sex) mainMeta.push(a.sex);
-    if (a.size) mainMeta.push(a.size);
-    // Trait pills (conditional)
-    const traitPills = [];
-    if (tr.housetrained)  traitPills.push({ icon: '🏠', label: 'House-trained' });
-    if (tr.kidsOk)        traitPills.push({ icon: '👶', label: 'Good with kids' });
-    if (tr.dogsOk)        traitPills.push({ icon: '🐕', label: 'Good with dogs' });
-    if (tr.catsOk)        traitPills.push({ icon: '🐈', label: 'Good with cats' });
-    if (tr.vaccinated)    traitPills.push({ icon: '💉', label: 'Vaccinated' });
-    if (tr.specialNeeds)  traitPills.push({ icon: '⭐', label: 'Special needs' });
-    if (tr.activityLevel) traitPills.push({ icon: '⚡', label: tr.activityLevel });
+    const displayName = a.ageYears != null ? `${a.name}, ${a.ageYears}` : a.name;
+    // Compact second-line meta
+    const metaLine = [a.breed, a.sex, a.size].filter(Boolean).join(' · ');
+    // "Good with" traits shown as labeled badges
+    const goodWithBadges = [];
+    if (tr.kidsOk)  goodWithBadges.push({ icon: '👶', label: 'Kids' });
+    if (tr.dogsOk)  goodWithBadges.push({ icon: '🐕', label: 'Dogs' });
+    if (tr.catsOk)  goodWithBadges.push({ icon: '🐈', label: 'Cats' });
+    // "About me" extras
+    const aboutChips = [];
+    if (tr.housetrained) aboutChips.push({ icon: '🏠', label: 'House-trained' });
+    if (tr.vaccinated)   aboutChips.push({ icon: '💉', label: 'Vaccinated' });
+    if (tr.activityLevel) aboutChips.push({ icon: '⚡', label: tr.activityLevel });
     return (
       <div className="result-overlay">
-        <div className="result-card animal-card-v2">
-          {/* Full photo — never cropped */}
+        <div className="result-card animal-card-v2 profile-layout">
+          {/* Photo with close pill */}
           <div className="photo-frame">
             {photoUrl
               ? <img src={photoUrl} alt={a.name} className="photo-full" onError={e => { e.target.style.display='none'; }}/>
@@ -1408,77 +1575,88 @@ function ResultCard({ data, photoUrl, onAgain }) {
                   </svg>
                 </div>
             }
-            <div className={`status-badge ${a.needsFoster ? "badge-foster" : "badge-adoptable"}`}>
-              {a.needsFoster ? "🐾 Needs foster" : "✓ Adoptable"}
+            <button className="close-pill" onClick={onAgain} aria-label="Close" type="button">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M6 6l12 12M6 18L18 6"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Profile body */}
+          <div className="profile-body">
+            <div className="profile-name-row">
+              <h2 className="profile-name">{displayName}</h2>
+              <span className={`status-tag ${a.needsFoster ? 'tag-foster' : 'tag-adoptable'}`}>
+                {a.needsFoster ? '🐾 Needs foster' : '✓ Adoptable'}
+              </span>
             </div>
-          </div>
+            {metaLine && <div className="profile-meta">{metaLine}</div>}
 
-          {/* Dating-profile identity block */}
-          <div className="animal-identity">
-            <h2 className="animal-name-solo">{displayName}</h2>
-            {mainMeta.length > 0 && (
-              <div className="meta-pills">
-                {mainMeta.map((m, i) => (
-                  <span key={i} className="meta-pill">{m}</span>
-                ))}
-              </div>
-            )}
-            {(r.name || r.city || r.state) && (
-              <div className="rescue-line">
-                <span className="rescue-pin">📍</span>
-                <span className="rescue-text">
-                  <span className="rescue-name-text">{r.name || 'A local rescue'}</span>
-                  {(r.city || r.state) && (
-                    <span className="rescue-loc-text"> · {[r.city, r.state].filter(Boolean).join(', ')}</span>
-                  )}
-                </span>
-              </div>
-            )}
-            {traitPills.length > 0 && (
-              <div className="trait-pills">
-                {traitPills.map((p, i) => (
-                  <span key={i} className="trait-pill">
-                    <span className="trait-icon">{p.icon}</span>
-                    <span>{p.label}</span>
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+            <div className="profile-loc">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0, marginTop:2}}>
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>
+                <strong>{r.name || 'A local rescue'}</strong>
+                {(r.city || r.state) && <span className="loc-city"> · {[r.city, r.state].filter(Boolean).join(', ')}</span>}
+              </span>
+            </div>
 
-          {/* Expandable bio — description only */}
-          {a.description && (
-            <div className="details-section">
-              <button
-                type="button"
-                className="details-toggle"
-                onClick={() => setShowDetails(v => !v)}
-                aria-expanded={showDetails}
-              >
-                <span>{showDetails ? `Less about ${a.name}` : `More about ${a.name}`}</span>
-                <span className="details-chevron">{showDetails ? '▲' : '▼'}</span>
-              </button>
-              {showDetails && (
-                <div className="details-body">
-                  <p className="animal-desc">{a.description}</p>
+            {goodWithBadges.length > 0 && (
+              <section className="profile-section">
+                <h3 className="section-head">🤝 Good with</h3>
+                <div className="good-with-row">
+                  {goodWithBadges.map((b, i) => (
+                    <div key={i} className="good-with-badge">
+                      <span className="gw-icon">{b.icon}</span>
+                      <span className="gw-label">{b.label}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
-          )}
+              </section>
+            )}
 
-          {/* Primary CTA only — header already has Become a foster */}
-          <div className="card-ctas">
+            {(a.description || aboutChips.length > 0) && (
+              <section className="profile-section">
+                <h3 className="section-head">📖 About {a.name}</h3>
+                {aboutChips.length > 0 && (
+                  <div className="about-chips">
+                    {aboutChips.map((c, i) => (
+                      <span key={i} className="about-chip">
+                        <span>{c.icon}</span>
+                        <span>{c.label}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {a.description && (
+                  <p className="profile-about-text">
+                    {showDetails || a.description.length <= 180
+                      ? a.description
+                      : a.description.slice(0, 177) + '…'}
+                    {a.description.length > 180 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowDetails(v => !v)}
+                        className="inline-more"
+                      >{showDetails ? ' Less' : ' More'}</button>
+                    )}
+                  </p>
+                )}
+              </section>
+            )}
+
             {a.listingUrl && (
-              <a href={a.listingUrl} target="_blank" rel="noopener noreferrer" className="btn-foster">
+              <a href={a.listingUrl} target="_blank" rel="noopener noreferrer" className="btn-foster profile-cta">
                 Meet {a.name} →
               </a>
             )}
-          </div>
 
-          <div className="card-footer">
-            <button className="again-btn" onClick={onAgain}>↺ Throw again</button>
-            <ShareButton animal={a} rescue={r} state={data.state}/>
-            <span className="footer-brand">Powered by Second Tail</span>
+            <div className="profile-footer">
+              <button className="again-btn" onClick={onAgain}>↺ Throw again</button>
+              <ShareButton animal={a} rescue={r} state={data.state}/>
+            </div>
           </div>
         </div>
       </div>

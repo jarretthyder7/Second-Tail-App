@@ -850,7 +850,7 @@ function App() {
     setPhotoUrl(null);
     let data;
     try {
-      const r = await fetch(`/api/rescue-animal?state=${encodeURIComponent(tgt.state)}`);
+      const r = await fetch(`/api/rescue-animal?state=${encodeURIComponent(tgt.state)}&species=${encodeURIComponent(sel || 'dog')}`);
       const j = await r.json();
       if (j && j.ok && j.type === 'animal' && j.animal) {
         data = {

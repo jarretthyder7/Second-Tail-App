@@ -944,6 +944,26 @@
   </style>
 </head>
 <body>
+<script>
+  // PostHog loader (config-driven; no-op when env keys absent)
+  window.__st_capture = function(name, props) {
+    try { if (window.posthog && window.posthog.capture) window.posthog.capture(name, props || {}); } catch(e) {}
+  };
+  (async function initPosthog() {
+    try {
+      var cfg = await fetch('/api/analytics-config').then(function(r){return r.json();}).catch(function(){return null;});
+      if (!cfg || !cfg.key) return;
+      // Inline stub so capture() queues events until script loads
+      !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+      window.posthog.init(cfg.key, {
+        api_host: cfg.host,
+        person_profiles: 'identified_only',
+        capture_pageview: true,
+        capture_pageleave: true
+      });
+    } catch(e) {}
+  })();
+</script>
 <div id="root"></div>
 
 <script type="text/babel">
@@ -1330,6 +1350,7 @@ function App() {
 
     setTarget(tgt);
     setPhase('throwing');
+    if (window.__st_capture) window.__st_capture('spinner_throw', { state: tgt.state, species: selectionRef.current, isOcean: !!tgt.isOcean });
     setRipples([]);
 
     const startPos  = { x: clientX, y: clientY };
@@ -1357,6 +1378,7 @@ function App() {
           // Ocean splash — don't load an animal; prompt re-toss instead.
           setSplashes([{ id: Date.now(), x: tgt.oceanSvgX, y: tgt.oceanSvgY }]);
           setSplashToast(true);
+          if (window.__st_capture) window.__st_capture('spinner_ocean_landing', { state: tgt.state });
           setTimeout(() => setSplashes([]), 1400);
           setTimeout(() => setSplashToast(false), 1800);
           setTimeout(() => {
@@ -1443,8 +1465,18 @@ function App() {
           poolInfo: j.poolInfo || null,
         };
         if (j.animal.photo) setPhotoUrl(j.animal.photo);
+        if (window.__st_capture) window.__st_capture('spinner_animal_shown', {
+          state: tgt.state,
+          species: j.animal.species || sel,
+          animal_id: j.animal.id,
+          rescue_id: j.rescue && j.rescue.id,
+          rescue_name: j.rescue && j.rescue.name,
+          needs_foster: !!j.animal.needsFoster,
+          is_url_fallback: !!j.animal.listingUrlIsFallback,
+        });
       } else {
         data = { type: 'empty', state: tgt.state };
+        if (window.__st_capture) window.__st_capture('spinner_no_animals', { state: tgt.state, species: sel });
       }
     } catch {
       data = { type: 'generic', state: tgt.state, headline: `Foster homes change everything in ${tgt.state}`, snippet: `A foster family in ${tgt.state} creates space in the shelter for another life. Sign up and we'll match you when Second Tail launches nearby.`, source:'', date:null, url:'', image:null, breed:'', year:null };
@@ -1692,6 +1724,7 @@ function ResultCard({ data, photoUrl, onAgain }) {
   const [cardShareCopied, setCardShareCopied] = useState(false);
   const handleCardShare = async () => {
     const aa = data.animal || {};
+    if (window.__st_capture) window.__st_capture('spinner_share_click', { state: data.state, animal_id: aa.id });
     const rr = data.rescue || {};
     const where = (rr.city || rr.state || data.state || '');
     const text = `Meet ${aa.name || 'an adoptable dog'}${where ? ` in ${where}` : ''} — real rescue animals, one throw at a time.`;
@@ -1843,11 +1876,32 @@ function ResultCard({ data, photoUrl, onAgain }) {
             )}
 
             {a.listingUrl && (
-              <a href={a.listingUrl} target="_blank" rel="noopener noreferrer" className="btn-foster profile-cta">
+              <a
+                href={a.listingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-foster profile-cta"
+                onClick={() => window.__st_capture && window.__st_capture('spinner_meet_click', {
+                  state: data.state,
+                  animal_id: a.id,
+                  rescue_id: r.id,
+                  rescue_name: r.name,
+                  is_url_fallback: !!a.listingUrlIsFallback,
+                })}
+              >
                 {a.listingUrlIsFallback ? `Find ${a.name} online →` : `Meet ${a.name} →`}
               </a>
             )}
-            <a href={fosterCTA} target="_blank" className="btn-rescue profile-cta-secondary">
+            <a
+              href={fosterCTA}
+              target="_blank"
+              className="btn-rescue profile-cta-secondary"
+              onClick={() => window.__st_capture && window.__st_capture('spinner_signup_click', {
+                state: data.state,
+                animal_id: a.id,
+                rescue_id: r.id,
+              })}
+            >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
@@ -1857,7 +1911,7 @@ function ResultCard({ data, photoUrl, onAgain }) {
 
           </div>
         </div>
-        <button className="throw-again-cta" onClick={onAgain} type="button">↺ Throw again</button>
+        <button className="throw-again-cta" onClick={() => { if (window.__st_capture) window.__st_capture("spinner_throw_again"); onAgain(); }} type="button">↺ Throw again</button>
       </div>
     );
   }

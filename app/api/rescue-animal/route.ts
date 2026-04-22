@@ -152,12 +152,16 @@ export async function GET(req: NextRequest) {
     return emptyResponse(state, 'no_matches_with_photo', debug, wantDebug)
   }
 
-  // Prefer foster-needed animals; fall back to any adoptable match.
+  // Prefer foster-needed animals when there are enough of them — otherwise
+  // fall back to the whole adoptable pool so variety wins. (Before we were
+  // ALWAYS preferring foster-needed even if there were only 1-2, so the user
+  // kept seeing the same dog on repeat throws.)
   const fosterMatches = matches.filter(
     (a) => a.attributes?.isNeedingFoster === true
   )
-  const pool = fosterMatches.length > 0 ? fosterMatches : matches
-  const pickIndex = Math.floor(Math.random() * Math.min(pool.length, 25))
+  const pool = fosterMatches.length >= 5 ? fosterMatches : matches
+  // Pick from the full pool (up to our fetch limit, 100) instead of only 25.
+  const pickIndex = Math.floor(Math.random() * pool.length)
   const pick = pool[pickIndex]
 
   const attrs = pick.attributes || {}

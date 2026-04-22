@@ -1396,8 +1396,18 @@ function App() {
     if ((phase === 'loading' || phase === 'result') && target && svgRef.current) {
       const ox = (target.svgX / MAP_W) * 100;
       const oy = (target.svgY / MAP_H) * 100;
-      svgRef.current.style.transformOrigin = `${ox}% ${oy}%`;
-      svgRef.current.style.transform       = 'scale(3.8)';
+      const svg = svgRef.current;
+      // Commit origin BEFORE transform so the transition starts from the right anchor
+      // (otherwise the browser animates from the previous origin, causing a visible snap).
+      svg.style.transition = 'none';
+      svg.style.transformOrigin = `${ox}% ${oy}%`;
+      // Force a reflow so the origin change is applied in isolation
+      void svg.getBoundingClientRect();
+      requestAnimationFrame(() => {
+        if (!svgRef.current) return;
+        svgRef.current.style.transition = '';
+        svgRef.current.style.transform = 'scale(3.8)';
+      });
     }
   }, [phase, target]);
 

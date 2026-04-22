@@ -364,6 +364,55 @@
       padding: 4px 10px; border-radius: 999px;
       letter-spacing: 0.02em;
     }
+
+    /* Animal card variants */
+    .news-hero-animal {
+      background: linear-gradient(135deg, #FDF6EC 0%, #F7E2BD 100%);
+      aspect-ratio: 4 / 3;
+    }
+    .animal-name {
+      font-size: 28px !important;
+      line-height: 1.15 !important;
+      -webkit-line-clamp: 1 !important;
+    }
+    .status-animal {
+      position: absolute; top: 14px; right: 14px;
+      background: #5A8F5A; color: white;
+      font-family: 'Geist', system-ui, sans-serif;
+      font-size: 11px; font-weight: 600;
+      padding: 4px 10px; border-radius: 999px;
+      letter-spacing: 0.02em;
+      box-shadow: 0 2px 8px rgba(90, 143, 90, 0.3);
+    }
+    .rescue-strip-new {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--warm);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    .rescue-strip-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--bark);
+      opacity: 0.65;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .rescue-strip-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--dark);
+      margin-top: 2px;
+    }
+    .rescue-strip-loc {
+      font-size: 12px;
+      color: var(--bark);
+      opacity: 0.75;
+      text-align: right;
+      flex-shrink: 0;
+    }
   </style>
 </head>
 <body>
@@ -791,24 +840,27 @@ function App() {
     setPhotoUrl(null);
     let data;
     try {
-      const r = await fetch(`/api/rescue-news?state=${encodeURIComponent(tgt.state)}`);
+      const r = await fetch(`/api/rescue-animal?state=${encodeURIComponent(tgt.state)}`);
       const j = await r.json();
-      if (j && j.ok && j.story && j.type) {
+      if (j && j.ok && j.type === 'animal' && j.animal) {
         data = {
-          type: j.type, // 'news' | 'stateDog' | 'generic'
+          type: 'animal',
+          state: tgt.state,
+          animal: j.animal,
+          rescue: j.rescue || {},
+        };
+        if (j.animal.photo) setPhotoUrl(j.animal.photo);
+      } else if (j && j.ok && j.story && j.type) {
+        data = {
+          type: j.type, // 'stateDog' | 'generic'
           state: tgt.state,
           headline: j.story.headline || '',
           snippet: j.story.snippet || '',
-          source: j.story.source || '',
-          date: j.story.date || null,
-          url: j.story.url || '',
-          image: j.story.image || null,
           breed: j.story.breed || '',
           year: j.story.year || null,
         };
-        if (j.story.image) setPhotoUrl(j.story.image);
       } else {
-        data = { type: 'generic', state: tgt.state, headline: `Foster homes change everything in ${tgt.state}`, snippet: `A foster family in ${tgt.state} creates space in the shelter for another life. Sign up and we'll match you when Second Tail launches nearby.`, source:'', date:null, url:'', image:null, breed:'', year:null };
+        data = { type: 'generic', state: tgt.state, headline: `Foster homes change everything in ${tgt.state}`, snippet: `A foster family in ${tgt.state} creates space in the shelter for another life. Sign up and we'll match you when Second Tail launches nearby.`, breed:'', year:null };
       }
     } catch {
       data = { type: 'generic', state: tgt.state, headline: `Foster homes change everything in ${tgt.state}`, snippet: `A foster family in ${tgt.state} creates space in the shelter for another life. Sign up and we'll match you when Second Tail launches nearby.`, source:'', date:null, url:'', image:null, breed:'', year:null };
@@ -989,6 +1041,64 @@ function ResultCard({ data, photoUrl, onAgain }) {
     }
   }
   const sourceLabel = data.source ? data.source.replace(/^www\./, '') : '';
+
+  // ─── Real adoptable animal from RescueGroups ───
+  if (data.type === 'animal' && data.animal) {
+    const a = data.animal;
+    const r = data.rescue || {};
+    const metaBits = [a.breed, a.age, a.sex, a.size].filter(Boolean);
+    return (
+      <div className="result-overlay">
+        <div className="result-card">
+          <div className="news-hero news-hero-animal">
+            {photoUrl
+              ? <img src={photoUrl} alt={a.name} onError={e => { e.target.style.display='none'; }}/>
+              : <div className="news-hero-placeholder">
+                  <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#D76B1A" strokeWidth="1.5">
+                    <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2 .352-3.5 2.435-3.5 5.348 0 4.817 3.1 8.652 5.5 8.652C11 17 12 14 12 14s1 3 3.5 3c2.4 0 5.5-3.835 5.5-8.652C21 5.435 19.5 3.352 17.5 3 15.577 2.679 14 3.782 14 5.172"/>
+                  </svg>
+                </div>
+            }
+            <div className="news-hero-overlay"/>
+            <div className="news-hero-title">
+              <h2 className="animal-name">{a.name}</h2>
+              {metaBits.length > 0 && (
+                <div className="news-meta">{metaBits.join(' · ')}</div>
+              )}
+            </div>
+            <div className="status-pill status-animal">Adoptable</div>
+          </div>
+          <div className="card-body">
+            <div className="rescue-strip-new">
+              <div>
+                <div className="rescue-strip-label">Available at</div>
+                <div className="rescue-strip-name">{r.name || 'A local rescue'}</div>
+              </div>
+              {(r.city || r.state) && (
+                <div className="rescue-strip-loc">📍 {[r.city, r.state].filter(Boolean).join(', ')}</div>
+              )}
+            </div>
+            {a.description && <div className="news-snippet">{a.description}</div>}
+            {a.listingUrl && (
+              <a href={a.listingUrl} target="_blank" rel="noopener noreferrer" className="btn-foster">
+                Meet {a.name} →
+              </a>
+            )}
+            <a href="https://getsecondtail.com/for-fosters" target="_blank" className="btn-rescue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              Sign up to foster with Second Tail
+            </a>
+          </div>
+          <div className="card-footer">
+            <button className="again-btn" onClick={onAgain}>↺ Throw again</button>
+            <span className="footer-brand">Powered by Second Tail</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ─── Tier 1/2: News story ───
   if (data.type === 'news') {

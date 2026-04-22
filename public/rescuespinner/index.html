@@ -423,6 +423,33 @@
       letter-spacing: 0.02em;
       box-shadow: 0 2px 8px rgba(215, 107, 26, 0.3);
     }
+
+    .splash-toast {
+      background: #4C94C4 !important;
+      box-shadow: 0 4px 14px rgba(76, 148, 196, 0.3);
+    }
+
+    /* Mobile polish — tighter card + bigger tap targets */
+    @media (max-width: 540px) {
+      .header { padding: 8px 14px; }
+      .header-tagline { display: none; }
+      .result-card { max-width: 94vw; max-height: 86vh; }
+      .card-body { padding: 14px 16px 16px; gap: 10px; }
+      .news-hero-title h2 { font-size: 18px !important; }
+      .news-snippet { font-size: 13.5px; }
+      .pet-btn { min-height: 44px; padding: 8px 14px; }
+      .again-btn, .share-btn { min-height: 44px; }
+    }
+
+    .share-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 13px; color: var(--bark);
+      background: none; border: none; cursor: pointer;
+      padding: 8px 12px; border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .share-btn:hover { background: var(--warm); }
+    .share-btn.copied { color: var(--orange); }
   </style>
 </head>
 <body>
@@ -563,13 +590,15 @@ function App() {
   const [projFn, setProjFn]         = useState(null);
   const [stateFeaturesRef]          = [useRef(null)];
   const [target, setTarget]         = useState(null);
+  const [splashes, setSplashes]       = useState([]);
   const [ripples, setRipples]       = useState([]);
   const [animalData, setAnimalData] = useState(null);
   const [photoUrl, setPhotoUrl]     = useState(null);
 
   // Gamification
   const [discovered, setDiscovered]       = useState({ states: new Set(), total: 0 });
-  const [newStateFlash, setNewStateFlash] = useState(null);  // state name string or null
+  const [newStateFlash, setNewStateFlash] = useState(null);
+  const [splashToast, setSplashToast] = useState(false);  // state name string or null
   const [scoreBump, setScoreBump]         = useState(false);
 
   // Draggable bone — direct DOM ref, no React re-renders during motion
@@ -708,7 +737,7 @@ function App() {
 
     const directState = checkPoint(natSvgX, natSvgY);
     if (directState) {
-      return { svgX: natSvgX, svgY: natSvgY, screenX: rect.left + natSvgX * sx, screenY: rect.top + natSvgY * sy, state: directState };
+      return { svgX: natSvgX, svgY: natSvgY, screenX: rect.left + natSvgX * sx, screenY: rect.top + natSvgY * sy, state: directState, isOcean: false };
     }
 
     // Off-land: spiral outward to find nearest state
@@ -727,7 +756,7 @@ function App() {
       }
     }
     if (best) {
-      return { svgX: best.px, svgY: best.py, screenX: rect.left + best.px * sx, screenY: rect.top + best.py * sy, state: best.state };
+      return { svgX: best.px, svgY: best.py, screenX: rect.left + best.px * sx, screenY: rect.top + best.py * sy, state: best.state, isOcean: true, oceanSvgX: natSvgX, oceanSvgY: natSvgY };
     }
     return null;
   }, [projFn]);
@@ -799,6 +828,12 @@ function App() {
         rafRef.current = requestAnimationFrame(animate);
       } else {
         setPhase('landing');
+        if (tgt.isOcean && tgt.oceanSvgX != null) {
+          setSplashes([{ id: Date.now(), x: tgt.oceanSvgX, y: tgt.oceanSvgY }]);
+          setSplashToast(true);
+          setTimeout(() => setSplashes([]), 1400);
+          setTimeout(() => setSplashToast(false), 1400);
+        }
         setRipples([{ id: Date.now(), x: tgt.svgX, y: tgt.svgY }]);
         setTimeout(() => {
           setPhase('loading');
@@ -896,6 +931,7 @@ function App() {
     setPhotoUrl(null);
     setTarget(null);
     setRipples([]);
+    setSplashes([]);
     if (svgRef.current) { svgRef.current.style.transform = ''; svgRef.current.style.transformOrigin = ''; }
     setTimeout(resetBone, 50);
   };
@@ -945,6 +981,27 @@ function App() {
               </g>
             ))}
 
+            {splashes.map(s => (
+              <g key={s.id} className="splash-ring">
+                {/* concentric blue ripples */}
+                <circle cx={s.x} cy={s.y} r="3" fill="none" stroke="rgba(76,148,196,0.85)" strokeWidth="1.5">
+                  <animate attributeName="r" from="3" to="40" dur="1.2s" fill="freeze"/>
+                  <animate attributeName="stroke-opacity" from=".85" to="0" dur="1.2s" fill="freeze"/>
+                </circle>
+                <circle cx={s.x} cy={s.y} r="3" fill="none" stroke="rgba(120,180,220,0.6)" strokeWidth="1">
+                  <animate attributeName="r" from="3" to="60" dur="1.4s" fill="freeze"/>
+                  <animate attributeName="stroke-opacity" from=".6" to="0" dur="1.4s" fill="freeze"/>
+                </circle>
+                {/* splash droplets */}
+                {[-12, -4, 4, 12].map((dx, i) => (
+                  <circle key={i} cx={s.x + dx} cy={s.y - 4} r="1.6" fill="rgba(120,180,220,0.9)">
+                    <animate attributeName="cy" from={s.y - 4} to={s.y - 16 - Math.abs(dx)} dur=".6s" fill="freeze"/>
+                    <animate attributeName="fill-opacity" from=".9" to="0" dur=".6s" fill="freeze"/>
+                  </circle>
+                ))}
+              </g>
+            ))}
+
             {(phase === 'loading' || phase === 'result') && target && (
               <g transform={`translate(${target.svgX},${target.svgY})`}>
                 <ellipse cx="0" cy="2" rx="5" ry="2" fill="rgba(0,0,0,0.2)"/>
@@ -966,6 +1023,10 @@ function App() {
         {/* New-state toast */}
         {newStateFlash && (
           <div className="new-state-toast">✨ New! {newStateFlash}</div>
+        )}
+
+        {splashToast && (
+          <div className="new-state-toast splash-toast">🌊 Splash! Bouncing to shore…</div>
         )}
 
         {phase === 'loading' && (
@@ -1022,6 +1083,37 @@ function App() {
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Share button with Web Share API + clipboard fallback ──
+function ShareButton({ animal, rescue, state }) {
+  const [copied, setCopied] = useState(false);
+  const handleShare = async () => {
+    const aName = (animal && animal.name) || 'an adoptable dog';
+    const city  = (rescue && (rescue.city || rescue.state)) || state || '';
+    const text  = `Meet ${aName}${city ? ` in ${city}` : ''} — real rescue animals, one throw at a time.`;
+    const url   = 'https://getsecondtail.com/rescuespinner';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Second Tail', text, url });
+        return;
+      }
+    } catch {}
+    try {
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {}
+  };
+  return (
+    <button
+      className={`share-btn${copied ? ' copied' : ''}`}
+      onClick={handleShare}
+      aria-label="Share this rescue finder"
+    >
+      {copied ? '✓ Copied link' : '↗ Share'}
+    </button>
   );
 }
 
@@ -1094,6 +1186,7 @@ function ResultCard({ data, photoUrl, onAgain }) {
           </div>
           <div className="card-footer">
             <button className="again-btn" onClick={onAgain}>↺ Throw again</button>
+            <ShareButton animal={a} rescue={r} state={data.state}/>
             <span className="footer-brand">Powered by Second Tail</span>
           </div>
         </div>

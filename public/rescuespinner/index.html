@@ -1430,7 +1430,9 @@ function App() {
     setTimeout(resetBone, 50);
   };
 
-  const toyLabel  = selection === 'cat' ? 'toy' : selection === 'both' ? 'treat' : 'bone';
+  const toyLabel    = selection === 'cat' ? 'toy' : selection === 'both' ? 'treat' : 'bone';
+  const petSingular = selection === 'cat' ? 'cat' : selection === 'both' ? 'pet'   : 'dog';
+  const petPlural   = selection === 'cat' ? 'cats' : selection === 'both' ? 'pets' : 'dogs';
   const showBone  = phase === 'idle' || phase === 'throwing' || phase === 'landing';
   const hasPlayed = discovered.total > 0;
 
@@ -1527,8 +1529,8 @@ function App() {
         {/* Intro text */}
         {phase === 'idle' && (
           <div className="map-intro">
-            <h1>Grab the {toyLabel} —<br/>meet a rescue dog.</h1>
-            <p>Toss onto any state. See real dogs needing fosters or forever homes.</p>
+            <h1>Grab the {toyLabel} —<br/>meet a rescue {petSingular}.</h1>
+            <p>Toss onto any state. See real {petPlural} needing fosters or forever homes.</p>
           </div>
         )}
 
@@ -1782,7 +1784,7 @@ function ResultCard({ data, photoUrl, onAgain }) {
 
             {a.listingUrl && (
               <a href={a.listingUrl} target="_blank" rel="noopener noreferrer" className="btn-foster profile-cta">
-                Meet {a.name} →
+                {a.listingUrlIsFallback ? `Find ${a.name} online →` : `Meet ${a.name} →`}
               </a>
             )}
             <a href={fosterCTA} target="_blank" className="btn-rescue profile-cta-secondary">

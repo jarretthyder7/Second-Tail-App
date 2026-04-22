@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Lora, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { PostHogProvider } from '@/components/posthog-provider'
 import { validateEnvironmentVariables } from '@/lib/env-validation'
 import './globals.css'
 

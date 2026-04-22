@@ -4,6 +4,7 @@ import { Suspense, useEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { PostHogProvider as PHSDKProvider } from 'posthog-js/react'
 import posthog from 'posthog-js'
+import { AuthTracker } from './auth-tracker'
 
 function PageviewTracker() {
   const pathname = usePathname()
@@ -32,7 +33,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       posthog.init(key, {
         api_host: host,
         person_profiles: 'identified_only',
-        capture_pageview: false, // tracked manually above for App Router
+        capture_pageview: false,
         capture_pageleave: true,
       })
     } catch {}
@@ -40,6 +41,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <PHSDKProvider client={posthog}>
+      <AuthTracker />
       <Suspense fallback={null}>
         <PageviewTracker />
       </Suspense>

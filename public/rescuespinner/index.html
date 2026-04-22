@@ -1159,12 +1159,19 @@ function App() {
       .attr('id',    d => 'st-' + String(d.id).padStart(2,'0'))
       .attr('d',     path)
       .attr('fill',  (_, i) => fills[i % fills.length])
-      .attr('stroke','#D76B1A').attr('stroke-opacity',.25).attr('stroke-width',.7);
+      .attr('stroke','#4A3C36').attr('stroke-opacity',.35).attr('stroke-width',.8);
 
+    // Internal state borders — slightly darker, clearer
     layer.append('path')
       .datum(topojson.mesh(usData, usData.objects.states, (a,b) => a !== b))
       .attr('d', path).attr('fill','none')
-      .attr('stroke','#5A4A42').attr('stroke-opacity',.15).attr('stroke-width',.5);
+      .attr('stroke','#3A2E28').attr('stroke-opacity',.35).attr('stroke-width',.6);
+
+    // Outer US border — thicker + darker so map separates clearly from the ocean bg
+    layer.append('path')
+      .datum(topojson.mesh(usData, usData.objects.states, (a,b) => a === b))
+      .attr('d', path).attr('fill','none')
+      .attr('stroke','#2E2420').attr('stroke-opacity',.75).attr('stroke-width',1.6).attr('stroke-linejoin','round');
   }, [usData]);
 
   // Highlight a visited state on the map

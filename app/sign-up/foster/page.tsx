@@ -210,6 +210,22 @@ function FosterSignUpForm() {
         return
       }
       if (result.redirectTo) {
+        try {
+          const ph = (window as any).posthog
+          if (ph?.identify && authData.user) {
+            ph.identify(authData.user.id, { email: authData.user.email })
+          }
+          if (ph?.capture) {
+            ph.capture('foster_signup_completed', {
+              state,
+              has_pets: pets.length > 0 && !pets.includes('None'),
+              has_yard: livingSituation.toLowerCase().includes('yard'),
+              foster_count: fosterCount,
+              foster_duration: fosterDuration,
+            })
+          }
+          await new Promise((r) => setTimeout(r, 150))
+        } catch {}
         window.location.href = result.redirectTo
       }
     } catch (err) {

@@ -925,6 +925,23 @@
       .throw-again-cta { max-width: 100%; padding: 13px 18px; font-size: 13px; }
       .header-share { width: 32px; height: 32px; margin-right: 6px; }
     }
+
+    .rg-credit {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 8px 12px;
+      background: var(--warm);
+      border-radius: 10px;
+      font-size: 11.5px;
+      color: var(--bark);
+      opacity: 0.9;
+      font-family: 'Geist', sans-serif;
+    }
+    .rg-credit strong { color: var(--dark); font-weight: 700; }
+    .rg-credit-source { font-size: 10.5px; opacity: 0.65; }
+    .rg-credit-source a { color: var(--orange); text-decoration: none; font-weight: 500; }
+    .rg-credit-source a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -1424,6 +1441,7 @@ function App() {
           state: tgt.state,
           animal: j.animal,
           rescue: j.rescue || {},
+          poolInfo: j.poolInfo || null,
         };
         if (j.animal.photo) setPhotoUrl(j.animal.photo);
       } else {
@@ -1774,6 +1792,17 @@ function ResultCard({ data, photoUrl, onAgain }) {
                 {(r.city || r.state) && <span className="loc-city"> · {[r.city, r.state].filter(Boolean).join(', ')}</span>}
               </span>
             </div>
+
+            {(data.poolInfo?.totalInState != null) && (
+              <div className="rg-credit">
+                <span>
+                  1 of <strong>{data.poolInfo.totalInState.toLocaleString()}</strong> adoptable animals in {data.state}
+                </span>
+                <span className="rg-credit-source">
+                  via{' '}<a href="https://rescuegroups.org" target="_blank" rel="noopener noreferrer">RescueGroups.org</a>
+                </span>
+              </div>
+            )}
 
             {goodWithBadges.length > 0 && (
               <section className="profile-section">

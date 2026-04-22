@@ -61,34 +61,57 @@ type AnimalResponse =
   | { ok: true; state: string; type: 'stateDog'; story: any }
   | { ok: true; state: string; type: 'generic'; story: any }
 
-async function fetchAnimalsForState(stateAbbr: string, key: string) {
-  const url = 'https://api.rescuegroups.org/v5/public/animals/search/available?include=orgs,pictures,species'
+async function fetchAnimalsForState(
+  stateAbbr: string,
+  key: string
+): Promise<{ json: any | null; debug: any }> {
+  const debug: any = { stateAbbr }
+  // Minimal, known-working query. Extra filtering happens client-side below.
+  const url =
+    'https://api.rescuegroups.org/v5/public/animals/search/available?include=orgs,pictures&limit=50'
   const body = {
     data: {
       filters: [
         { fieldName: 'orgs.state', operation: 'equal', criteria: stateAbbr },
-        { fieldName: 'animals.isAdoptionPending', operation: 'equal', criteria: false },
-        { fieldName: 'animals.pictureCount', operation: 'greaterthan', criteria: 0 },
       ],
-      sort: [{ fieldName: 'animals.updatedDate', sortDirection: 'desc' }],
-      limit: 50,
     },
   }
+  debug.requestUrl = url
+  debug.requestBody = body
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: key,
-      'Content-Type': 'application/vnd.api+json',
-      Accept: 'application/vnd.api+json',
-    },
-    body: JSON.stringify(body),
-    next: { revalidate: 21600 },
-  })
-  if (!res.ok) return null
-  const json = await res.json().catch(() => null)
-  if (!json?.data || !Array.isArray(json.data) || json.data.length === 0) return null
-  return json
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: key,
+        'Content-Type': 'application/vnd.api+json',
+        Accept: 'application/vnd.api+json',
+      },
+      body: JSON.stringify(body),
+      next: { revalidate: 21600 },
+    })
+    debug.status = res.status
+    const text = await res.text()
+    debug.responseSnippet = text.slice(0, 400)
+    if (!res.ok) return { json: null, debug }
+    let json: any = null
+    try {
+      json = JSON.parse(text)
+    } catch {
+      debug.parseError = true
+      return { json: null, debug }
+    }
+    if (!json?.data || !Array.isArray(json.data) || json.data.length === 0) {
+      debug.emptyData = true
+      return { json: null, debug }
+    }
+    debug.count = json.data.length
+    debug.includedCount = Array.isArray(json.included) ? json.included.length : 0
+    return { json, debug }
+  } catch (e: any) {
+    debug.fetchError = String(e?.message || e)
+    return { json: null, debug }
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -104,12 +127,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const json = await fetchAnimalsForState(abbr, key)
+    const { json, debug } = await fetchAnimalsForState(abbr, key)
     if (json) {
       // Pick a random animal that actually has a usable image.
       const candidates = (json.data as any[]).filter((a) => {
         const attrs = a?.attributes || {}
-        const hasPic = !!attrs.pictureThumbnailUrl && attrs.pictureCount > 0
+        const hasPic = !!attrs.pictureThumbnailUrl && (attrs.pictureCount || 0) > 0
         return hasPic && !attrs.isAdoptionPending
       })
       const pick = candidates.length
@@ -174,9 +197,11 @@ export async function GET(req: NextRequest) {
     }
 
     // No animal available — fall through to state dog, then generic.
+    // Include debug info so we can diagnose silent failures via ?debug=1.
+    const wantDebug = req.nextUrl.searchParams.get('debug') === '1'
     const dog = STATE_DOGS[state]
     if (dog) {
-      return Response.json({
+      const resp: any = {
         ok: true,
         state,
         type: 'stateDog',
@@ -190,11 +215,18 @@ export async function GET(req: NextRequest) {
           url: '',
           image: null,
         },
-      })
+      }
+      if (wantDebug) resp.debug = debug
+      return Response.json(resp)
     }
-    return Response.json(buildGeneric(state))
+    const gen = buildGeneric(state) as any
+    if (wantDebug) gen.debug = debug
+    return Response.json(gen)
   } catch (e: any) {
-    return Response.json(buildGeneric(state))
+    const wantDebug = req.nextUrl.searchParams.get('debug') === '1'
+    const gen = buildGeneric(state) as any
+    if (wantDebug) gen.debug = { error: String(e?.message || e) }
+    return Response.json(gen)
   }
 }
 

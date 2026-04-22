@@ -1615,18 +1615,6 @@ function App() {
     return () => el.removeEventListener('wheel', onWheel);
   }, [phase, zoomTo]);
 
-  // ── Zoom map on landing — viewBox-based, no CSS transform conflicts ──
-  useEffect(() => {
-    if (phase === 'loading' && target) {
-      // Equivalent to the old scale(3.8): show a MAP_W/3.8 wide region
-      // centered on the landing spot, animated smoothly via the same rAF system.
-      const targetW = MAP_W / 3.8;
-      const targetH = MAP_H / 3.8;
-      const newX = Math.max(-targetW * 0.5, Math.min(MAP_W - targetW * 0.5, target.svgX - targetW / 2));
-      const newY = Math.max(-targetH * 0.5, Math.min(MAP_H - targetH * 0.5, target.svgY - targetH / 2));
-      animateMapView({ x: newX, y: newY, w: targetW, h: targetH }, 1400);
-    }
-  }, [phase, target, animateMapView]);
 
   // ── Load rescue news story ──
   const loadAnimal = async (tgt, sel) => {

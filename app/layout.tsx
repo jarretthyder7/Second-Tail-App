@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${lora.className} antialiased`}>
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
         <Analytics />
       </body>
     </html>

@@ -246,6 +246,7 @@ export async function GET(req: NextRequest) {
       totalMatches: matches.length,
       fosterNeeded: fosterMatches.length,
       species,
+      totalInState: json?.meta?.count || null,
     },
   }
   // Include species on the animal itself so the card can label correctly.

@@ -1357,25 +1357,18 @@ function App() {
   // isDrop=true  → user just released slowly; land at release point.
   // isDrop=false → user flung it; project throw arc (capped distance).
   //
-  // Coordinate strategy: screen → SVG uses the CURRENT zoomed viewBox so the
-  // user can aim precisely. But screenX/screenY on the returned target are
-  // computed in FULL-VIEW space — the map snaps back to full view the moment
-  // the bone is thrown, so the arc animation endpoint must live there.
+  // Both screen→SVG and SVG→screen use the CURRENT viewBox throughout, so the
+  // arc endpoint stays within the zoomed region the user aimed at.
   const pickTarget = useCallback((releaseX, releaseY, vx, vy, isDrop) => {
     if (!projFn || !mapRef.current) return null;
     const rect = mapRef.current.getBoundingClientRect();
     const vb   = mapViewRef.current; // current (possibly zoomed) viewBox
 
-    // Zoomed-view render params — used to convert screen → SVG coords
-    const rs     = Math.min(rect.width / vb.w, rect.height / vb.h);
-    const rW     = vb.w * rs, rH = vb.h * rs;
-    const offX   = (rect.width  - rW) / 2;
-    const offY   = (rect.height - rH) / 2;
-
-    // Full-view render params — used to convert SVG → screen for the arc endpoint
-    const frs    = Math.min(rect.width / MAP_W, rect.height / MAP_H);
-    const fOffX  = (rect.width  - MAP_W * frs) / 2;
-    const fOffY  = (rect.height - MAP_H * frs) / 2;
+    // Render params for the current viewBox (used for both directions)
+    const rs   = Math.min(rect.width / vb.w, rect.height / vb.h);
+    const rW   = vb.w * rs, rH = vb.h * rs;
+    const offX = (rect.width  - rW) / 2;
+    const offY = (rect.height - rH) / 2;
 
     const feats = stateFeaturesRef.current;
     if (!feats) return null;
@@ -1395,10 +1388,10 @@ function App() {
       y: vb.y + (sy - rect.top  - offY) / rs,
     });
 
-    // Natural SVG coords → full-view screen coords (for post-reset arc endpoint)
+    // Natural SVG coords → current-view screen coords (arc endpoint stays in zoomed view)
     const toScreen = (nx, ny) => ({
-      x: rect.left + fOffX + nx * frs,
-      y: rect.top  + fOffY + ny * frs,
+      x: rect.left + offX + (nx - vb.x) * rs,
+      y: rect.top  + offY + (ny - vb.y) * rs,
     });
 
     let natSvgX, natSvgY;
@@ -1492,9 +1485,6 @@ function App() {
     const tgt = pickTarget(clientX, clientY, vx, vy, isDrop);
     if (!tgt) { resetBone(); return; }
 
-    // Animate map back to full USA view so the throw arc is legible
-    animateMapView(FULL_VIEW, 320);
-
     setTarget(tgt);
     setPhase('throwing');
     if (window.__st_capture) window.__st_capture('spinner_throw', { state: tgt.state, species: selectionRef.current, isOcean: !!tgt.isOcean });
@@ -1536,7 +1526,6 @@ function App() {
             applyMapView({ ...FULL_VIEW });
             const pos = getRestPos();
             boneLiveRef.current = { x: pos.x, y: pos.y, rot: -18, scale: 1 };
-            if (svgRef.current) { svgRef.current.style.transform = ''; svgRef.current.style.transformOrigin = ''; }
             setTimeout(resetBone, 50);
           }, 1200);
           return;
@@ -1549,7 +1538,7 @@ function App() {
       }
     }
     rafRef.current = requestAnimationFrame(animate);
-  }, [pickTarget, resetBone, applyBoneTransform, animateMapView]);
+  }, [pickTarget, resetBone, applyBoneTransform]);
 
   useEffect(() => () => {
     cancelAnimationFrame(rafRef.current);
@@ -1626,25 +1615,18 @@ function App() {
     return () => el.removeEventListener('wheel', onWheel);
   }, [phase, zoomTo]);
 
-  // ── Zoom map on landing ──
+  // ── Zoom map on landing — viewBox-based, no CSS transform conflicts ──
   useEffect(() => {
-    if ((phase === 'loading' || phase === 'result') && target && svgRef.current) {
-      const ox = (target.svgX / MAP_W) * 100;
-      const oy = (target.svgY / MAP_H) * 100;
-      const svg = svgRef.current;
-      // Commit origin BEFORE transform so the transition starts from the right anchor
-      // (otherwise the browser animates from the previous origin, causing a visible snap).
-      svg.style.transition = 'none';
-      svg.style.transformOrigin = `${ox}% ${oy}%`;
-      // Force a reflow so the origin change is applied in isolation
-      void svg.getBoundingClientRect();
-      requestAnimationFrame(() => {
-        if (!svgRef.current) return;
-        svgRef.current.style.transition = '';
-        svgRef.current.style.transform = 'scale(3.8)';
-      });
+    if (phase === 'loading' && target) {
+      // Equivalent to the old scale(3.8): show a MAP_W/3.8 wide region
+      // centered on the landing spot, animated smoothly via the same rAF system.
+      const targetW = MAP_W / 3.8;
+      const targetH = MAP_H / 3.8;
+      const newX = Math.max(-targetW * 0.5, Math.min(MAP_W - targetW * 0.5, target.svgX - targetW / 2));
+      const newY = Math.max(-targetH * 0.5, Math.min(MAP_H - targetH * 0.5, target.svgY - targetH / 2));
+      animateMapView({ x: newX, y: newY, w: targetW, h: targetH }, 1400);
     }
-  }, [phase, target]);
+  }, [phase, target, animateMapView]);
 
   // ── Load rescue news story ──
   const loadAnimal = async (tgt, sel) => {
@@ -1710,7 +1692,6 @@ function App() {
     setRipples([]);
     setSplashes([]);
     applyMapView({ ...FULL_VIEW });
-    if (svgRef.current) { svgRef.current.style.transform = ''; svgRef.current.style.transformOrigin = ''; }
     setTimeout(resetBone, 50);
   };
 

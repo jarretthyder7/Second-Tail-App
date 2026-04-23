@@ -25,11 +25,23 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      // Don't reveal whether the user exists.
+      // Log the real error for debugging (Vercel runtime logs) — don't reveal
+      // to the client whether the user exists.
+      console.error(
+        '[reset-password] generateLink failed:',
+        error.message,
+        error.status || ''
+      )
+      const msg = String(error.message || '').toLowerCase()
+      const isRateLimit =
+        msg.includes('rate limit') ||
+        msg.includes('too many') ||
+        msg.includes('already sent')
       return NextResponse.json({
         success: true,
-        message:
-          'If an account exists with this email, a reset link has been sent.',
+        message: isRateLimit
+          ? "A reset link was recently sent. Check your inbox + spam, or wait a minute and try again."
+          : 'If an account exists with this email, a reset link has been sent.',
       })
     }
 

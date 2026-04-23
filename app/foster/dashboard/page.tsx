@@ -475,11 +475,6 @@ export default function FosterDashboard() {
                     >
                       via rescuegroups.org
                     </div>
-                    {a.rescue?.inNetwork && (
-                      <div className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/95 text-[#2E7D32] text-[9.5px] font-bold tracking-wide shadow-sm">
-                        ✨ On Second Tail
-                      </div>
-                    )}
                   </div>
                   <div className="mt-2 px-1">
                     <div className="text-[11px] text-gray-500 truncate">

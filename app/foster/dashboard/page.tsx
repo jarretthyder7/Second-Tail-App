@@ -586,6 +586,22 @@ export default function FosterDashboard() {
           </div>
         </section>
 
+        {/* Preview of what unlocks when matched */}
+        <section>
+          <div className="mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">When you get matched</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Here's what your dashboard looks like once a rescue matches you with an animal.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <UnlockCard icon={<Heart className="w-5 h-5" />} title="Your foster's profile" desc="Photo, breed, medical, behavior — all in one place." />
+            <UnlockCard icon={<MessageCircle className="w-5 h-5" />} title="Message your rescue" desc="Direct line to the rescue for any question." />
+            <UnlockCard icon={<ShoppingBag className="w-5 h-5" />} title="Request supplies" desc="Food, toys, meds — the rescue ships to you." />
+            <UnlockCard icon={<Clock className="w-5 h-5" />} title="Schedule appointments" desc="Vet visits, meet & greets, adoption days." />
+          </div>
+        </section>
+
       </main>
 
       <AnimalProfileModal
@@ -668,6 +684,24 @@ function ActionCard({
 function TipCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
     <div className="rounded-2xl p-5 border border-gray-100" style={{ backgroundColor: '#FDF6EC' }}>
+      <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: '#F7E2BD', color: '#D76B1A' }}>
+        {icon}
+      </div>
+      <h3 className="font-semibold text-sm text-gray-900 mb-1.5">{title}</h3>
+      <p className="text-xs text-gray-600 leading-relaxed">{desc}</p>
+    </div>
+  )
+}
+
+function UnlockCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+  return (
+    <div className="relative rounded-2xl p-5 bg-white border border-gray-100 opacity-80">
+      <div className="absolute top-3 right-3 text-gray-400">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      </div>
       <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-3" style={{ backgroundColor: '#F7E2BD', color: '#D76B1A' }}>
         {icon}
       </div>

@@ -32,6 +32,9 @@ function FosterProfileContent() {
   const [showReturnConfirmation, setShowReturnConfirmation] = useState(false)
   const [isReturning, setIsReturning] = useState(false)
   const [returnSuccess, setReturnSuccess] = useState(false)
+  const [showRemoveConfirmation, setShowRemoveConfirmation] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
+  const [removeError, setRemoveError] = useState('')
 
   const {
     data: foster,
@@ -111,6 +114,27 @@ function FosterProfileContent() {
       alert(err.message || "Failed to return dog to rescue. Please try again.")
     } finally {
       setIsReturning(false)
+    }
+  }
+
+  const handleRemoveFoster = async () => {
+    setIsRemoving(true)
+    setRemoveError('')
+    try {
+      const res = await fetch(`/api/admin/foster/${fosterId}?orgId=${orgId}`, {
+        method: 'DELETE',
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setRemoveError(body?.error || 'Failed to remove foster. Please try again.')
+        setIsRemoving(false)
+        return
+      }
+      // Success — redirect back to fosters list
+      router.push(`/org/${orgId}/admin/fosters`)
+    } catch (err: any) {
+      setRemoveError(err.message || 'Failed to remove foster. Please try again.')
+      setIsRemoving(false)
     }
   }
 
@@ -346,10 +370,70 @@ function FosterProfileContent() {
                   </div>
                 </div>
               )}
+
+              {/* Danger zone — remove foster from this rescue's network */}
+              <div className="pt-6 mt-6 border-t border-red-100">
+                <h3 className="font-semibold text-red-900 mb-1">Danger zone</h3>
+                <p className="text-sm text-neutral-charcoal/60 mb-3">
+                  Remove this foster from {foster?.organization?.name || 'your rescue'}. Any dogs assigned to them will be unassigned. They&apos;ll go back to an unconnected foster state and can be onboarded by another rescue.
+                </p>
+                <Button
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                  onClick={() => setShowRemoveConfirmation(true)}
+                >
+                  Remove foster from network
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {showRemoveConfirmation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="text-lg font-bold text-primary-bark">Remove {foster?.name || 'this foster'}?</h3>
+                <p className="text-sm text-neutral-charcoal/70 mt-1">
+                  {foster?.dogs?.length > 0
+                    ? `They currently have ${foster.dogs.length} dog${foster.dogs.length === 1 ? '' : 's'} assigned. Those dogs will be unassigned and returned to your rescue.`
+                    : 'No dogs are currently assigned to them.'}
+                </p>
+                <p className="text-sm text-neutral-charcoal/70 mt-2">
+                  This foster will lose access to your organization&apos;s dashboard. They&apos;ll land on the unconnected foster view next time they log in.
+                </p>
+              </div>
+            </div>
+            {removeError && (
+              <div className="mb-3 p-2.5 rounded-lg bg-red-50 border border-red-200 text-sm text-red-800">
+                {removeError}
+              </div>
+            )}
+            <div className="flex gap-3 justify-end mt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowRemoveConfirmation(false)
+                  setRemoveError('')
+                }}
+                disabled={isRemoving}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleRemoveFoster}
+                disabled={isRemoving}
+                className="bg-red-600 text-white hover:bg-red-700"
+              >
+                {isRemoving ? 'Removing…' : 'Yes, remove'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

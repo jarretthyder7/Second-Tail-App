@@ -42,6 +42,9 @@ export default function FosterDashboard() {
   const [fosterProfile, setFosterProfile] = useState<FosterProfile | null>(null)
   const [rescues, setRescues] = useState<Rescue[]>([])
   const [dogs, setDogs] = useState<Dog[]>([])
+  const [apiAnimals, setApiAnimals] = useState<any[]>([])
+  const [apiLoading, setApiLoading] = useState(true)
+  const [selectedAnimal, setSelectedAnimal] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [showInviteRescueModal, setShowInviteRescueModal] = useState(false)
@@ -98,6 +101,21 @@ export default function FosterDashboard() {
 
           if (dogsError) throw dogsError
           setDogs(dogsData || [])
+
+          // Fetch real adoptable animals from RescueGroups for this state
+          if (fosterData.state) {
+            fetch(`/api/rescue-animals?state=${encodeURIComponent(fosterData.state)}&limit=12`)
+              .then((r) => r.json())
+              .then((j) => {
+                if (j?.ok && Array.isArray(j.animals)) setApiAnimals(j.animals)
+              })
+              .catch(() => {})
+              .finally(() => setApiLoading(false))
+          } else {
+            setApiLoading(false)
+          }
+        } else {
+          setApiLoading(false)
         }
 
         setLoading(false)
@@ -311,29 +329,59 @@ export default function FosterDashboard() {
         <section id="animals-section">
           <div className="mb-4">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Animals looking for homes</h2>
-            <p className="text-sm text-gray-600 mt-1">Available for fostering near you</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Real adoptable animals in {stateLabel}. Tap one to let their rescue know you found them on Second Tail.
+            </p>
           </div>
-          {dogs.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dogs.map((dog) => (
-                <div key={dog.id} className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-[#F7E2BD] to-[#FDF6EC] flex items-center justify-center">
-                    <PawPrint className="w-12 h-12" style={{ color: '#D76B1A', opacity: 0.4 }} />
+
+          {apiLoading ? (
+            <div className="flex gap-3 overflow-hidden">
+              {[0,1,2,3,4,5].map((i) => (
+                <div key={i} className="flex-shrink-0 w-40 sm:w-44 aspect-square rounded-2xl bg-gray-100 animate-pulse" />
+              ))}
+            </div>
+          ) : apiAnimals.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-0 sm:px-0 snap-x snap-mandatory" style={{ scrollbarWidth: 'thin' }}>
+              {apiAnimals.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedAnimal(a)
+                    setShowInviteRescueModal(true)
+                  }}
+                  className="group flex-shrink-0 w-40 sm:w-44 snap-start text-left"
+                >
+                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-[#F7E2BD] to-[#FDF6EC] shadow-sm group-hover:shadow-md transition-shadow">
+                    {a.photo ? (
+                      <img
+                        src={a.photo}
+                        alt={a.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          const t = e.currentTarget as HTMLImageElement
+                          t.style.display = 'none'
+                        }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <PawPrint className="w-12 h-12" style={{ color: '#D76B1A', opacity: 0.4 }} />
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/75 via-black/40 to-transparent">
+                      <div className="text-white font-bold text-sm truncate">{a.name}</div>
+                      <div className="text-white/80 text-[11px] truncate">
+                        {[a.breed, a.ageGroup].filter(Boolean).join(' · ') || 'Adoptable'}
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1">{dog.name}</h3>
-                    <p className="text-xs text-gray-500 mb-4">
-                      {dog.breed || 'Mixed breed'} · {dog.size || 'Size unknown'}
-                    </p>
-                    <button
-                      onClick={() => toast.success(`We'll let the rescue know you're interested in ${dog.name}!`)}
-                      className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#D76B1A] text-white rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
-                    >
-                      <Heart className="w-3.5 h-3.5" />
-                      I'm interested
-                    </button>
+                  <div className="mt-2 px-1">
+                    <div className="text-[11px] text-gray-500 truncate">
+                      📍 {a.rescue?.name || 'Local rescue'}
+                    </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           ) : (
@@ -342,10 +390,10 @@ export default function FosterDashboard() {
                 <Heart className="w-8 h-8" style={{ color: '#D76B1A' }} />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Your future foster is on their way
+                No adoptable animals found nearby
               </h3>
               <p className="text-gray-600 max-w-md mx-auto text-sm sm:text-base">
-                Once rescues in {stateLabel} join Second Tail, you'll see dogs who need homes right here.
+                RescueGroups doesn't have animals listed for {stateLabel} right now. Check back tomorrow — new listings come in constantly.
               </p>
             </div>
           )}
@@ -380,10 +428,18 @@ export default function FosterDashboard() {
 
       <InviteRescueModal
         isOpen={showInviteRescueModal}
-        onClose={() => setShowInviteRescueModal(false)}
+        onClose={() => {
+          setShowInviteRescueModal(false)
+          // Clear the selected animal on close so the next open (e.g. from the
+          // "Invite a rescue" top-level button) shows a blank form.
+          setSelectedAnimal(null)
+        }}
         fosterName={displayName}
         fosterCity={fosterProfile?.city || ''}
         fosterState={fosterProfile?.state || ''}
+        prefillOrgName={selectedAnimal?.rescue?.name || undefined}
+        prefillEmail={selectedAnimal?.rescue?.email || undefined}
+        prefillAnimalName={selectedAnimal?.name || undefined}
       />
 
       <footer className="border-t border-gray-200 bg-[#D76B1A] py-8 mt-12">

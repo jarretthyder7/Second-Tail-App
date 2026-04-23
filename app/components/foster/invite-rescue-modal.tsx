@@ -49,46 +49,48 @@ export function InviteRescueModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setStatus('idle')
+    setErrorMsg('')
 
-    try {
-      const response = await fetch('/api/email/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type: 'rescue-invite-from-foster',
-          rescueEmail,
-          rescueName: orgName,
-          fosterName,
-          fosterCity,
-          fosterState,
-          customMessage: message || undefined,
-        }),
-      })
-
-      if (response.ok) {
-        setStatus('success')
-        setOrgName('')
-        setRescueEmail('')
-        setMessage('')
-        setTimeout(() => {
-          onClose()
-          setStatus('idle')
-        }, 2000)
-      } else {
-        setStatus('error')
-        setErrorMsg('Something went wrong. Please try again.')
-      }
-    } catch (error) {
+    if (!rescueEmail.trim() || !orgName.trim()) {
       setStatus('error')
-      setErrorMsg('Something went wrong. Please try again.')
-      console.error('Error sending invite:', error)
-    } finally {
-      setIsLoading(false)
+      setErrorMsg('Enter the rescue name and email first.')
+      return
     }
+
+    const where = [fosterCity, fosterState].filter(Boolean).join(', ')
+    const fosterFirst = fosterName || 'a hopeful foster'
+    const subject = `${fosterFirst} is interested in fostering with ${orgName}`
+
+    const defaultBody = [
+      `Hi ${orgName},`,
+      '',
+      message && message.trim()
+        ? message.trim()
+        : `I'm ${fosterFirst}${where ? ` in ${where}` : ''}. I found you through Second Tail (getsecondtail.com), a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, all in one place. I'm signed up and ready to foster.`,
+      '',
+      `If you'd like to try Second Tail together, I can introduce you to the team. Either way, I'd love to learn more about your fostering process.`,
+      '',
+      `Thanks for the work you do!`,
+      `— ${fosterFirst}`,
+    ].join('\n')
+
+    const mailto = `mailto:${encodeURIComponent(rescueEmail.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(defaultBody)}`
+
+    // Attempt to open the user's mail client. After the handoff, mark success
+    // and close the modal — the actual send is up to the user's mail app.
+    setIsLoading(true)
+    try {
+      window.location.href = mailto
+    } catch {}
+    setTimeout(() => {
+      setIsLoading(false)
+      setStatus('success')
+      setTimeout(() => {
+        onClose()
+        setStatus('idle')
+      }, 2500)
+    }, 500)
   }
 
   if (!isOpen) return null
@@ -116,7 +118,8 @@ export function InviteRescueModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-gray-900 font-semibold">Invite sent! Thanks for spreading the word.</p>
+              <p className="text-gray-900 font-semibold">Your email app should've opened.</p>
+              <p className="text-gray-500 text-sm mt-1">Send from there — and thanks for spreading the word!</p>
             </div>
           ) : status === 'error' ? (
             <div className="text-center py-6">
@@ -190,7 +193,7 @@ export function InviteRescueModal({
                   disabled={isLoading}
                   className="flex-1 px-4 py-2.5 text-white bg-orange-600 hover:bg-orange-700 disabled:opacity-50 rounded-full font-semibold transition-colors"
                 >
-                  {isLoading ? 'Sending...' : 'Send Invite'}
+                  {isLoading ? 'Opening…' : 'Compose email'}
                 </button>
               </div>
             </form>

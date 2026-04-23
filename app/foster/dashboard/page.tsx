@@ -45,6 +45,8 @@ export default function FosterDashboard() {
   const [apiAnimals, setApiAnimals] = useState<any[]>([])
   const [apiLoading, setApiLoading] = useState(true)
   const [selectedAnimal, setSelectedAnimal] = useState<any | null>(null)
+  const [zipInput, setZipInput] = useState('')
+  const [radius, setRadius] = useState(50)
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [showInviteRescueModal, setShowInviteRescueModal] = useState(false)
@@ -102,20 +104,11 @@ export default function FosterDashboard() {
           if (dogsError) throw dogsError
           setDogs(dogsData || [])
 
-          // Fetch real adoptable animals from RescueGroups for this state
-          if (fosterData.state) {
-            fetch(`/api/rescue-animals?state=${encodeURIComponent(fosterData.state)}&limit=12`)
-              .then((r) => r.json())
-              .then((j) => {
-                if (j?.ok && Array.isArray(j.animals)) setApiAnimals(j.animals)
-              })
-              .catch(() => {})
-              .finally(() => setApiLoading(false))
-          } else {
-            setApiLoading(false)
-          }
-        } else {
-          setApiLoading(false)
+          // Seed ZIP from localStorage (set when they used the input before)
+          try {
+            const savedZip = localStorage.getItem('foster_zip') || ''
+            if (/^\d{5}$/.test(savedZip)) setZipInput(savedZip)
+          } catch {}
         }
 
         setLoading(false)
@@ -128,6 +121,40 @@ export default function FosterDashboard() {
 
     loadData()
   }, [router, supabase])
+
+  // Fetch animals whenever ZIP, radius, or the foster's state changes.
+  useEffect(() => {
+    const state = fosterProfile?.state
+    if (!state && !zipInput) return // nothing to query yet
+    setApiLoading(true)
+    const params = new URLSearchParams()
+    if (/^\d{5}$/.test(zipInput)) {
+      params.set('zip', zipInput)
+      params.set('radius', String(radius))
+    }
+    if (state) params.set('state', state)
+    params.set('limit', '12')
+
+    // Debounce ZIP typing
+    const handle = setTimeout(() => {
+      fetch(`/api/rescue-animals?${params.toString()}`)
+        .then((r) => r.json())
+        .then((j) => {
+          if (j?.ok && Array.isArray(j.animals)) setApiAnimals(j.animals)
+          else setApiAnimals([])
+        })
+        .catch(() => setApiAnimals([]))
+        .finally(() => setApiLoading(false))
+    }, 300)
+    return () => clearTimeout(handle)
+  }, [fosterProfile?.state, zipInput, radius])
+
+  // Persist ZIP to localStorage on change
+  useEffect(() => {
+    if (/^\d{5}$/.test(zipInput)) {
+      try { localStorage.setItem('foster_zip', zipInput) } catch {}
+    }
+  }, [zipInput])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
@@ -330,8 +357,49 @@ export default function FosterDashboard() {
           <div className="mb-4">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Animals looking for homes</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Real adoptable animals in {stateLabel}. Tap one to let their rescue know you found them on Second Tail.
+              Tap one to let their rescue know you'd love to foster them.
             </p>
+          </div>
+
+          {/* ZIP + radius controls */}
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-4 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
+              <div className="sm:w-32">
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">
+                  Your ZIP
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={5}
+                  value={zipInput}
+                  onChange={(e) => setZipInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="e.g. 10075"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 focus:border-[#D76B1A]"
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-gray-600">Within</label>
+                  <span className="text-xs font-semibold text-[#D76B1A]">{radius} miles</span>
+                </div>
+                <input
+                  type="range"
+                  min={5}
+                  max={100}
+                  step={5}
+                  value={radius}
+                  onChange={(e) => setRadius(parseInt(e.target.value, 10))}
+                  disabled={!/^\d{5}$/.test(zipInput)}
+                  className="w-full accent-[#D76B1A] disabled:opacity-40"
+                />
+              </div>
+            </div>
+            {!/^\d{5}$/.test(zipInput) && (
+              <p className="text-[11px] text-gray-400 mt-2">
+                Enter a 5-digit ZIP to refine results by distance. Otherwise showing animals from rescues in {stateLabel}.
+              </p>
+            )}
           </div>
 
           {apiLoading ? (
@@ -375,6 +443,12 @@ export default function FosterDashboard() {
                         {[a.breed, a.ageGroup].filter(Boolean).join(' · ') || 'Adoptable'}
                       </div>
                     </div>
+                    <div
+                      className="absolute bottom-1.5 left-2 text-[9px] font-medium text-white/75"
+                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                    >
+                      via rescuegroups.org
+                    </div>
                   </div>
                   <div className="mt-2 px-1">
                     <div className="text-[11px] text-gray-500 truncate">
@@ -390,10 +464,10 @@ export default function FosterDashboard() {
                 <Heart className="w-8 h-8" style={{ color: '#D76B1A' }} />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                No adoptable animals found nearby
+                No adoptable animals in range right now
               </h3>
               <p className="text-gray-600 max-w-md mx-auto text-sm sm:text-base">
-                RescueGroups doesn't have animals listed for {stateLabel} right now. Check back tomorrow — new listings come in constantly.
+                Try widening the radius above, or check back tomorrow — new listings come in constantly.
               </p>
             </div>
           )}

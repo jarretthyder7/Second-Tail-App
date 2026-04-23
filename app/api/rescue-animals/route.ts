@@ -42,10 +42,35 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+async function runQuery(key: string, body: any) {
+  const url =
+    'https://api.rescuegroups.org/v5/public/animals/search/available?include=orgs,pictures&limit=100'
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: key,
+      'Content-Type': 'application/vnd.api+json',
+      Accept: 'application/vnd.api+json',
+    },
+    body: JSON.stringify(body),
+    next: { revalidate: 21600 },
+  })
+  if (!res.ok) return null
+  return res.json().catch(() => null)
+}
+
 export async function GET(req: NextRequest) {
   const rawState = (req.nextUrl.searchParams.get('state') || '').trim()
+  const zip = (req.nextUrl.searchParams.get('zip') || '').trim()
+  const radius = Math.min(
+    Math.max(parseInt(req.nextUrl.searchParams.get('radius') || '50', 10) || 50, 5),
+    100
+  )
   const speciesParam = (req.nextUrl.searchParams.get('species') || 'both').toLowerCase()
-  const limit = Math.min(Math.max(parseInt(req.nextUrl.searchParams.get('limit') || '12', 10) || 12, 1), 24)
+  const limit = Math.min(
+    Math.max(parseInt(req.nextUrl.searchParams.get('limit') || '12', 10) || 12, 1),
+    24
+  )
   const species = speciesParam === 'cat' || speciesParam === 'dog' ? speciesParam : 'both'
 
   const key = process.env.RESCUEGROUPS_API_KEY
@@ -55,108 +80,95 @@ export async function GET(req: NextRequest) {
 
   const abbr = US_ABBR_SET.has(rawState.toUpperCase())
     ? rawState.toUpperCase()
-    : STATE_ABBR[rawState]
-  if (!abbr) {
-    return Response.json({ ok: false, error: 'unknown state', animals: [] })
-  }
+    : STATE_ABBR[rawState] || ''
 
-  const url =
-    'https://api.rescuegroups.org/v5/public/animals/search/available?include=orgs,pictures&limit=100'
-  const body = {
-    data: {
-      filters: [
-        { fieldName: 'orgs.state', operation: 'equal', criteria: abbr },
-      ],
-    },
-  }
+  // Build filters: prefer zip+radius (better NY metro coverage), fall back to state.
+  let json: any = null
+  let queryMode: 'zip' | 'state' | 'none' = 'none'
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: key,
-        'Content-Type': 'application/vnd.api+json',
-        Accept: 'application/vnd.api+json',
+  if (/^\d{5}$/.test(zip)) {
+    const body = {
+      data: {
+        filters: [],
+        filterRadius: { miles: radius, postalcode: zip },
       },
-      body: JSON.stringify(body),
-      next: { revalidate: 21600 },
-    })
-    if (!res.ok) {
-      return Response.json({ ok: false, state: abbr, animals: [] })
     }
-    const json: any = await res.json().catch(() => null)
-    if (!json?.data || !Array.isArray(json.data)) {
-      return Response.json({ ok: true, state: abbr, animals: [] })
-    }
-
-    const included: any[] = Array.isArray(json.included) ? json.included : []
-
-    // Filter + map to a compact shape.
-    const allow = (slug: string): boolean => {
-      if (species === 'dog') return slug.endsWith('-dog')
-      if (species === 'cat') return slug.endsWith('-cat')
-      return slug.endsWith('-dog') || slug.endsWith('-cat')
-    }
-
-    const picked: any[] = []
-    const seenRescues = new Set<string>() // encourage variety across rescues
-
-    const shuffled = shuffle(json.data as any[])
-    for (const a of shuffled) {
-      if (picked.length >= limit) break
-      const attrs = a?.attributes || {}
-      if (!attrs.pictureThumbnailUrl) continue
-      if (attrs.isAdoptionPending) continue
-      const slug = String(attrs.slug || '').toLowerCase()
-      if (!allow(slug)) continue
-
-      const orgId = a.relationships?.orgs?.data?.[0]?.id
-      const org = included.find((r) => r.type === 'orgs' && r.id === orgId)
-      const orgAttrs = org?.attributes || {}
-      // Skip rescues without an email — can't invite them anyway.
-      if (!orgAttrs.email) continue
-
-      // Prefer full-size photo from included pictures.
-      const picIds: string[] = (a.relationships?.pictures?.data || []).map((p: any) => p.id)
-      let heroPhoto = fullSizeImage(attrs.pictureThumbnailUrl)
-      if (picIds.length > 0) {
-        const pic = included.find((r) => r.type === 'pictures' && picIds.includes(r.id))
-        const u = pic?.attributes?.original?.url || pic?.attributes?.large?.url || pic?.attributes?.url
-        if (u) heroPhoto = u
-      }
-
-      // Soft variety: prefer unique rescues until we run out
-      const rescueKey = String(orgId)
-      if (picked.length < limit && !seenRescues.has(rescueKey)) {
-        seenRescues.add(rescueKey)
-      } else if (seenRescues.size >= Math.min(seenRescues.size, picked.length)) {
-        // allow duplicates once we've seen most rescues
-      }
-
-      picked.push({
-        id: String(a.id),
-        name: decodeEntities(String(attrs.name || 'Unnamed')).trim(),
-        breed: attrs.breedString || attrs.breedPrimary || '',
-        ageGroup: attrs.ageGroup || '',
-        sex: attrs.sex || '',
-        size: attrs.sizeGroup || '',
-        species: slug.endsWith('-cat') ? 'cat' : 'dog',
-        photo: heroPhoto,
-        slug: attrs.slug || '',
-        rescue: {
-          id: orgId,
-          name: String(orgAttrs.name || '').trim(),
-          city: String(orgAttrs.city || '').trim(),
-          state: String(orgAttrs.state || abbr).trim(),
-          email: String(orgAttrs.email || '').trim(),
-          phone: String(orgAttrs.phone || '').trim() || null,
-          url: String(orgAttrs.url || '').trim() || null,
-        },
-      })
-    }
-
-    return Response.json({ ok: true, state: abbr, animals: picked })
-  } catch (e: any) {
-    return Response.json({ ok: false, state: abbr, animals: [], error: String(e?.message || e) })
+    json = await runQuery(key, body)
+    queryMode = 'zip'
   }
+
+  // If zip query returned nothing usable, try state fallback.
+  if (
+    (!json?.data || !Array.isArray(json.data) || json.data.length === 0) &&
+    abbr
+  ) {
+    const body = {
+      data: {
+        filters: [
+          { fieldName: 'orgs.state', operation: 'equal', criteria: abbr },
+        ],
+      },
+    }
+    json = await runQuery(key, body)
+    queryMode = 'state'
+  }
+
+  if (!json?.data || !Array.isArray(json.data) || json.data.length === 0) {
+    return Response.json({ ok: true, animals: [], queryMode })
+  }
+
+  const included: any[] = Array.isArray(json.included) ? json.included : []
+
+  const allow = (slug: string): boolean => {
+    if (species === 'dog') return slug.endsWith('-dog')
+    if (species === 'cat') return slug.endsWith('-cat')
+    return slug.endsWith('-dog') || slug.endsWith('-cat')
+  }
+
+  const picked: any[] = []
+  const shuffled = shuffle(json.data as any[])
+  for (const a of shuffled) {
+    if (picked.length >= limit) break
+    const attrs = a?.attributes || {}
+    if (!attrs.pictureThumbnailUrl) continue
+    if (attrs.isAdoptionPending) continue
+    const slug = String(attrs.slug || '').toLowerCase()
+    if (!allow(slug)) continue
+
+    const orgId = a.relationships?.orgs?.data?.[0]?.id
+    const org = included.find((r) => r.type === 'orgs' && r.id === orgId)
+    const orgAttrs = org?.attributes || {}
+
+    const picIds: string[] = (a.relationships?.pictures?.data || []).map((p: any) => p.id)
+    let heroPhoto = fullSizeImage(attrs.pictureThumbnailUrl)
+    if (picIds.length > 0) {
+      const pic = included.find((r) => r.type === 'pictures' && picIds.includes(r.id))
+      const u =
+        pic?.attributes?.original?.url || pic?.attributes?.large?.url || pic?.attributes?.url
+      if (u) heroPhoto = u
+    }
+
+    picked.push({
+      id: String(a.id),
+      name: decodeEntities(String(attrs.name || 'Unnamed')).trim(),
+      breed: attrs.breedString || attrs.breedPrimary || '',
+      ageGroup: attrs.ageGroup || '',
+      sex: attrs.sex || '',
+      size: attrs.sizeGroup || '',
+      species: slug.endsWith('-cat') ? 'cat' : 'dog',
+      photo: heroPhoto,
+      slug: attrs.slug || '',
+      rescue: {
+        id: orgId,
+        name: String(orgAttrs.name || '').trim(),
+        city: String(orgAttrs.city || '').trim(),
+        state: String(orgAttrs.state || abbr || '').trim(),
+        email: String(orgAttrs.email || '').trim(), // may be empty — UI handles that
+        phone: String(orgAttrs.phone || '').trim() || null,
+        url: String(orgAttrs.url || '').trim() || null,
+      },
+    })
+  }
+
+  return Response.json({ ok: true, animals: picked, queryMode, radius, zip })
 }

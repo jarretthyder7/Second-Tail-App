@@ -35,7 +35,6 @@ interface Animal {
     email?: string
     phone?: string | null
     url?: string | null
-    inNetwork?: boolean
   }
 }
 
@@ -189,14 +188,9 @@ export function AnimalProfileModal({
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              <span className="flex-1">
+              <span>
                 <strong className="text-[#1F1B18]">{a.rescue.name}</strong>
                 {rescueLocation && <span className="opacity-70"> · {rescueLocation}</span>}
-                {a.rescue.inNetwork && (
-                  <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-[10.5px] font-bold tracking-wide">
-                    ✨ On Second Tail
-                  </span>
-                )}
               </span>
             </div>
           )}

@@ -15,6 +15,9 @@ function FosterSignUpForm() {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [needsConfirmation, setNeedsConfirmation] = useState(false)
+  const [isResending, setIsResending] = useState(false)
+  const [resentMessage, setResentMessage] = useState("")
   const router = useRouter()
 
   // Step 2: About Your Home (displayed as step 1)
@@ -200,9 +203,24 @@ function FosterSignUpForm() {
       if (signUpError) throw signUpError
       if (!authData.user) throw new Error("Signup returned no user")
 
-      // Create the profile + foster_profile + welcome email.
-      // With Supabase "Confirm email" turned off, signUp() returns an active
-      // session so the user is already logged in at this point.
+      // If Supabase is set to require email confirmation, signUp() returns a
+      // user but NO session. Don't try to redirect them to a gated dashboard —
+      // show them a "check your email" screen instead. Profile creation will
+      // happen in /auth/callback AFTER they click the confirmation link.
+      if (!authData.session) {
+        try {
+          const ph = (window as any).posthog
+          if (ph?.capture) {
+            ph.capture("foster_signup_email_confirmation_sent", { state })
+          }
+        } catch {}
+        setNeedsConfirmation(true)
+        setIsLoading(false)
+        return
+      }
+
+      // Email confirmation OFF — we already have a session, create the profile
+      // now and redirect to the dashboard.
       const result = await createProfileAfterSignup(authData.user.id)
       if (result.error) {
         setError(result.error)
@@ -247,6 +265,70 @@ function FosterSignUpForm() {
       <div className="container mx-auto px-4 py-6 sm:py-8">
         <div className="max-w-lg mx-auto">
           <div className="bg-[#FDF6EC] rounded-2xl shadow-lg p-5 sm:p-8 space-y-5">
+            {needsConfirmation ? (
+              <div className="py-4 space-y-4 text-center">
+                <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <svg className="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+                <p className="text-sm text-muted-foreground">
+                  We sent a confirmation link to <strong className="text-foreground">{email}</strong>. Click it to activate your foster account and start seeing animals.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  The link works on any device — if you opened this on your phone, you can click the email link on your laptop, or vice versa.
+                </p>
+                {resentMessage && (
+                  <div className="rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm py-2 px-3">
+                    {resentMessage}
+                  </div>
+                )}
+                <div className="pt-2 space-y-2">
+                  <button
+                    type="button"
+                    disabled={isResending}
+                    onClick={async () => {
+                      setResentMessage("")
+                      setIsResending(true)
+                      try {
+                        const supabase = createClient()
+                        const { error } = await supabase.auth.resend({
+                          type: "signup",
+                          email,
+                          options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+                        })
+                        if (error) {
+                          setResentMessage(`Couldn't resend: ${error.message}`)
+                        } else {
+                          setResentMessage("Confirmation email resent. Check your inbox + spam.")
+                        }
+                      } catch (err) {
+                        setResentMessage("Couldn't resend right now. Try again in a minute.")
+                      }
+                      setIsResending(false)
+                    }}
+                    className="text-sm text-primary font-semibold hover:underline disabled:opacity-60"
+                  >
+                    {isResending ? "Resending…" : "Didn't get it? Resend the email"}
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    Used the wrong email?{" "}
+                    <button
+                      type="button"
+                      className="text-primary font-medium hover:underline"
+                      onClick={() => {
+                        setNeedsConfirmation(false)
+                        setResentMessage("")
+                      }}
+                    >
+                      Go back to signup
+                    </button>
+                  </p>
+                </div>
+              </div>
+            ) : (
+            <>
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Join as Foster</h1>
               <p className="text-sm text-muted-foreground mt-1.5">
@@ -594,6 +676,8 @@ function FosterSignUpForm() {
                 )}
               </div>
             </form>
+            </>
+            )}
           </div>
         </div>
       </div>

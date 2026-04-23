@@ -446,7 +446,7 @@ export default function FosterDashboard() {
                   }}
                   className="group flex-shrink-0 w-40 sm:w-44 snap-start text-left"
                 >
-                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-[#F7E2BD] to-[#FDF6EC] shadow-sm group-hover:shadow-md transition-shadow">
+                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-[#F7E2BD] to-[#FDF6EC] border-2 border-[#4A3C36]/25 shadow-sm group-hover:shadow-md group-hover:border-[#4A3C36]/45 transition-all">
                     {a.photo ? (
                       <img
                         src={a.photo}
@@ -475,6 +475,11 @@ export default function FosterDashboard() {
                     >
                       via rescuegroups.org
                     </div>
+                    {a.rescue?.inNetwork && (
+                      <div className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/95 text-[#2E7D32] text-[9.5px] font-bold tracking-wide shadow-sm">
+                        ✨ On Second Tail
+                      </div>
+                    )}
                   </div>
                   <div className="mt-2 px-1">
                     <div className="text-[11px] text-gray-500 truncate">
@@ -503,9 +508,9 @@ export default function FosterDashboard() {
         <section id="rescues-section">
           <div className="flex items-center justify-between mb-4 gap-4">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Rescues near you</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Rescues on Second Tail near you</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Using Second Tail in {stateLabel}
+                Rescues in {stateLabel} actively using Second Tail
               </p>
             </div>
             {rescues.length > 0 && (
@@ -545,10 +550,10 @@ export default function FosterDashboard() {
                 <PawPrint className="w-8 h-8" style={{ color: '#D76B1A' }} />
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Be the one who brings a rescue on board
+                No rescues in {stateLabel} are using Second Tail yet
               </h3>
               <p className="text-gray-600 mb-6 max-w-md mx-auto text-sm sm:text-base">
-                No rescues on Second Tail in {stateLabel} yet. Know one that could use better tools? Send them an invite — you'll be the reason a dog finds their next home.
+                That&apos;s why this is empty. The animals above come from rescues not yet on Second Tail — reach out to one and invite them. You&apos;ll be the reason a dog finds their next home.
               </p>
               <button
                 onClick={() => setShowInviteRescueModal(true)}

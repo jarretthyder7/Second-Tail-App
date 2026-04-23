@@ -264,7 +264,7 @@ export default function FosterDashboard() {
                   className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <Sparkles className="w-4 h-4 text-[#D76B1A]" />
-                  Rescue spinner
+                  Toss the Bone
                   <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
                 </a>
                 <div className="border-t border-gray-100 my-1" />

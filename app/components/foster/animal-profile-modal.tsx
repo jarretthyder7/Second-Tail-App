@@ -35,6 +35,7 @@ interface Animal {
     email?: string
     phone?: string | null
     url?: string | null
+    inNetwork?: boolean
   }
 }
 
@@ -188,9 +189,14 @@ export function AnimalProfileModal({
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              <span>
+              <span className="flex-1">
                 <strong className="text-[#1F1B18]">{a.rescue.name}</strong>
                 {rescueLocation && <span className="opacity-70"> · {rescueLocation}</span>}
+                {a.rescue.inNetwork && (
+                  <span className="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#E8F5E9] text-[#2E7D32] text-[10.5px] font-bold tracking-wide">
+                    ✨ On Second Tail
+                  </span>
+                )}
               </span>
             </div>
           )}
@@ -253,8 +259,8 @@ export function AnimalProfileModal({
             </div>
           )}
 
-          {/* CTAs */}
-          <div className="pt-2 flex flex-col gap-2">
+          {/* CTA — email outreach only */}
+          <div className="pt-2">
             {mailto ? (
               <a
                 href={mailto}
@@ -270,16 +276,6 @@ export function AnimalProfileModal({
               <div className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 text-center text-[13px] text-gray-600">
                 {a.rescue?.name || 'This rescue'} doesn&apos;t have a public email. Try visiting their site.
               </div>
-            )}
-            {a.listingUrl && (
-              <a
-                href={a.listingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center px-5 py-2.5 rounded-full bg-white text-[#4A3C36] border border-[#E5D8C0] text-[13px] font-medium hover:border-[#4A3C36] transition"
-              >
-                See {a.name}&apos;s listing →
-              </a>
             )}
           </div>
         </div>

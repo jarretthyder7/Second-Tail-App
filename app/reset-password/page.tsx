@@ -1,11 +1,11 @@
-"use client"
+'use client'
 
-import type React from "react"
+import type React from 'react'
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 const Lock = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -25,58 +25,128 @@ const Lock = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 )
 
-export default function ResetPasswordPage() {
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
+function ResetPasswordInner() {
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
+  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [bootstrapState, setBootstrapState] =
+    useState<'checking' | 'ready' | 'failed'>('checking')
   const router = useRouter()
+  const searchParams = useSearchParams()
   const supabase = createClient()
 
+  // Bootstrap: convert whatever Supabase gave us (token_hash in query OR
+  // access_token in hash OR existing session) into a live session.
   useEffect(() => {
-    // Check if user has a valid session from the reset link
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        setError("Invalid or expired reset link. Please request a new one.")
+    let cancelled = false
+
+    const run = async () => {
+      // 1. If we're already signed in (e.g. from an earlier verify), just use it.
+      const {
+        data: { session: existing },
+      } = await supabase.auth.getSession()
+      if (existing) {
+        if (!cancelled) setBootstrapState('ready')
+        return
       }
-    })
-  }, [supabase.auth])
+
+      // 2. Token-hash flow — typical for generateLink() recovery emails.
+      const token_hash = searchParams?.get('token_hash')
+      const type = searchParams?.get('type')
+      if (token_hash && type === 'recovery') {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash,
+          type: 'recovery',
+        })
+        if (!cancelled) {
+          setBootstrapState(error ? 'failed' : 'ready')
+          if (error) {
+            setError(
+              'This reset link is expired or already used. Request a new one.'
+            )
+          }
+        }
+        return
+      }
+
+      // 3. Implicit flow — tokens in URL hash (older Supabase emails).
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hash = new URLSearchParams(window.location.hash.slice(1))
+        const access_token = hash.get('access_token')
+        const refresh_token = hash.get('refresh_token')
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          })
+          // Clean the URL so the tokens aren't sitting in the address bar.
+          try {
+            window.history.replaceState(null, '', window.location.pathname)
+          } catch {}
+          if (!cancelled) {
+            setBootstrapState(error ? 'failed' : 'ready')
+            if (error) {
+              setError(
+                'This reset link is expired or already used. Request a new one.'
+              )
+            }
+          }
+          return
+        }
+      }
+
+      // 4. Nothing worked.
+      if (!cancelled) {
+        setBootstrapState('failed')
+        setError(
+          'Invalid or expired reset link. Request a new one from the login page.'
+        )
+      }
+    }
+
+    run()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    setError("")
+    setError('')
 
     if (password !== confirmPassword) {
       setError("Passwords don't match")
       setIsLoading(false)
       return
     }
-
     if (password.length < 6) {
-      setError("Password must be at least 6 characters")
+      setError('Password must be at least 6 characters')
       setIsLoading(false)
       return
     }
 
     try {
       const { error: updateError } = await supabase.auth.updateUser({
-        password: password,
+        password,
       })
-
       if (updateError) {
         setError(updateError.message)
         setIsLoading(false)
         return
       }
-
       setSuccess(true)
-      setTimeout(() => {
-        router.push("/")
-      }, 2000)
+      setTimeout(() => router.push('/'), 2000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Something went wrong. Please try again.'
+      )
       setIsLoading(false)
     }
   }
@@ -88,23 +158,46 @@ export default function ResetPasswordPage() {
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-[#D76B1A]/10 flex items-center justify-center mb-3 md:mb-4">
             <Lock className="w-5 h-5 md:w-6 md:h-6 text-[#D76B1A]" />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#5A4A42]" style={{ fontFamily: "Lora, serif" }}>
+          <h1
+            className="text-2xl sm:text-3xl font-bold text-[#5A4A42]"
+            style={{ fontFamily: 'Lora, serif' }}
+          >
             Reset your password
           </h1>
-          <p className="text-sm md:text-base text-[#2E2E2E]/70">Enter your new password below.</p>
+          <p className="text-sm md:text-base text-[#2E2E2E]/70">
+            Enter your new password below.
+          </p>
         </div>
 
-        {success ? (
+        {bootstrapState === 'checking' ? (
+          <div className="text-center py-6 text-sm text-[#2E2E2E]/60">
+            Verifying reset link…
+          </div>
+        ) : success ? (
           <div className="p-4 md:p-5 bg-[#D76B1A]/10 border border-[#D76B1A]/30 text-[#5A4A42] rounded-xl">
-            <p className="text-sm md:text-base font-medium mb-2">Password updated!</p>
-            <p className="text-xs md:text-sm text-[#2E2E2E]/70">
-              Your password has been successfully reset. Redirecting you to login...
+            <p className="text-sm md:text-base font-medium mb-2">
+              Password updated!
             </p>
+            <p className="text-xs md:text-sm text-[#2E2E2E]/70">
+              Redirecting you to the homepage…
+            </p>
+          </div>
+        ) : bootstrapState === 'failed' ? (
+          <div className="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm space-y-3">
+            <p>{error}</p>
+            <Link
+              href="/forgot-password"
+              className="inline-block text-[#D76B1A] font-semibold hover:underline"
+            >
+              Request a new reset link →
+            </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
             <div>
-              <label className="block text-xs md:text-sm font-semibold text-[#5A4A42] mb-2">New Password</label>
+              <label className="block text-xs md:text-sm font-semibold text-[#5A4A42] mb-2">
+                New Password
+              </label>
               <input
                 type="password"
                 value={password}
@@ -116,7 +209,9 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label className="block text-xs md:text-sm font-semibold text-[#5A4A42] mb-2">Confirm Password</label>
+              <label className="block text-xs md:text-sm font-semibold text-[#5A4A42] mb-2">
+                Confirm Password
+              </label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -137,14 +232,17 @@ export default function ResetPasswordPage() {
               type="submit"
               disabled={isLoading}
               className="w-full inline-flex items-center justify-center rounded-full px-5 md:px-6 py-3 md:py-3.5 text-sm md:text-base font-semibold text-white hover:opacity-90 transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#D76B1A" }}
+              style={{ backgroundColor: '#D76B1A' }}
             >
-              {isLoading ? "Updating..." : "Update password"}
+              {isLoading ? 'Updating…' : 'Update password'}
             </button>
 
             <p className="text-xs text-center text-[#2E2E2E]/60 pt-2">
-              Remember your password?{" "}
-              <Link href="/" className="text-[#D76B1A] hover:underline font-semibold">
+              Remember your password?{' '}
+              <Link
+                href="/"
+                className="text-[#D76B1A] hover:underline font-semibold"
+              >
                 Back to Home
               </Link>
             </p>
@@ -152,5 +250,13 @@ export default function ResetPasswordPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ResetPasswordInner />
+    </Suspense>
   )
 }

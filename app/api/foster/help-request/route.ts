@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
               </div>
 
               <p style="color: #666; margin: 20px 0;">
-                <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://app.secondtail.org"}/org/${orgId}/admin/request-supplies" style="background-color: #D76B1A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                <a href="${process.env.NEXT_PUBLIC_BASE_URL || "https://getsecondtail.com"}/org/${orgId}/admin/request-supplies" style="background-color: #D76B1A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
                   View in Admin Panel
                 </a>
               </p>

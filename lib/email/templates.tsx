@@ -123,7 +123,7 @@ export const emailTemplates = {
         <p><strong>${orgName}</strong> sent you a message.</p>
         <p>Log in to your dashboard to read and reply.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
         </div>
       </div>
     `,
@@ -139,7 +139,7 @@ export const emailTemplates = {
         <p><strong>${fosterName}</strong> sent you a new message about <strong>${dogName}</strong>.</p>
         <p>Log in to Second Tail to reply.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
         </div>
       </div>
     `,
@@ -155,7 +155,7 @@ export const emailTemplates = {
         <p><strong>${fosterName}</strong> has requested a <strong>${appointmentType}</strong> for <strong>${dogName}</strong> on <strong>${preferredDate}</strong>.</p>
         <p>Log in to review and schedule it.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Request</a>
+          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Request</a>
         </div>
       </div>
     `,
@@ -293,7 +293,7 @@ export const emailTemplates = {
         <p>Unfortunately, the appointment <strong>${appointmentTitle}</strong> for <strong>${animalName}</strong> has been cancelled.</p>
         <p>Please contact your rescue organization for more information.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://secondtail.org/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Dashboard</a>
+          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Dashboard</a>
         </div>
       </div>
     `,

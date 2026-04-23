@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 
 interface InviteRescueModalProps {
@@ -9,6 +9,11 @@ interface InviteRescueModalProps {
   fosterName: string
   fosterCity: string
   fosterState: string
+  /** Optional prefill — used when foster clicks a specific animal/rescue card. */
+  prefillOrgName?: string
+  prefillEmail?: string
+  prefillMessage?: string
+  prefillAnimalName?: string
 }
 
 export function InviteRescueModal({
@@ -17,6 +22,10 @@ export function InviteRescueModal({
   fosterName,
   fosterCity,
   fosterState,
+  prefillOrgName,
+  prefillEmail,
+  prefillMessage,
+  prefillAnimalName,
 }: InviteRescueModalProps) {
   const [orgName, setOrgName] = useState('')
   const [rescueEmail, setRescueEmail] = useState('')
@@ -24,6 +33,19 @@ export function InviteRescueModal({
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
+
+  // Refresh prefilled fields whenever modal opens with new context.
+  useEffect(() => {
+    if (!isOpen) return
+    setOrgName(prefillOrgName || '')
+    setRescueEmail(prefillEmail || '')
+    const defaultMsg = prefillAnimalName
+      ? `Hi! I'm ${fosterName || 'a foster-to-be'}${fosterCity || fosterState ? ` in ${[fosterCity, fosterState].filter(Boolean).join(', ')}` : ''}. I saw ${prefillAnimalName} on Second Tail, a free tool that helps rescues manage fosters. I'd love to foster with you — and Second Tail would make the process easier for both of us.`
+      : (prefillMessage || '')
+    setMessage(defaultMsg)
+    setStatus('idle')
+    setErrorMsg('')
+  }, [isOpen, prefillOrgName, prefillEmail, prefillMessage, prefillAnimalName, fosterName, fosterCity, fosterState])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -192,7 +192,7 @@ export default function RescueWaitlistPage() {
                       <option value="">Select...</option>
                       <option value="foster">A foster told us</option>
                       <option value="social">Social media</option>
-                      <option value="rescuespinner">Rescue Spinner</option>
+                      <option value="tossthebone">Toss the Bone</option>
                       <option value="referral">Another rescue</option>
                       <option value="other">Other</option>
                     </select>

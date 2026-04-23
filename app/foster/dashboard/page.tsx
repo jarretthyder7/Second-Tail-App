@@ -257,7 +257,7 @@ export default function FosterDashboard() {
                   Invite a rescue
                 </button>
                 <a
-                  href="/rescuespinner"
+                  href="/tossthebone"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setMenuOpen(false)}

@@ -6,9 +6,14 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async redirects() {
+    return [
+      { source: '/rescuespinner', destination: '/tossthebone', permanent: true },
+    ]
+  },
   async rewrites() {
     return [
-      { source: '/rescuespinner', destination: '/rescuespinner/index.html' },
+      { source: '/tossthebone', destination: '/tossthebone/index.html' },
     ]
   },
 }

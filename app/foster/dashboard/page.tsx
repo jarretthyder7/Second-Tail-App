@@ -19,6 +19,7 @@ interface FosterProfile {
   city: string
   state: string
   created_at: string
+  removed_from_org_at?: string | null
 }
 
 interface Rescue {
@@ -286,6 +287,32 @@ export default function FosterDashboard() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+
+        {/* Recently removed from an org — friendly banner */}
+        {(() => {
+          const removedAt = fosterProfile?.removed_from_org_at
+          if (!removedAt) return null
+          const diffMs = Date.now() - new Date(removedAt).getTime()
+          const recent = diffMs >= 0 && diffMs < 30 * 24 * 60 * 60 * 1000
+          if (!recent) return null
+          return (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <PawPrint className="w-4.5 h-4.5 text-amber-700" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-amber-900">
+                    You&apos;re no longer connected to your previous rescue.
+                  </p>
+                  <p className="text-sm text-amber-800 mt-1 leading-snug">
+                    That&apos;s okay — you&apos;re still a foster on Second Tail. Explore rescues and animals below, or invite a specific rescue to connect with you.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#D76B1A] to-[#B85A14] text-white shadow-sm">

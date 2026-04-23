@@ -1,34 +1,6 @@
 import { NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
 export const revalidate = 21600 // 6 hours
-
-/**
- * Returns the set of RescueGroups org IDs that have been linked to an
- * `organizations` row in our DB. Used to tag animals whose rescue is
- * already on Second Tail ("in-network"). Fails open — if the column or
- * table is missing, we just return an empty set and no badges show.
- */
-async function fetchInNetworkOrgIds(): Promise<Set<string>> {
-  try {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!url || !key) return new Set()
-    const supa = createClient(url, key, { auth: { persistSession: false } })
-    const { data, error } = await supa
-      .from('organizations')
-      .select('rescuegroups_org_id')
-      .not('rescuegroups_org_id', 'is', null)
-    if (error || !data) return new Set()
-    return new Set(
-      data
-        .map((r: any) => String(r.rescuegroups_org_id || '').trim())
-        .filter(Boolean)
-    )
-  } catch {
-    return new Set()
-  }
-}
 
 const STATE_ABBR: Record<string, string> = {
   Alabama:'AL',Alaska:'AK',Arizona:'AZ',Arkansas:'AR',California:'CA',
@@ -160,8 +132,6 @@ export async function GET(req: NextRequest) {
     return slug.endsWith('-dog') || slug.endsWith('-cat')
   }
 
-  const inNetworkOrgs = await fetchInNetworkOrgIds()
-
   const picked: any[] = []
   const shuffled = shuffle(json.data as any[])
   for (const a of shuffled) {
@@ -229,7 +199,6 @@ export async function GET(req: NextRequest) {
         email: String(orgAttrs.email || '').trim(),
         phone: String(orgAttrs.phone || '').trim() || null,
         url: String(orgAttrs.url || '').trim() || null,
-        inNetwork: orgId ? inNetworkOrgs.has(String(orgId)) : false,
       },
     })
   }

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { Calendar, AlertCircle, Package, Eye, ChevronRight, Smile, HelpCircle, Plus } from "lucide-react"
+import { Calendar, AlertCircle, Package, Eye, ChevronRight, Smile, HelpCircle, Plus, PawPrint, Lock } from "lucide-react"
 import { NewMessageModal } from "@/components/foster/new-message-modal"
 import { RequestHelpModal } from "@/components/foster/request-help-modal"
 import { InviteFriendsModal } from "@/components/foster/invite-friends-modal"
@@ -82,20 +82,98 @@ export default function FosterDashboardPage() {
   }
 
   if (!dog) {
+    const firstName = (profile?.full_name || profile?.name || "").split(" ")[0] || "there"
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-3xl mx-auto p-4 sm:p-6 lg:p-8">
-          <div className="bg-card rounded-2xl shadow-sm p-6 sm:p-8 text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-3">Welcome!</h2>
-            <p className="text-muted-foreground mb-6 text-base sm:text-lg leading-relaxed">
-              You'll be matched with an animal soon. Check back here for updates!
-            </p>
-            <Link
-              href={`/org/${orgId}/foster/explore`}
-              className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition"
+      <div className="min-h-screen bg-background pb-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+          {/* Hero preview card — mirrors the layout of the real hero card */}
+          <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
+            <div
+              className="relative aspect-[4/3] sm:aspect-video flex items-center justify-center overflow-hidden"
+              style={{ background: "linear-gradient(135deg, #FDF6EC 0%, #F7E2BD 100%)" }}
             >
-              Explore Nearby Rescues
-            </Link>
+              <div className="text-center px-6">
+                <div className="w-20 h-20 mx-auto rounded-full bg-white/80 backdrop-blur flex items-center justify-center mb-4 shadow-sm">
+                  <PawPrint className="w-10 h-10" style={{ color: "#D76B1A" }} />
+                </div>
+                <p className="text-xl sm:text-2xl font-bold" style={{ color: "#5A4A42", fontFamily: "Lora, serif" }}>
+                  Your foster is on the way, {firstName}
+                </p>
+                <p className="text-sm sm:text-base mt-2" style={{ color: "#5A4A42", opacity: 0.7 }}>
+                  Your rescue will match you with an animal soon. When they do, this page becomes your home base.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 sm:p-6 space-y-4">
+              <Link
+                href={`/org/${orgId}/foster/explore`}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-semibold text-white transition hover:opacity-90"
+                style={{ backgroundColor: "#D76B1A" }}
+              >
+                Explore Nearby Rescues
+              </Link>
+            </div>
+          </div>
+
+          {/* Preview: what unlocks when matched */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Lock className="w-4 h-4" style={{ color: "#D76B1A" }} />
+              <h2 className="text-base sm:text-lg font-bold text-foreground">
+                Here's what unlocks when you're matched
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <PreviewActionCard
+                icon={<Smile className="w-5 h-5" />}
+                title="Add Daily Updates"
+                desc="Share photos and notes — your rescue sees them live"
+              />
+              <PreviewActionCard
+                icon={<Package className="w-5 h-5" />}
+                title="Request Supplies"
+                desc="Food, toys, medications — sent to your door"
+              />
+              <PreviewActionCard
+                icon={<Plus className="w-5 h-5" />}
+                title="Schedule Appointments"
+                desc="Vet visits, meet & greets, adoption days"
+              />
+              <PreviewActionCard
+                icon={<HelpCircle className="w-5 h-5" />}
+                title="Message Your Rescue"
+                desc="Direct line for quick questions or help"
+              />
+            </div>
+          </div>
+
+          {/* While you wait */}
+          <div className="bg-card rounded-2xl shadow-sm p-4 sm:p-6">
+            <h2 className="text-base sm:text-lg font-bold text-foreground mb-1">
+              While you wait
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              A few things that'll make your first foster day easier.
+            </p>
+            <div className="space-y-3">
+              <WhileYouWaitItem
+                icon="🛏"
+                title="Prepare a cozy space"
+                desc="Quiet corner with a bed, water bowl, and soft blankets."
+              />
+              <WhileYouWaitItem
+                icon="🛒"
+                title="Stock the basics"
+                desc="Leash, collar, and waste bags. Food + meds come from your rescue."
+              />
+              <WhileYouWaitItem
+                icon="⏳"
+                title="Be patient on day one"
+                desc="New environments take a few days. Let them come to you."
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -298,6 +376,57 @@ export default function FosterDashboardPage() {
         fosterName={profile?.full_name || ""}
         referralCode=""
       />
+    </div>
+  )
+}
+
+function PreviewActionCard({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode
+  title: string
+  desc: string
+}) {
+  return (
+    <div className="relative bg-card rounded-xl p-4 border border-gray-100 opacity-75">
+      <div className="absolute top-3 right-3">
+        <Lock className="w-3.5 h-3.5 text-gray-400" />
+      </div>
+      <div
+        className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
+        style={{ backgroundColor: "#F7E2BD", color: "#D76B1A" }}
+      >
+        {icon}
+      </div>
+      <h3 className="font-semibold text-sm text-foreground">{title}</h3>
+      <p className="text-xs text-muted-foreground mt-1 leading-snug">{desc}</p>
+    </div>
+  )
+}
+
+function WhileYouWaitItem({
+  icon,
+  title,
+  desc,
+}: {
+  icon: string
+  title: string
+  desc: string
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div
+        className="w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center text-base"
+        style={{ backgroundColor: "#FDF6EC" }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground leading-snug">{desc}</p>
+      </div>
     </div>
   )
 }

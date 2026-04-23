@@ -33,6 +33,13 @@ function fullSizeImage(thumb?: string | null): string | null {
   return String(thumb).replace(/[?&]width=\d+/, '').replace(/[?&]height=\d+/, '')
 }
 
+function cleanDescription(raw: string, maxLen = 400): string {
+  if (!raw) return ''
+  let s = decodeEntities(raw).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+  if (s.length > maxLen) s = s.slice(0, maxLen - 1).trimEnd() + '…'
+  return s
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr]
   for (let i = a.length - 1; i > 0; i--) {
@@ -148,22 +155,48 @@ export async function GET(req: NextRequest) {
       if (u) heroPhoto = u
     }
 
+    // Parse age years (for "Mika, 6" display).
+    const ageString = String(attrs.ageString || '')
+    let ageYears: number | null = null
+    const yearMatch = ageString.match(/(\d+)\s*Years?/i)
+    if (yearMatch) ageYears = parseInt(yearMatch[1], 10)
+
+    // Traits — only include ones marked true/populated.
+    const traits: Record<string, any> = {}
+    if (attrs.isHousetrained === true) traits.housetrained = true
+    if (attrs.isKidsOk === true) traits.kidsOk = true
+    if (attrs.isDogsOk === true) traits.dogsOk = true
+    if (attrs.isCatsOk === true) traits.catsOk = true
+    if (attrs.isCurrentVaccinations === true) traits.vaccinated = true
+    if (attrs.isSpecialNeeds === true) traits.specialNeeds = true
+    if (attrs.activityLevel) traits.activityLevel = String(attrs.activityLevel)
+
+    const listingUrl = orgAttrs.url
+      ? String(orgAttrs.url)
+      : `https://rescuegroups.org/animals/detail?AnimalID=${a.id}`
+
     picked.push({
       id: String(a.id),
       name: decodeEntities(String(attrs.name || 'Unnamed')).trim(),
       breed: attrs.breedString || attrs.breedPrimary || '',
       ageGroup: attrs.ageGroup || '',
+      ageString,
+      ageYears,
       sex: attrs.sex || '',
       size: attrs.sizeGroup || '',
       species: slug.endsWith('-cat') ? 'cat' : 'dog',
+      needsFoster: !!attrs.isNeedingFoster,
       photo: heroPhoto,
       slug: attrs.slug || '',
+      description: cleanDescription(attrs.descriptionText || attrs.descriptionHtml || ''),
+      traits,
+      listingUrl,
       rescue: {
         id: orgId,
         name: String(orgAttrs.name || '').trim(),
         city: String(orgAttrs.city || '').trim(),
         state: String(orgAttrs.state || abbr || '').trim(),
-        email: String(orgAttrs.email || '').trim(), // may be empty — UI handles that
+        email: String(orgAttrs.email || '').trim(),
         phone: String(orgAttrs.phone || '').trim() || null,
         url: String(orgAttrs.url || '').trim() || null,
       },

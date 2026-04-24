@@ -105,14 +105,17 @@ export default function FosterDashboardPage() {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-3">
               <Link
                 href={`/org/${orgId}/foster/explore`}
                 className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-semibold text-white transition hover:opacity-90"
                 style={{ backgroundColor: "#D76B1A" }}
               >
-                Explore Nearby Rescues
+                Explore nearby animals
               </Link>
+              <p className="text-xs sm:text-sm text-center text-muted-foreground">
+                Browse real adoptable dogs and cats near you while you wait. Tap one to introduce yourself to their rescue.
+              </p>
             </div>
           </div>
 

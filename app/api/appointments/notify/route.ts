@@ -1,32 +1,70 @@
 import { createClient } from "@/lib/supabase/server"
 import { Resend } from "resend"
+import { z } from "zod"
 import { emailTemplates } from "@/lib/email/templates"
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
+const notifySchema = z.object({
+  appointmentId: z.string().uuid(),
+  notificationType: z.enum(["reminder", "confirmation", "update", "cancelled"]),
+  customMessage: z.string().max(2000).optional(),
+})
+
 export async function POST(request: Request) {
   try {
     const supabase = await createClient()
-    
-    const { data: { user } } = await supabase.auth.getUser()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
     if (!user) {
       return Response.json({ error: "Unauthorized" }, { status: 401 })
     }
-    
-    const { appointmentId, notificationType, customMessage } = await request.json()
+
+    // Only rescue staff may send appointment notifications.
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return Response.json({ error: "Profile not found" }, { status: 403 })
+    }
+    if (profile.role !== "rescue" || !profile.organization_id) {
+      return Response.json({ error: "Forbidden" }, { status: 403 })
+    }
+
+    const body = await request.json().catch(() => null)
+    const parsed = notifySchema.safeParse(body)
+    if (!parsed.success) {
+      return Response.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 },
+      )
+    }
+    const { appointmentId, notificationType, customMessage } = parsed.data
 
     const { data: appointment, error: appointmentError } = await supabase
       .from("appointments")
-      .select(`
+      .select(
+        `
         *,
         dog:dogs(name, foster_id),
         assigned_to:profiles(name, email)
-      `)
+      `,
+      )
       .eq("id", appointmentId)
       .single()
 
     if (appointmentError || !appointment) {
       return Response.json({ error: "Appointment not found" }, { status: 404 })
+    }
+
+    // Defense in depth: ensure caller belongs to the appointment's org.
+    if (appointment.organization_id !== profile.organization_id) {
+      return Response.json({ error: "Forbidden" }, { status: 403 })
     }
 
     const { data: foster } = await supabase
@@ -92,8 +130,6 @@ export async function POST(request: Request) {
           customMessage,
         )
         break
-      default:
-        return Response.json({ error: "Invalid notification type" }, { status: 400 })
     }
 
     const { data: emailResult, error: emailError } = await resend.emails.send({

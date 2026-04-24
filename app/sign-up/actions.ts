@@ -85,12 +85,22 @@ export async function createProfileAfterSignup(userId: string) {
   }
 
   // ── Foster signup ──
-  const { data: invitation } = await svc
-    .from("invitations")
-    .select("id, organization_id")
-    .eq("email", email)
-    .eq("status", "pending")
-    .maybeSingle()
+  // Only auto-accept an invitation if the foster arrived via an invite link
+  // (invite_code in metadata). Matching on email alone silently attached fosters
+  // to stale pending invites — bug fixed here.
+  const inviteCode = typeof meta.invite_code === "string" ? (meta.invite_code as string) : null
+  const { data: invitation } = inviteCode
+    ? await svc
+        .from("invitations")
+        .select("id, organization_id, email")
+        .eq("code", inviteCode)
+        .eq("status", "pending")
+        .maybeSingle()
+    : { data: null as { id: string; organization_id: string; email: string } | null }
+
+  // Defense in depth: the invitation's email must match the signing-up user's.
+  const validInvitation =
+    invitation && invitation.email?.toLowerCase() === email.toLowerCase() ? invitation : null
 
   const fosterName = ((meta.name as string) || email.split("@")[0]).trim()
 
@@ -103,7 +113,7 @@ export async function createProfileAfterSignup(userId: string) {
         name: fosterName,
         phone,
         role: "foster",
-        organization_id: invitation?.organization_id ?? null,
+        organization_id: validInvitation?.organization_id ?? null,
       },
       { onConflict: "id" },
     )
@@ -139,11 +149,11 @@ export async function createProfileAfterSignup(userId: string) {
     }
   }
 
-  if (invitation) {
+  if (validInvitation) {
     await svc
       .from("invitations")
       .update({ status: "accepted", updated_at: new Date().toISOString() })
-      .eq("id", invitation.id)
+      .eq("id", validInvitation.id)
   }
 
   // Fire-and-forget welcome email (call directly — avoids the /api/email/send auth gate)
@@ -152,8 +162,8 @@ export async function createProfileAfterSignup(userId: string) {
   )
 
   return {
-    redirectTo: invitation?.organization_id
-      ? `/org/${invitation.organization_id}/foster/dashboard`
+    redirectTo: validInvitation?.organization_id
+      ? `/org/${validInvitation.organization_id}/foster/dashboard`
       : `/foster/dashboard`,
   }
 }

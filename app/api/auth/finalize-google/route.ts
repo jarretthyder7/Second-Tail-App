@@ -101,17 +101,32 @@ export async function POST(request: NextRequest) {
       }).catch(() => {})
     }
   } else if (isFosterGoogleSignup || !existingProfile) {
-    const { data: invitation } = await svc
-      .from("invitations")
-      .select("id, organization_id")
-      .eq("email", user.email!)
-      .eq("status", "pending")
-      .maybeSingle()
+    // Only auto-accept an invitation if the foster arrived via an invite link
+    // (invite_code in metadata). Email-only matching silently attached fosters
+    // to stale invites; fixed here.
+    const inviteCode =
+      (typeof meta.invite_code === "string" && meta.invite_code) ||
+      (signupIntent as { invite_code?: string } | null)?.invite_code ||
+      null
+
+    const { data: invitation } = inviteCode
+      ? await svc
+          .from("invitations")
+          .select("id, organization_id, email")
+          .eq("code", inviteCode)
+          .eq("status", "pending")
+          .maybeSingle()
+      : { data: null as { id: string; organization_id: string; email: string } | null }
+
+    const validInvitation =
+      invitation && invitation.email?.toLowerCase() === user.email?.toLowerCase()
+        ? invitation
+        : null
 
     const { data: upserted } = await svc
       .from("profiles")
       .upsert(
-        { id: user.id, email: user.email, name: meta.name || user.email?.split("@")[0], role: "foster", organization_id: invitation?.organization_id ?? null },
+        { id: user.id, email: user.email, name: meta.name || user.email?.split("@")[0], role: "foster", organization_id: validInvitation?.organization_id ?? null },
         { onConflict: "id" }
       )
       .select("id, role, organization_id, name, phone, city, state, experience_level, dog_size_preference, availability")
@@ -123,8 +138,8 @@ export async function POST(request: NextRequest) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "welcome-foster", email: user.email, name: meta.name || user.email?.split("@")[0] }),
       }).catch(() => {})
-      if (invitation) {
-        await svc.from("invitations").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", invitation.id)
+      if (validInvitation) {
+        await svc.from("invitations").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", validInvitation.id)
       }
     }
   }

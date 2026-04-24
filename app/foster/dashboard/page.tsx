@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner'
 import { InviteRescueModal } from '@/app/components/foster/invite-rescue-modal'
 import { AnimalProfileModal } from '@/app/components/foster/animal-profile-modal'
+import { PendingInvitationsBanner } from '@/app/components/foster/pending-invitations-banner'
 
 interface FosterProfile {
   id: string
@@ -286,6 +287,9 @@ export default function FosterDashboard() {
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
+
+        {/* Pending invitations banner — shown only if rescues have invited this email */}
+        <PendingInvitationsBanner />
 
         {/* Hero */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#D76B1A] to-[#B85A14] text-white shadow-sm">

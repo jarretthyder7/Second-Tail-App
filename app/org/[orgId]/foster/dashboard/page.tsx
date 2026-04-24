@@ -97,10 +97,10 @@ export default function FosterDashboardPage() {
                   <PawPrint className="w-10 h-10" style={{ color: "#D76B1A" }} />
                 </div>
                 <p className="text-xl sm:text-2xl font-bold" style={{ color: "#5A4A42", fontFamily: "Lora, serif" }}>
-                  Your foster is on the way, {firstName}
+                  Find your first foster{firstName !== "there" ? `, ${firstName}` : ""}
                 </p>
                 <p className="text-sm sm:text-base mt-2" style={{ color: "#5A4A42", opacity: 0.7 }}>
-                  Your rescue will match you with an animal soon. When they do, this page becomes your home base.
+                  Connect with a rescue to get started. Browse animals and rescues nearby — reach out to any of them directly.
                 </p>
               </div>
             </div>
@@ -113,8 +113,15 @@ export default function FosterDashboardPage() {
               >
                 Explore nearby animals
               </Link>
+              <Link
+                href={`/org/${orgId}/foster/explore/rescues`}
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-semibold border-2 transition hover:bg-[#FDF6EC]"
+                style={{ borderColor: "#D76B1A", color: "#D76B1A" }}
+              >
+                Explore nearby rescues
+              </Link>
               <p className="text-xs sm:text-sm text-center text-muted-foreground">
-                Browse real adoptable dogs and cats near you while you wait. Tap one to introduce yourself to their rescue.
+                Browse adoptable animals or rescues already on Second Tail. Tap one to introduce yourself.
               </p>
             </div>
           </div>

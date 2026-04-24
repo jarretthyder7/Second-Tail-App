@@ -46,6 +46,17 @@ export const metadata: Metadata = {
     title: 'Second Tail',
   },
   alternates: { canonical: '/' },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    shortcut: '/icons/icon-192x192.png',
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   openGraph: {
     type: 'website',
     siteName: 'Second Tail',
@@ -54,12 +65,21 @@ export const metadata: Metadata = {
       'Free foster dashboard and all-in-one rescue management platform. Care plans, supply requests, appointments, medical records, and messaging.',
     url: '/',
     locale: 'en_US',
+    images: [
+      {
+        url: '/icons/icon-512x512.png',
+        width: 512,
+        height: 512,
+        alt: 'Second Tail logo',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Second Tail — Fostering and rescue, made easier.',
     description:
       'Free foster dashboard and all-in-one rescue management platform.',
+    images: ['/icons/icon-512x512.png'],
   },
   robots: {
     index: true,

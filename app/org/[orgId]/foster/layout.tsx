@@ -21,7 +21,9 @@ import {
   Users,
   Package,
   Bell,
+  Lock,
 } from "lucide-react"
+import { toast } from "sonner"
 import { useOrgBranding } from "@/lib/branding/use-org-branding"
 
 export default function OrgFosterLayout({
@@ -36,6 +38,7 @@ export default function OrgFosterLayout({
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+  const [hasDog, setHasDog] = useState<boolean | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
 
@@ -58,6 +61,8 @@ export default function OrgFosterLayout({
           .select("id")
           .eq("foster_id", user.id)
           .eq("organization_id", orgId)
+
+        setHasDog(!!(dogs && dogs.length > 0))
 
         if (dogs && dogs.length > 0) {
           const dogIds = dogs.map((d) => d.id)
@@ -147,24 +152,29 @@ export default function OrgFosterLayout({
 
   const isActive = (path: string) => pathname.includes(path)
 
-  // Desktop tabs (unchanged)
+  // Desktop tabs — `requiresDog: true` means locked until the foster has a dog
   const desktopTabs = [
-    { name: "Dashboard",      href: `/org/${orgId}/foster/dashboard`,        path: "/dashboard",      icon: LayoutDashboard },
-    { name: "Messages",       href: `/org/${orgId}/foster/messages`,          path: "/messages",       icon: MessageSquare },
-    { name: "Appointments",   href: `/org/${orgId}/foster/appointments`,      path: "/appointments",   icon: CalendarIcon },
-    { name: "Learn",          href: `/org/${orgId}/foster/learn`,             path: "/learn",          icon: BookOpen },
-    { name: "Reimbursements", href: `/org/${orgId}/foster/reimbursements`,    path: "/reimbursements", icon: DollarSign },
-    { name: "My Requests",    href: `/org/${orgId}/foster/request-supplies`,  path: "/request-supplies", icon: Package },
+    { name: "Dashboard",      href: `/org/${orgId}/foster/dashboard`,        path: "/dashboard",      icon: LayoutDashboard, requiresDog: false },
+    { name: "Messages",       href: `/org/${orgId}/foster/messages`,          path: "/messages",       icon: MessageSquare,   requiresDog: true },
+    { name: "Appointments",   href: `/org/${orgId}/foster/appointments`,      path: "/appointments",   icon: CalendarIcon,    requiresDog: true },
+    { name: "Learn",          href: `/org/${orgId}/foster/learn`,             path: "/learn",          icon: BookOpen,        requiresDog: true },
+    { name: "Reimbursements", href: `/org/${orgId}/foster/reimbursements`,    path: "/reimbursements", icon: DollarSign,      requiresDog: true },
+    { name: "My Requests",    href: `/org/${orgId}/foster/request-supplies`,  path: "/request-supplies", icon: Package,       requiresDog: true },
   ]
 
-  // Mobile bottom nav — 5 most important actions
+  // Mobile bottom nav
   const bottomTabs = [
-    { name: "Home",      href: `/org/${orgId}/foster/dashboard`,       path: "/dashboard",      icon: LayoutDashboard },
-    { name: "Messages",  href: `/org/${orgId}/foster/messages`,         path: "/messages",       icon: MessageSquare,  badge: unreadMessageCount },
-    { name: "Appts",     href: `/org/${orgId}/foster/appointments`,     path: "/appointments",   icon: CalendarIcon },
-    { name: "Requests",  href: `/org/${orgId}/foster/request-supplies`, path: "/request-supplies", icon: Package },
-    { name: "Emergency", href: `/org/${orgId}/foster/emergency`,        path: "/emergency",      icon: AlertCircle,    emergency: true },
+    { name: "Home",      href: `/org/${orgId}/foster/dashboard`,       path: "/dashboard",      icon: LayoutDashboard, requiresDog: false },
+    { name: "Messages",  href: `/org/${orgId}/foster/messages`,         path: "/messages",       icon: MessageSquare,   requiresDog: true, badge: unreadMessageCount },
+    { name: "Appts",     href: `/org/${orgId}/foster/appointments`,     path: "/appointments",   icon: CalendarIcon,    requiresDog: true },
+    { name: "Requests",  href: `/org/${orgId}/foster/request-supplies`, path: "/request-supplies", icon: Package,       requiresDog: true },
+    { name: "Emergency", href: `/org/${orgId}/foster/emergency`,        path: "/emergency",      icon: AlertCircle,     requiresDog: true, emergency: true },
   ]
+
+  const isLocked = (requiresDog: boolean) => requiresDog && hasDog === false
+  const showLockedToast = (name: string) => {
+    toast.info(`${name} unlocks once you're matched with an animal.`)
+  }
 
   return (
     <ProtectedRoute allowedRoles={["foster"]}>
@@ -317,21 +327,38 @@ export default function OrgFosterLayout({
             </div>
           </div>
 
-          {/* Desktop tab nav — unchanged */}
+          {/* Desktop tab nav — locks items that require a dog */}
           <nav className="hidden md:block overflow-x-auto border-t border-gray-100">
             <div className="max-w-7xl mx-auto px-4 flex gap-1">
               {desktopTabs.map((tab) => {
                 const Icon = tab.icon
                 const showBadge = tab.path === "/messages" && unreadMessageCount > 0
+                const locked = isLocked(tab.requiresDog)
+                const baseClass = `py-3 px-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 relative text-sm`
+                const activeClass = isActive(tab.path)
+                  ? "border-[var(--brand-primary,#D76B1A)] text-[var(--brand-primary,#D76B1A)] font-semibold"
+                  : "border-transparent text-gray-500 hover:text-gray-800"
+                const lockedClass = "border-transparent text-gray-300 cursor-not-allowed"
+
+                if (locked) {
+                  return (
+                    <button
+                      key={tab.path}
+                      type="button"
+                      onClick={() => showLockedToast(tab.name)}
+                      className={`${baseClass} ${lockedClass}`}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span className="hidden lg:inline">{tab.name}</span>
+                      <Lock className="w-3 h-3" />
+                    </button>
+                  )
+                }
                 return (
                   <Link
                     key={tab.path}
                     href={tab.href}
-                    className={`py-3 px-3 border-b-2 transition-colors whitespace-nowrap flex items-center gap-2 relative text-sm ${
-                      isActive(tab.path)
-                        ? "border-[var(--brand-primary,#D76B1A)] text-[var(--brand-primary,#D76B1A)] font-semibold"
-                        : "border-transparent text-gray-500 hover:text-gray-800"
-                    }`}
+                    className={`${baseClass} ${activeClass}`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="hidden lg:inline">{tab.name}</span>
@@ -353,8 +380,25 @@ export default function OrgFosterLayout({
         {/* ── Mobile Bottom Nav ───────────────────── */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50">
           <div className="flex items-stretch">
-            {bottomTabs.map(({ name, href, path, icon: Icon, badge, emergency }: any) => {
+            {bottomTabs.map(({ name, href, path, icon: Icon, badge, emergency, requiresDog }: any) => {
               const active = isActive(path)
+              const locked = isLocked(!!requiresDog)
+              if (locked) {
+                return (
+                  <button
+                    key={path}
+                    type="button"
+                    onClick={() => showLockedToast(name)}
+                    className="flex flex-col items-center justify-center gap-1 py-3 flex-1 transition-colors relative text-gray-300 cursor-not-allowed"
+                  >
+                    <div className="relative">
+                      <Icon className="w-[22px] h-[22px] opacity-60" />
+                      <Lock className="absolute -bottom-0.5 -right-1 w-3 h-3 text-gray-400 bg-white rounded-full p-0.5" />
+                    </div>
+                    <span className="text-[10px] leading-none font-medium opacity-70">{name}</span>
+                  </button>
+                )
+              }
               return (
                 <Link
                   key={path}

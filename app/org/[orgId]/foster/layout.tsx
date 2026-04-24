@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { useOrgBranding } from "@/lib/branding/use-org-branding"
+import { InviteFriendsModal } from "@/components/foster/invite-friends-modal"
 
 export default function OrgFosterLayout({
   children,
@@ -36,6 +37,7 @@ export default function OrgFosterLayout({
   const orgId = params.orgId as string
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false)
+  const [showInviteFriendsModal, setShowInviteFriendsModal] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
   const [hasDog, setHasDog] = useState<boolean | null>(null)
@@ -152,15 +154,16 @@ export default function OrgFosterLayout({
 
   const isActive = (path: string) => pathname.includes(path)
 
-  // Desktop tabs — `requiresDog: true` means locked until the foster has a dog
+  // Desktop tabs — `requiresDog: true` means locked until the foster has a dog.
+  // Reimbursements is `hideUntilDog: true` — hidden entirely, not locked, until matched.
   const desktopTabs = [
     { name: "Dashboard",      href: `/org/${orgId}/foster/dashboard`,        path: "/dashboard",      icon: LayoutDashboard, requiresDog: false },
     { name: "Messages",       href: `/org/${orgId}/foster/messages`,          path: "/messages",       icon: MessageSquare,   requiresDog: true },
     { name: "Appointments",   href: `/org/${orgId}/foster/appointments`,      path: "/appointments",   icon: CalendarIcon,    requiresDog: true },
     { name: "Learn",          href: `/org/${orgId}/foster/learn`,             path: "/learn",          icon: BookOpen,        requiresDog: true },
-    { name: "Reimbursements", href: `/org/${orgId}/foster/reimbursements`,    path: "/reimbursements", icon: DollarSign,      requiresDog: true },
+    { name: "Reimbursements", href: `/org/${orgId}/foster/reimbursements`,    path: "/reimbursements", icon: DollarSign,      requiresDog: true, hideUntilDog: true },
     { name: "My Requests",    href: `/org/${orgId}/foster/request-supplies`,  path: "/request-supplies", icon: Package,       requiresDog: true },
-  ]
+  ].filter((t: any) => !(t.hideUntilDog && hasDog === false))
 
   // Mobile bottom nav
   const bottomTabs = [
@@ -284,18 +287,20 @@ export default function OrgFosterLayout({
                         <BookOpen className="w-4 h-4 text-gray-400" />
                         Learn
                       </Link>
-                      <Link
-                        href={`/org/${orgId}/foster/reimbursements`}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <DollarSign className="w-4 h-4 text-gray-400" />
-                        Reimbursements
-                      </Link>
+                      {hasDog && (
+                        <Link
+                          href={`/org/${orgId}/foster/reimbursements`}
+                          className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <DollarSign className="w-4 h-4 text-gray-400" />
+                          Reimbursements
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           setShowUserMenu(false)
-                          window.dispatchEvent(new CustomEvent("openInviteModal"))
+                          setShowInviteFriendsModal(true)
                         }}
                         className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium w-full text-left"
                         style={{ color: "var(--brand-primary, #D76B1A)" }}
@@ -427,6 +432,13 @@ export default function OrgFosterLayout({
         </nav>
 
       </div>
+
+      <InviteFriendsModal
+        isOpen={showInviteFriendsModal}
+        onClose={() => setShowInviteFriendsModal(false)}
+        fosterName={profile?.full_name || profile?.name || ""}
+        referralCode=""
+      />
     </ProtectedRoute>
   )
 }

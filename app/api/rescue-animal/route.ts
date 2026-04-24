@@ -152,96 +152,98 @@ export async function GET(req: NextRequest) {
     return emptyResponse(state, 'no_matches_with_photo', debug, wantDebug)
   }
 
-  // Prefer foster-needed animals when there are enough of them — otherwise
-  // fall back to the whole adoptable pool so variety wins. (Before we were
-  // ALWAYS preferring foster-needed even if there were only 1-2, so the user
-  // kept seeing the same dog on repeat throws.)
   const fosterMatches = matches.filter(
     (a) => a.attributes?.isNeedingFoster === true
   )
   const pool = fosterMatches.length >= 5 ? fosterMatches : matches
-  // Pick from the full pool (up to our fetch limit, 100) instead of only 25.
-  const pickIndex = Math.floor(Math.random() * pool.length)
-  const pick = pool[pickIndex]
 
-  const attrs = pick.attributes || {}
-  const orgId = pick.relationships?.orgs?.data?.[0]?.id
-  const org = included.find((r) => r.type === 'orgs' && r.id === orgId)
-  const orgAttrs = org?.attributes || {}
-
-  // Collect ALL full-size photos from included pictures.
-  const picIds: string[] = (pick.relationships?.pictures?.data || []).map(
-    (p: any) => p.id
-  )
-  const allPhotos: string[] = []
-  for (const pid of picIds) {
-    const pic = included.find((r) => r.type === 'pictures' && r.id === pid)
-    const u =
-      pic?.attributes?.original?.url ||
-      pic?.attributes?.large?.url ||
-      pic?.attributes?.url
-    if (u && !allPhotos.includes(u)) allPhotos.push(u)
+  // Pick up to 3 unique animals from the pool
+  const pickCount = Math.min(3, pool.length)
+  const picks: any[] = []
+  const usedIdx = new Set<number>()
+  while (picks.length < pickCount) {
+    const idx = Math.floor(Math.random() * pool.length)
+    if (!usedIdx.has(idx)) { usedIdx.add(idx); picks.push(pool[idx]) }
   }
-  let heroPhoto = allPhotos[0] || fullSizeImage(attrs.pictureThumbnailUrl)
 
-  // Parse age — extract years as a number for the "Name, age" header.
-  const ageString = String(attrs.ageString || '')
-  let ageYears: number | null = null
-  const yearMatch = ageString.match(/(\d+)\s*Years?/i)
-  if (yearMatch) ageYears = parseInt(yearMatch[1], 10)
+  function buildEntry(pick: any) {
+    const attrs = pick.attributes || {}
+    const orgId = pick.relationships?.orgs?.data?.[0]?.id
+    const org = included.find((r: any) => r.type === 'orgs' && r.id === orgId)
+    const orgAttrs = org?.attributes || {}
 
-  // Traits — only include ones set to true or with a usable value.
-  const traits: Record<string, any> = {}
-  if (attrs.isHousetrained === true) traits.housetrained = true
-  if (attrs.isKidsOk === true) traits.kidsOk = true
-  if (attrs.isDogsOk === true) traits.dogsOk = true
-  if (attrs.isCatsOk === true) traits.catsOk = true
-  if (attrs.isCurrentVaccinations === true) traits.vaccinated = true
-  if (attrs.isSpecialNeeds === true) traits.specialNeeds = true
-  if (attrs.activityLevel) traits.activityLevel = String(attrs.activityLevel)
-  if (attrs.energyLevel) traits.energyLevel = String(attrs.energyLevel)
-  if (attrs.adoptionFeeString) traits.adoptionFee = String(attrs.adoptionFeeString)
+    const picIds: string[] = (pick.relationships?.pictures?.data || []).map((p: any) => p.id)
+    const allPhotos: string[] = []
+    for (const pid of picIds) {
+      const pic = included.find((r: any) => r.type === 'pictures' && r.id === pid)
+      const u = pic?.attributes?.original?.url || pic?.attributes?.large?.url || pic?.attributes?.url
+      if (u && !allPhotos.includes(u)) allPhotos.push(u)
+    }
+    const heroPhoto = allPhotos[0] || fullSizeImage(attrs.pictureThumbnailUrl)
 
-  // Prefer the rescue's own site. Otherwise send the user to a Google search
-  // for the rescue + animal name — more useful than a generic RG detail page.
-  const rescueName = orgAttrs.name ? String(orgAttrs.name) : ''
-  const animalName = attrs.name ? String(attrs.name) : ''
-  const searchFallback = `https://www.google.com/search?q=${encodeURIComponent(
-    `${rescueName} ${animalName}`.trim() || 'animal rescue adoption'
-  )}`
-  const listingUrl = orgAttrs.url ? String(orgAttrs.url) : searchFallback
+    const ageString = String(attrs.ageString || '')
+    let ageYears: number | null = null
+    const yearMatch = ageString.match(/(\d+)\s*Years?/i)
+    if (yearMatch) ageYears = parseInt(yearMatch[1], 10)
+
+    const traits: Record<string, any> = {}
+    if (attrs.isHousetrained === true) traits.housetrained = true
+    if (attrs.isKidsOk === true) traits.kidsOk = true
+    if (attrs.isDogsOk === true) traits.dogsOk = true
+    if (attrs.isCatsOk === true) traits.catsOk = true
+    if (attrs.isCurrentVaccinations === true) traits.vaccinated = true
+    if (attrs.isSpecialNeeds === true) traits.specialNeeds = true
+    if (attrs.activityLevel) traits.activityLevel = String(attrs.activityLevel)
+    if (attrs.energyLevel) traits.energyLevel = String(attrs.energyLevel)
+    if (attrs.adoptionFeeString) traits.adoptionFee = String(attrs.adoptionFeeString)
+
+    const rescueName = orgAttrs.name ? String(orgAttrs.name) : ''
+    const animalName = attrs.name ? String(attrs.name) : ''
+    const searchFallback = `https://www.google.com/search?q=${encodeURIComponent(
+      `${rescueName} ${animalName}`.trim() || 'animal rescue adoption'
+    )}`
+    const listingUrl = orgAttrs.url ? String(orgAttrs.url) : searchFallback
+    const slug = String(attrs.slug || '').toLowerCase()
+
+    return {
+      animal: {
+        id: pick.id,
+        name: attrs.name || 'A new friend',
+        needsFoster: !!attrs.isNeedingFoster,
+        breed: attrs.breedString || attrs.breedPrimary || '',
+        ageString,
+        ageGroup: attrs.ageGroup || '',
+        ageYears,
+        sex: attrs.sex || '',
+        size: attrs.sizeGroup || '',
+        photo: heroPhoto,
+        photos: allPhotos,
+        traits,
+        description: cleanDescription(attrs.descriptionText || attrs.descriptionHtml || ''),
+        listingUrl,
+        listingUrlIsFallback: !orgAttrs.url,
+        species: slug.endsWith('-cat') ? 'cat' : 'dog',
+      },
+      rescue: {
+        id: orgId,
+        name: orgAttrs.name || 'A local rescue',
+        city: orgAttrs.city || '',
+        state: orgAttrs.state || abbr,
+        url: orgAttrs.url || null,
+        phone: orgAttrs.phone || null,
+      },
+    }
+  }
+
+  const entries = picks.map(buildEntry)
 
   const resp: any = {
     ok: true,
     state,
     type: 'animal',
-    animal: {
-      id: pick.id,
-      name: attrs.name || 'A new friend',
-      needsFoster: !!attrs.isNeedingFoster,
-      breed: attrs.breedString || attrs.breedPrimary || '',
-      ageString: ageString,
-      ageGroup: attrs.ageGroup || '',
-      ageYears,
-      sex: attrs.sex || '',
-      size: attrs.sizeGroup || '',
-      photo: heroPhoto,
-      photos: allPhotos,
-      traits,
-      description: cleanDescription(
-        attrs.descriptionText || attrs.descriptionHtml || ''
-      ),
-      listingUrl,
-      listingUrlIsFallback: !orgAttrs.url,
-    },
-    rescue: {
-      id: orgId,
-      name: orgAttrs.name || 'A local rescue',
-      city: orgAttrs.city || '',
-      state: orgAttrs.state || abbr,
-      url: orgAttrs.url || null,
-      phone: orgAttrs.phone || null,
-    },
+    animal: entries[0].animal,
+    rescue: entries[0].rescue,
+    animals: entries,
     poolInfo: {
       totalMatches: matches.length,
       fosterNeeded: fosterMatches.length,
@@ -249,9 +251,6 @@ export async function GET(req: NextRequest) {
       totalInState: json?.meta?.count || null,
     },
   }
-  // Include species on the animal itself so the card can label correctly.
-  const slug = String(attrs.slug || '').toLowerCase()
-  resp.animal.species = slug.endsWith('-cat') ? 'cat' : 'dog'
   if (wantDebug) resp.debug = debug
   return Response.json(resp)
 }

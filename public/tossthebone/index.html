@@ -78,11 +78,12 @@
     @keyframes scoreBump { 0%,100% { transform: scale(1); } 50% { transform: scale(1.18); background: #f0c878; } }
 
     .header-link {
-      font-size: 12px; color: var(--orange); text-decoration: none; font-weight: 500;
-      border: 1px solid var(--orange); padding: 5px 12px; border-radius: 999px;
+      font-size: 12px; color: white; text-decoration: none; font-weight: 600;
+      background: var(--orange); padding: 6px 14px; border-radius: 999px;
       transition: all .18s; white-space: nowrap; flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(215,107,26,0.32);
     }
-    .header-link:hover { background: var(--orange); color: white; }
+    .header-link:hover { background: #c05e16; }
 
     /* ── Map ── */
     .map-wrapper { flex: 1; position: relative; overflow: hidden; touch-action: none; }
@@ -964,7 +965,7 @@
     .map-zoom-btn:disabled { opacity: 0.28; cursor: default; transform: none; }
     .map-zoom-hint {
       position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-      font-size: 10px; color: var(--bark); opacity: 0.38;
+      font-size: 13px; color: var(--bark); opacity: 0.5;
       pointer-events: none; white-space: nowrap;
       font-family: 'Geist', sans-serif; user-select: none;
     }
@@ -972,6 +973,99 @@
       .map-zoom-controls { bottom: 10px; right: 10px; }
       .map-zoom-btn { width: 38px; height: 38px; font-size: 22px; }
     }
+
+    /* ── State search ── */
+    .state-search-wrap {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 20; pointer-events: all; width: 220px;
+    }
+    .state-search-input-row {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.93);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 0 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    }
+    .state-search-input {
+      flex: 1; border: none; background: transparent;
+      font-size: 12px; font-family: 'Geist', sans-serif;
+      color: var(--bark); padding: 8px 0; outline: none;
+    }
+    .state-search-input::placeholder { color: rgba(74,60,54,0.45); }
+    .state-search-dropdown {
+      margin-top: 4px;
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--border); border-radius: 12px;
+      overflow: hidden; box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+    .state-search-option {
+      display: block; width: 100%; text-align: left;
+      padding: 9px 14px; font-size: 12px;
+      font-family: 'Geist', sans-serif; color: var(--bark);
+      background: transparent; border: none; cursor: pointer;
+      transition: background 0.1s;
+    }
+    .state-search-option:hover { background: var(--cream); }
+    @media (max-width: 600px) { .state-search-wrap { width: 180px; } }
+
+    /* ── Carousel ── */
+    .carousel-wrapper { display: flex; flex-direction: column; }
+    .carousel-container {
+      display: flex;
+      overflow-x: scroll; overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      height: calc(92dvh - 40px);
+    }
+    .carousel-container::-webkit-scrollbar { display: none; }
+    .carousel-slide {
+      flex-shrink: 0; width: 100%;
+      scroll-snap-align: start;
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      display: flex; flex-direction: column;
+    }
+    @media (max-width: 600px) {
+      .carousel-container { height: calc(100dvh - 168px); }
+    }
+    .carousel-dots {
+      display: flex; gap: 7px; justify-content: center;
+      padding: 8px 0 4px; flex-shrink: 0;
+    }
+    .carousel-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: rgba(74,60,54,0.22);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .carousel-dot.active { background: var(--orange); transform: scale(1.3); }
+
+    /* ── CTA slide ── */
+    .cta-slide {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 48px 28px; gap: 16px; text-align: center;
+      background: var(--cream); flex: 1;
+    }
+    .cta-slide-emoji { font-size: 64px; line-height: 1; }
+    .cta-slide-headline {
+      font-family: 'Lora', serif; font-size: 26px; font-weight: 700;
+      color: var(--dark); line-height: 1.2;
+    }
+    .cta-slide-body {
+      font-size: 14px; color: var(--bark); line-height: 1.6; max-width: 280px;
+    }
+    .cta-slide-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--orange); color: white; text-decoration: none;
+      font-weight: 600; font-size: 15px; padding: 14px 28px;
+      border-radius: 999px; margin-top: 8px;
+      box-shadow: 0 4px 12px rgba(215,107,26,0.35);
+      transition: transform 0.15s;
+    }
+    .cta-slide-btn:hover { transform: scale(1.03); }
   </style>
 </head>
 <body>
@@ -1096,6 +1190,26 @@ function getTouchMid(t0, t1) {
 }
 
 function lerp(a, b, t)        { return a + (b - a) * t; }
+
+const STATE_CENTROIDS = {
+  'Alabama':{'x':682,'y':380},'Alaska':{'x':148,'y':490},'Arizona':{'x':228,'y':368},
+  'Arkansas':{'x':608,'y':358},'California':{'x':128,'y':308},'Colorado':{'x':332,'y':290},
+  'Connecticut':{'x':868,'y':182},'Delaware':{'x':840,'y':232},'Florida':{'x':720,'y':452},
+  'Georgia':{'x':712,'y':390},'Hawaii':{'x':290,'y':518},'Idaho':{'x':228,'y':202},
+  'Illinois':{'x':638,'y':272},'Indiana':{'x':668,'y':262},'Iowa':{'x':568,'y':242},
+  'Kansas':{'x':488,'y':312},'Kentucky':{'x':692,'y':302},'Louisiana':{'x':612,'y':420},
+  'Maine':{'x':898,'y':130},'Maryland':{'x':822,'y':240},'Massachusetts':{'x':878,'y':172},
+  'Michigan':{'x':672,'y':202},'Minnesota':{'x':558,'y':172},'Mississippi':{'x':648,'y':390},
+  'Missouri':{'x':590,'y':302},'Montana':{'x':268,'y':162},'Nebraska':{'x':468,'y':268},
+  'Nevada':{'x':185,'y':278},'New Hampshire':{'x':878,'y':158},'New Jersey':{'x':848,'y':222},
+  'New Mexico':{'x':312,'y':380},'New York':{'x':828,'y':192},'North Carolina':{'x':768,'y':330},
+  'North Dakota':{'x':458,'y':162},'Ohio':{'x':718,'y':252},'Oklahoma':{'x':490,'y':352},
+  'Oregon':{'x':145,'y':205},'Pennsylvania':{'x':790,'y':222},'Rhode Island':{'x':878,'y':182},
+  'South Carolina':{'x':758,'y':360},'South Dakota':{'x':460,'y':212},'Tennessee':{'x':688,'y':340},
+  'Texas':{'x':472,'y':412},'Utah':{'x':255,'y':300},'Vermont':{'x':858,'y':158},
+  'Virginia':{'x':790,'y':290},'Washington':{'x':165,'y':158},'West Virginia':{'x':752,'y':280},
+  'Wisconsin':{'x':618,'y':202},'Wyoming':{'x':335,'y':232},
+};
 function bezier2(p0, p1, p2, t) {
   const mt = 1 - t;
   return { x: mt*mt*p0.x + 2*mt*t*p1.x + t*t*p2.x, y: mt*mt*p0.y + 2*mt*t*p1.y + t*t*p2.y };
@@ -1189,6 +1303,10 @@ function App() {
   const pinchRef       = useRef({ active: false, dist: 0, midSvgX: 0, midSvgY: 0 });
   const [isPanning, setIsPanning] = useState(false);
 
+  // ── State search ──
+  const [stateQuery, setStateQuery]       = useState('');
+  const [stateDropdown, setStateDropdown] = useState(false);
+
   // ── Rest position ──
   const getRestPos = useCallback(() => {
     const isMobile = window.innerWidth <= 600;
@@ -1259,6 +1377,17 @@ function App() {
     const newY = Math.max(-newH * 0.5, Math.min(MAP_H - newH * 0.5, cy - newH / 2));
     applyMapView({ x: newX, y: newY, w: newW, h: newH });
   }, [applyMapView]);
+
+  const handleStateSelect = useCallback((stateName) => {
+    const c = STATE_CENTROIDS[stateName];
+    if (!c) return;
+    const zW = MAP_W / 2.5, zH = MAP_H / 2.5;
+    const newX = Math.max(-zW * 0.5, Math.min(MAP_W - zW * 0.5, c.x - zW / 2));
+    const newY = Math.max(-zH * 0.5, Math.min(MAP_H - zH * 0.5, c.y - zH / 2));
+    animateMapView({ x: newX, y: newY, w: zW, h: zH }, 500);
+    setStateQuery('');
+    setStateDropdown(false);
+  }, [animateMapView]);
 
   // Pan drag handlers (map background, only when zoomed in)
   const startMapPan = useCallback((clientX, clientY) => {
@@ -1624,22 +1753,24 @@ function App() {
       const r = await fetch(`/api/rescue-animal?state=${encodeURIComponent(tgt.state)}&species=${encodeURIComponent(sel || 'dog')}`);
       const j = await r.json();
       if (j && j.ok && j.type === 'animal' && j.animal) {
+        const animals = j.animals || [{ animal: j.animal, rescue: j.rescue || {} }];
         data = {
           type: 'animal',
           state: tgt.state,
-          animal: j.animal,
-          rescue: j.rescue || {},
+          animals,
+          animal: animals[0].animal,
+          rescue: animals[0].rescue,
           poolInfo: j.poolInfo || null,
         };
-        if (j.animal.photo) setPhotoUrl(j.animal.photo);
+        if (animals[0].animal.photo) setPhotoUrl(animals[0].animal.photo);
         if (window.__st_capture) window.__st_capture('spinner_animal_shown', {
           state: tgt.state,
-          species: j.animal.species || sel,
-          animal_id: j.animal.id,
-          rescue_id: j.rescue && j.rescue.id,
-          rescue_name: j.rescue && j.rescue.name,
-          needs_foster: !!j.animal.needsFoster,
-          is_url_fallback: !!j.animal.listingUrlIsFallback,
+          species: animals[0].animal.species || sel,
+          animal_id: animals[0].animal.id,
+          rescue_id: animals[0].rescue && animals[0].rescue.id,
+          rescue_name: animals[0].rescue && animals[0].rescue.name,
+          needs_foster: !!animals[0].animal.needsFoster,
+          is_url_fallback: !!animals[0].animal.listingUrlIsFallback,
         });
       } else {
         data = { type: 'empty', state: tgt.state };
@@ -1872,9 +2003,44 @@ function App() {
           </div>
         )}
 
+        {/* State search */}
+        {phase === 'idle' && (
+          <div
+            className="state-search-wrap"
+            onMouseDown={e => e.stopPropagation()}
+            onTouchStart={e => e.stopPropagation()}
+          >
+            <div className="state-search-input-row">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(74,60,54,0.5)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input
+                type="text"
+                className="state-search-input"
+                placeholder="Find your state…"
+                value={stateQuery}
+                onChange={e => { setStateQuery(e.target.value); setStateDropdown(true); }}
+                onFocus={() => setStateDropdown(true)}
+                onBlur={() => setTimeout(() => setStateDropdown(false), 150)}
+              />
+            </div>
+            {stateDropdown && stateQuery.trim().length > 0 && (() => {
+              const q = stateQuery.trim().toLowerCase();
+              const matches = Object.keys(STATE_CENTROIDS).filter(s => s.toLowerCase().startsWith(q)).slice(0, 6);
+              return matches.length > 0 ? (
+                <div className="state-search-dropdown">
+                  {matches.map(s => (
+                    <button key={s} className="state-search-option" onMouseDown={() => handleStateSelect(s)}>{s}</button>
+                  ))}
+                </div>
+              ) : null;
+            })()}
+          </div>
+        )}
+
         {/* Pan hint when zoomed in */}
         {phase === 'idle' && mapView.w < MAP_W && (
-          <div className="map-zoom-hint">Drag to pan · Scroll or pinch to zoom</div>
+          <div className="map-zoom-hint">Drag to pan · Pinch or scroll to zoom · Search state above</div>
         )}
       </div>
 
@@ -1957,18 +2123,30 @@ function ShareButton({ animal, rescue, state }) {
 // ── Result Card ──
 function ResultCard({ data, photoUrl, onAgain }) {
   const fosterCTA = 'https://getsecondtail.com/sign-up/foster';
-  const [showDetails, setShowDetails] = useState(false);
+  const [activeIdx, setActiveIdx]         = useState(0);
+  const [showDetailsMap, setShowDetailsMap] = useState({});
   const [cardShareCopied, setCardShareCopied] = useState(false);
-  const handleCardShare = async () => {
-    const aa = data.animal || {};
+  const scrollRef = useRef(null);
+
+  const animals = data.type === 'animal'
+    ? (data.animals || (data.animal ? [{ animal: data.animal, rescue: data.rescue || {} }] : []))
+    : [];
+
+  const handleScroll = useCallback(() => {
+    if (!scrollRef.current) return;
+    const w = scrollRef.current.offsetWidth;
+    if (w === 0) return;
+    setActiveIdx(Math.round(scrollRef.current.scrollLeft / w));
+  }, []);
+
+  const handleCardShare = async (entry) => {
+    const aa = entry ? entry.animal : (data.animal || {});
+    const rr = entry ? entry.rescue  : (data.rescue  || {});
     if (window.__st_capture) window.__st_capture('spinner_share_click', { state: data.state, animal_id: aa.id });
-    const rr = data.rescue || {};
-    const where = (rr.city || rr.state || data.state || '');
+    const where = rr.city || rr.state || data.state || '';
     const text = `Meet ${aa.name || 'an adoptable dog'}${where ? ` in ${where}` : ''} — real rescue animals, one throw at a time.`;
-    const url = 'https://getsecondtail.com/tossthebone';
-    try {
-      if (navigator.share) { await navigator.share({ title: 'Second Tail', text, url }); return; }
-    } catch {}
+    const url  = 'https://getsecondtail.com/tossthebone';
+    try { if (navigator.share) { await navigator.share({ title: 'Second Tail', text, url }); return; } } catch {}
     try {
       await navigator.clipboard.writeText(`${text} ${url}`);
       setCardShareCopied(true);
@@ -1976,176 +2154,155 @@ function ResultCard({ data, photoUrl, onAgain }) {
     } catch {}
   };
 
-  // Format date: "Today" / "3 days ago" / "Apr 18, 2026"
-  let dateLabel = '';
-  if (data.date) {
-    const d = new Date(data.date);
-    if (!isNaN(d.getTime())) {
-      const diffDays = Math.floor((Date.now() - d.getTime()) / 86400000);
-      if (diffDays < 1) dateLabel = 'Today';
-      else if (diffDays === 1) dateLabel = 'Yesterday';
-      else if (diffDays < 30) dateLabel = `${diffDays} days ago`;
-      else dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  }
-  const sourceLabel = data.source ? data.source.replace(/^www\./, '') : '';
-
-  // ─── Real adoptable animal from RescueGroups ───
-  if (data.type === 'animal' && data.animal) {
-    const a = data.animal;
-    const r = data.rescue || {};
-    const tr = a.traits || {};
-    const displayName = a.ageYears != null ? `${a.name}, ${a.ageYears}` : a.name;
-    // Compact second-line meta
-    const metaLine = [a.breed, a.sex, a.size].filter(Boolean).join(' · ');
-    // "Good with" traits shown as labeled badges
-    const goodWithBadges = [];
-    if (tr.kidsOk)  goodWithBadges.push({ icon: '👶', label: 'Kids' });
-    if (tr.dogsOk)  goodWithBadges.push({ icon: '🐕', label: 'Dogs' });
-    if (tr.catsOk)  goodWithBadges.push({ icon: '🐈', label: 'Cats' });
-    // "About me" extras
-    const aboutChips = [];
-    if (tr.housetrained) aboutChips.push({ icon: '🏠', label: 'House-trained' });
-    if (tr.vaccinated)   aboutChips.push({ icon: '💉', label: 'Vaccinated' });
-    if (tr.activityLevel) aboutChips.push({ icon: '⚡', label: tr.activityLevel });
+  // ─── Real adoptable animals from RescueGroups — carousel ───
+  if (data.type === 'animal' && animals.length > 0) {
+    const totalSlides = animals.length + 1;
     return (
       <div className="result-overlay profile-overlay">
-        <div className="result-card animal-card-v2 profile-layout">
-          {/* Photo with close pill */}
-          <div className="photo-frame">
-            {photoUrl
-              ? <img src={photoUrl} alt={a.name} className="photo-full" onError={e => { e.target.style.display='none'; }}/>
-              : <div className="photo-placeholder-block">
-                  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#D76B1A" strokeWidth="1.5">
-                    <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2 .352-3.5 2.435-3.5 5.348 0 4.817 3.1 8.652 5.5 8.652C11 17 12 14 12 14s1 3 3.5 3c2.4 0 5.5-3.835 5.5-8.652C21 5.435 19.5 3.352 17.5 3 15.577 2.679 14 3.782 14 5.172"/>
-                  </svg>
-                </div>
-            }
-            <button
-              className={`share-pill${cardShareCopied ? ' copied' : ''}`}
-              onClick={handleCardShare}
-              aria-label={cardShareCopied ? 'Link copied' : 'Share'}
-              type="button"
-            >
-              {cardShareCopied ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
-                  <polyline points="16 6 12 2 8 6"/>
-                  <line x1="12" y1="2" x2="12" y2="15"/>
-                </svg>
-              )}
-            </button>
-            <a
-              href="https://rescuegroups.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rg-credit-badge"
-            >via RescueGroups.org</a>
-          </div>
-
-          {/* Profile body */}
-          <div className="profile-body">
-            <div className="profile-name-row">
-              <h2 className="profile-name">{displayName}</h2>
-              <span className={`status-tag ${a.needsFoster ? 'tag-foster' : 'tag-adoptable'}`}>
-                {a.needsFoster ? '🐾 Needs foster' : '✓ Adoptable'}
-              </span>
-            </div>
-            {metaLine && <div className="profile-meta">{metaLine}</div>}
-
-            <div className="profile-loc">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0, marginTop:2}}>
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                <circle cx="12" cy="10" r="3"/>
-              </svg>
-              <span>
-                <strong>{r.name || 'A local rescue'}</strong>
-                {(r.city || r.state) && <span className="loc-city"> · {[r.city, r.state].filter(Boolean).join(', ')}</span>}
-              </span>
-            </div>
-
-            {goodWithBadges.length > 0 && (
-              <section className="profile-section">
-                <h3 className="section-head">🤝 Good with</h3>
-                <div className="good-with-row">
-                  {goodWithBadges.map((b, i) => (
-                    <div key={i} className="good-with-badge">
-                      <span className="gw-icon">{b.icon}</span>
-                      <span className="gw-label">{b.label}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {(a.description || aboutChips.length > 0) && (
-              <section className="profile-section">
-                <h3 className="section-head">📖 About {a.name}</h3>
-                {aboutChips.length > 0 && (
-                  <div className="about-chips">
-                    {aboutChips.map((c, i) => (
-                      <span key={i} className="about-chip">
-                        <span>{c.icon}</span>
-                        <span>{c.label}</span>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {a.description && (
-                  <p className="profile-about-text">
-                    {showDetails || a.description.length <= 180
-                      ? a.description
-                      : a.description.slice(0, 177) + '…'}
-                    {a.description.length > 180 && (
+        <div className="result-card animal-card-v2 profile-layout" style={{overflow:'hidden'}}>
+          <div className="carousel-wrapper">
+            <div className="carousel-container" ref={scrollRef} onScroll={handleScroll}>
+              {animals.map((entry, i) => {
+                const a  = entry.animal;
+                const r  = entry.rescue || {};
+                const tr = a.traits || {};
+                const displayName  = a.ageYears != null ? `${a.name}, ${a.ageYears}` : a.name;
+                const metaLine     = [a.breed, a.sex, a.size].filter(Boolean).join(' · ');
+                const goodWithBadges = [];
+                if (tr.kidsOk) goodWithBadges.push({ icon: '👶', label: 'Kids' });
+                if (tr.dogsOk) goodWithBadges.push({ icon: '🐕', label: 'Dogs' });
+                if (tr.catsOk) goodWithBadges.push({ icon: '🐈', label: 'Cats' });
+                const aboutChips = [];
+                if (tr.housetrained)  aboutChips.push({ icon: '🏠', label: 'House-trained' });
+                if (tr.vaccinated)    aboutChips.push({ icon: '💉', label: 'Vaccinated' });
+                if (tr.activityLevel) aboutChips.push({ icon: '⚡', label: tr.activityLevel });
+                const showDetails = !!showDetailsMap[i];
+                const slidePhoto  = i === 0 ? photoUrl : a.photo;
+                return (
+                  <div key={i} className="carousel-slide">
+                    <div className="photo-frame">
+                      {slidePhoto
+                        ? <img src={slidePhoto} alt={a.name} className="photo-full" onError={e => { e.target.style.display='none'; }}/>
+                        : <div className="photo-placeholder-block">
+                            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#D76B1A" strokeWidth="1.5">
+                              <path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2 .352-3.5 2.435-3.5 5.348 0 4.817 3.1 8.652 5.5 8.652C11 17 12 14 12 14s1 3 3.5 3c2.4 0 5.5-3.835 5.5-8.652C21 5.435 19.5 3.352 17.5 3 15.577 2.679 14 3.782 14 5.172"/>
+                            </svg>
+                          </div>
+                      }
                       <button
+                        className={`share-pill${cardShareCopied && activeIdx === i ? ' copied' : ''}`}
+                        onClick={() => handleCardShare(entry)}
+                        aria-label="Share"
                         type="button"
-                        onClick={() => setShowDetails(v => !v)}
-                        className="inline-more"
-                      >{showDetails ? ' Less' : ' More'}</button>
-                    )}
-                  </p>
-                )}
-              </section>
-            )}
-
-            {a.listingUrl && (
-              <a
-                href={a.listingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-foster profile-cta"
-                onClick={() => window.__st_capture && window.__st_capture('spinner_meet_click', {
-                  state: data.state,
-                  animal_id: a.id,
-                  rescue_id: r.id,
-                  rescue_name: r.name,
-                  is_url_fallback: !!a.listingUrlIsFallback,
-                })}
-              >
-                {a.listingUrlIsFallback ? `Find ${a.name} online →` : `Meet ${a.name} →`}
-              </a>
-            )}
-            <a
-              href={fosterCTA}
-              target="_blank"
-              className="btn-rescue profile-cta-secondary"
-              onClick={() => window.__st_capture && window.__st_capture('spinner_signup_click', {
-                state: data.state,
-                animal_id: a.id,
-                rescue_id: r.id,
+                      >
+                        {cardShareCopied && activeIdx === i ? (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        ) : (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                            <polyline points="16 6 12 2 8 6"/>
+                            <line x1="12" y1="2" x2="12" y2="15"/>
+                          </svg>
+                        )}
+                      </button>
+                      <a href="https://rescuegroups.org" target="_blank" rel="noopener noreferrer" className="rg-credit-badge">via RescueGroups.org</a>
+                    </div>
+                    <div className="profile-body">
+                      <div className="profile-name-row">
+                        <h2 className="profile-name">{displayName}</h2>
+                        <span className={`status-tag ${a.needsFoster ? 'tag-foster' : 'tag-adoptable'}`}>
+                          {a.needsFoster ? '🐾 Needs foster' : '✓ Adoptable'}
+                        </span>
+                      </div>
+                      {metaLine && <div className="profile-meta">{metaLine}</div>}
+                      <div className="profile-loc">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0, marginTop:2}}>
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                          <circle cx="12" cy="10" r="3"/>
+                        </svg>
+                        <span>
+                          <strong>{r.name || 'A local rescue'}</strong>
+                          {(r.city || r.state) && <span className="loc-city"> · {[r.city, r.state].filter(Boolean).join(', ')}</span>}
+                        </span>
+                      </div>
+                      {goodWithBadges.length > 0 && (
+                        <section className="profile-section">
+                          <h3 className="section-head">🤝 Good with</h3>
+                          <div className="good-with-row">
+                            {goodWithBadges.map((b, bi) => (
+                              <div key={bi} className="good-with-badge">
+                                <span className="gw-icon">{b.icon}</span>
+                                <span className="gw-label">{b.label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                      {(a.description || aboutChips.length > 0) && (
+                        <section className="profile-section">
+                          <h3 className="section-head">📖 About {a.name}</h3>
+                          {aboutChips.length > 0 && (
+                            <div className="about-chips">
+                              {aboutChips.map((c, ci) => (
+                                <span key={ci} className="about-chip">
+                                  <span>{c.icon}</span>
+                                  <span>{c.label}</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          {a.description && (
+                            <p className="profile-about-text">
+                              {showDetails || a.description.length <= 180
+                                ? a.description
+                                : a.description.slice(0, 177) + '…'}
+                              {a.description.length > 180 && (
+                                <button type="button" onClick={() => setShowDetailsMap(prev => ({ ...prev, [i]: !prev[i] }))} className="inline-more">
+                                  {showDetails ? ' Less' : ' More'}
+                                </button>
+                              )}
+                            </p>
+                          )}
+                        </section>
+                      )}
+                      {a.listingUrl && (
+                        <a
+                          href={a.listingUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-foster profile-cta"
+                          onClick={() => window.__st_capture && window.__st_capture('spinner_meet_click', {
+                            state: data.state, animal_id: a.id, rescue_id: r.id,
+                            rescue_name: r.name, is_url_fallback: !!a.listingUrlIsFallback,
+                          })}
+                        >
+                          {a.listingUrlIsFallback ? `Find ${a.name} online →` : `Meet ${a.name} →`}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
               })}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-              Sign up to foster with Second Tail
-            </a>
-
-
+              {/* CTA slide */}
+              <div className="carousel-slide">
+                <div className="cta-slide">
+                  <div className="cta-slide-emoji">🐾</div>
+                  <div className="cta-slide-headline">Open your home.<br/>Change a life.</div>
+                  <div className="cta-slide-body">Sign up as a foster on Second Tail and help connect rescue dogs with loving families in your area.</div>
+                  <a
+                    href={fosterCTA}
+                    target="_blank"
+                    className="cta-slide-btn"
+                    onClick={() => window.__st_capture && window.__st_capture('spinner_signup_click', { state: data.state })}
+                  >Become a foster →</a>
+                </div>
+              </div>
+            </div>
+            <div className="carousel-dots">
+              {Array.from({ length: totalSlides }, (_, i) => (
+                <span key={i} className={`carousel-dot${i === activeIdx ? ' active' : ''}`}/>
+              ))}
+            </div>
           </div>
         </div>
         <button className="throw-again-cta" onClick={() => { if (window.__st_capture) window.__st_capture("spinner_throw_again"); onAgain(); }} type="button">↺ Throw again</button>
@@ -2154,7 +2311,6 @@ function ResultCard({ data, photoUrl, onAgain }) {
   }
 
   // ─── No animals available ───
-  // (This only fires when RescueGroups has no dogs listed for this state.)
   return (
     <div className="result-overlay">
       <div className="result-card">

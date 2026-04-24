@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import {
-  ArrowLeft, PawPrint, Heart, Mail, Users,
+  PawPrint, Heart, Mail, Users,
 } from 'lucide-react'
 import { AnimalProfileModal } from '@/app/components/foster/animal-profile-modal'
 import { InviteRescueModal } from '@/app/components/foster/invite-rescue-modal'
@@ -98,21 +97,7 @@ export default function FosterExplorePage() {
 
   return (
     <div className="min-h-screen bg-[#FDF6EC]">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-4">
-          <Link
-            href={`/org/${orgId}/foster/dashboard`}
-            className="inline-flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to dashboard
-          </Link>
-          <span className="flex-1" />
-        </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-28 md:pb-10 space-y-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Explore nearby animals</h1>
           <p className="text-sm text-gray-600 mt-1">

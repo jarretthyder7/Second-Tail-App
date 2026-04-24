@@ -40,7 +40,7 @@ export function InviteRescueModal({
     setOrgName(prefillOrgName || '')
     setRescueEmail(prefillEmail || '')
     const defaultMsg = prefillAnimalName
-      ? `Hi! I'm ${fosterName || 'a foster-to-be'}${fosterCity || fosterState ? ` in ${[fosterCity, fosterState].filter(Boolean).join(', ')}` : ''}. I saw ${prefillAnimalName} on Second Tail, a free tool that helps rescues manage fosters. I'd love to foster with you — and Second Tail would make the process easier for both of us.`
+      ? `Hi! I'm ${fosterName || 'a foster-to-be'}${fosterCity || fosterState ? ` in ${[fosterCity, fosterState].filter(Boolean).join(', ')}` : ''}. I saw ${prefillAnimalName} on Second Tail, a free tool that helps rescues manage fosters. I'd love to foster with you. If you'd like to learn more about Second Tail, you can sign up as a rescue at getsecondtail.com/sign-up/rescue.`
       : (prefillMessage || '')
     setMessage(defaultMsg)
     setStatus('idle')
@@ -67,9 +67,9 @@ export function InviteRescueModal({
       '',
       message && message.trim()
         ? message.trim()
-        : `I'm ${fosterFirst}${where ? ` in ${where}` : ''}. I found you through Second Tail (getsecondtail.com), a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, all in one place. I'm signed up and ready to foster.`,
+        : `I'm ${fosterFirst}${where ? ` in ${where}` : ''}. I found you through Second Tail (getsecondtail.com), a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, and more, all in one place. I'm signed up as a foster and ready to go.`,
       '',
-      `If you'd like to try Second Tail together, I can introduce you to the team. Either way, I'd love to learn more about your fostering process.`,
+      `If you'd like to learn more about Second Tail, you can sign up as a rescue at getsecondtail.com/sign-up/rescue. Either way, I'd love to learn more about your fostering process.`,
       '',
       `Thanks for the work you do!`,
       `— ${fosterFirst}`,
@@ -96,7 +96,7 @@ export function InviteRescueModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 pb-20 sm:pb-4 z-[60]">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">

@@ -2288,11 +2288,7 @@ function ResultCard({ data, photoUrl, onAgain }) {
                 </div>
               </div>
             </div>
-            <div className="carousel-dots">
-              {Array.from({ length: totalSlides }, (_, i) => (
-                <span key={i} className={`carousel-dot${i === activeIdx ? ' active' : ''}`}/>
-              ))}
-            </div>
+
           </div>
         </div>
         <button className="throw-again-cta" onClick={() => { if (window.__st_capture) window.__st_capture("spinner_throw_again"); onAgain(); }} type="button">↺ Throw again</button>

@@ -186,15 +186,17 @@ function FosterDogProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-28">
-      <div className="max-w-5xl mx-auto p-4 sm:p-6">
+    <div className="min-h-screen bg-background pb-28 overflow-x-hidden">
+      <div className="max-w-5xl mx-auto w-full p-4 sm:p-6">
         <div className="grid lg:grid-cols-[320px_1fr] gap-6">
           {/* LEFT COLUMN - Animal Summary (Always Visible) */}
-          <div className="space-y-4">
+          <div className="space-y-4 min-w-0">
             {/* Animal Photo & Basic Info Card */}
             <div className="bg-card rounded-2xl shadow-sm overflow-hidden">
-              {/* Photo with reliable fallback */}
-              <div className="aspect-square relative bg-muted">
+              {/* Photo with reliable fallback.
+                  Mobile: 4:3 so the photo doesn't dominate a whole screen.
+                  lg+: square to match the sidebar layout. */}
+              <div className="aspect-[4/3] lg:aspect-square relative bg-muted">
                 {!imageError && dog.image_url ? (
                   <img
                     src={dog.image_url || "/placeholder.svg"}
@@ -298,10 +300,10 @@ function FosterDogProfilePage() {
           </div>
 
           {/* RIGHT COLUMN - Tabbed Content */}
-          <div className="bg-card rounded-2xl shadow-sm">
-            {/* Tab Navigation */}
-            <div className="border-b border-border px-4 pt-4 rounded-t-2xl overflow-hidden">
-              <div className="flex gap-1 overflow-x-auto pb-0 -mb-px">
+          <div className="bg-card rounded-2xl shadow-sm min-w-0 overflow-hidden">
+            {/* Tab Navigation — horizontal scroll on narrow screens so all tabs stay reachable */}
+            <div className="border-b border-border px-4 pt-4">
+              <div className="flex gap-1 overflow-x-auto -mb-px [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {[
                   { id: "overview", label: "Overview", icon: FileText },
                   { id: "journey", label: "Journey", icon: Heart },

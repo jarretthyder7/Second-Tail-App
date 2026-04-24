@@ -64,7 +64,7 @@ function buildMailto(a: Animal, foster: Foster): string | null {
     '',
     `I'm ${fosterName}${where ? ` in ${where}` : ''}. I saw ${a.name} on Second Tail (getsecondtail.com) and would love to foster them.`,
     '',
-    `Second Tail is a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, all in one place. I'm signed up and ready. If you'd like to try it together, I can introduce you to the team.`,
+    `Second Tail is a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, and more, all in one place. I'm signed up as a foster. If you'd like to learn more about how it works for rescues, you can sign up at getsecondtail.com/sign-up/rescue.`,
     '',
     `Either way, I'd love to learn more about ${a.name} and your fostering process.`,
     '',
@@ -100,7 +100,7 @@ export function AnimalProfileModal({
   const rescueLocation = [a.rescue?.city, a.rescue?.state].filter(Boolean).join(', ')
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/55 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 bg-black/55 backdrop-blur-sm">
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92dvh] overflow-y-auto flex flex-col"
         style={{ WebkitOverflowScrolling: 'touch' }}

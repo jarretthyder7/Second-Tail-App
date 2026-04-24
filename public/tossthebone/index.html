@@ -1011,8 +1011,8 @@
     @media (max-width: 600px) { .state-search-wrap { width: 180px; } }
 
     @keyframes swipeHintPulse {
-      0%, 100% { opacity: 0.7; transform: translateY(-50%) translateX(0); }
-      50%       { opacity: 1;   transform: translateY(-50%) translateX(3px); }
+      0%, 100% { opacity: 0.75; transform: translateY(-50%) translateX(0); }
+      50%       { opacity: 1;    transform: translateY(-50%) translateX(5px); }
     }
 
     /* ── Carousel ── */
@@ -2185,12 +2185,13 @@ function ResultCard({ data, photoUrl, onAgain }) {
                       <a href="https://rescuegroups.org" target="_blank" rel="noopener noreferrer" className="rg-credit-badge">via RescueGroups.org</a>
                       {i === 0 && !hasSwipedOnce && animals.length > 1 && (
                         <div style={{
-                          position:'absolute', right:10, top:'50%', transform:'translateY(-50%)',
-                          background:'rgba(0,0,0,0.32)', borderRadius:'50%',
-                          width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center',
-                          animation:'swipeHintPulse 1.4s ease-in-out infinite', pointerEvents:'none',
+                          position:'absolute', right:12, top:'50%', transform:'translateY(-50%)',
+                          background:'rgba(0,0,0,0.52)', borderRadius:'50%',
+                          width:44, height:44, display:'flex', alignItems:'center', justifyContent:'center',
+                          animation:'swipeHintPulse 1.2s ease-in-out infinite', pointerEvents:'none',
+                          boxShadow:'0 2px 12px rgba(0,0,0,0.35)',
                         }}>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="9 18 15 12 9 6"/>
                           </svg>
                         </div>

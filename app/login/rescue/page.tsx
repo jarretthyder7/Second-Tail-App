@@ -203,13 +203,13 @@ function RescueLoginContent() {
           {/* Footer links */}
           <div className="mt-5 text-center space-y-2">
             <p className="text-sm text-gray-500">
-              Don&apos;t have an account?{" "}
+              Not invited yet?{" "}
               <Link
                 href="/sign-up/rescue"
                 className="font-semibold hover:opacity-80 transition"
                 style={{ color: "#D76B1A" }}
               >
-                Register your rescue
+                Join the waitlist
               </Link>
             </p>
             <p className="text-xs text-gray-400">

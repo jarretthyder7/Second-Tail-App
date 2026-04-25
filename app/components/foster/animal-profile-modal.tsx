@@ -64,7 +64,7 @@ function buildMailto(a: Animal, foster: Foster): string | null {
     '',
     `I'm ${fosterName}${where ? ` in ${where}` : ''}. I saw ${a.name} on Second Tail (getsecondtail.com) and would love to foster them.`,
     '',
-    `Second Tail is a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, and more, all in one place. I'm signed up as a foster. If you'd like to learn more about how it works for rescues, you can sign up at getsecondtail.com/sign-up/rescue.`,
+    `Second Tail is a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, and more, all in one place. I'm signed up as a foster. If you'd like to learn more about how it works for rescues, you can join their rescue waitlist at getsecondtail.com/sign-up/rescue.`,
     '',
     `Either way, I'd love to learn more about ${a.name} and your fostering process.`,
     '',

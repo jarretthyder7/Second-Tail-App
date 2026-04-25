@@ -411,7 +411,7 @@ export const emailTemplates = {
           Second Tail makes it easy to manage your foster network, coordinate care, and keep everyone connected — all in one place.
         </p>
         <div style="text-align: center; margin: 32px 0;">
-          <a href="https://getsecondtail.com/sign-up/rescue" style="display: inline-block; background-color: #d97706; color: white; padding: 16px 40px; border-radius: 24px; font-weight: bold; font-size: 16px; text-decoration: none;">Register Your Rescue Free</a>
+          <a href="https://getsecondtail.com/sign-up/rescue" style="display: inline-block; background-color: #d97706; color: white; padding: 16px 40px; border-radius: 24px; font-weight: bold; font-size: 16px; text-decoration: none;">Join the Rescue Waitlist</a>
         </div>
         <p style="color: #999; font-size: 12px; margin-top: 30px;">Second Tail helps rescue organizations coordinate fosters, track animal care, and focus on what matters — saving lives.</p>
       </div>

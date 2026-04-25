@@ -40,7 +40,7 @@ export function InviteRescueModal({
     setOrgName(prefillOrgName || '')
     setRescueEmail(prefillEmail || '')
     const defaultMsg = prefillAnimalName
-      ? `Hi! I'm ${fosterName || 'a foster-to-be'}${fosterCity || fosterState ? ` in ${[fosterCity, fosterState].filter(Boolean).join(', ')}` : ''}. I saw ${prefillAnimalName} on Second Tail, a free tool that helps rescues manage fosters. I'd love to foster with you. If you'd like to learn more about Second Tail, you can sign up as a rescue at getsecondtail.com/sign-up/rescue.`
+      ? `Hi! I'm ${fosterName || 'a foster-to-be'}${fosterCity || fosterState ? ` in ${[fosterCity, fosterState].filter(Boolean).join(', ')}` : ''}. I saw ${prefillAnimalName} on Second Tail, a free tool that helps rescues manage fosters. I'd love to foster with you. If you'd like to learn more about Second Tail, you can join their rescue waitlist at getsecondtail.com/sign-up/rescue.`
       : (prefillMessage || '')
     setMessage(defaultMsg)
     setStatus('idle')
@@ -69,7 +69,7 @@ export function InviteRescueModal({
         ? message.trim()
         : `I'm ${fosterFirst}${where ? ` in ${where}` : ''}. I found you through Second Tail (getsecondtail.com), a free platform that helps rescues and fosters coordinate — communication, care plans, supply requests, and more, all in one place. I'm signed up as a foster and ready to go.`,
       '',
-      `If you'd like to learn more about Second Tail, you can sign up as a rescue at getsecondtail.com/sign-up/rescue. Either way, I'd love to learn more about your fostering process.`,
+      `If you'd like to learn more about Second Tail, you can join their rescue waitlist at getsecondtail.com/sign-up/rescue. Either way, I'd love to learn more about your fostering process.`,
       '',
       `Thanks for the work you do!`,
       `— ${fosterFirst}`,

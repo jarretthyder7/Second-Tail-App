@@ -57,7 +57,7 @@ export default function Home() {
                 className="inline-flex items-center justify-center w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 text-white rounded-full font-semibold text-base sm:text-lg hover:opacity-90 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 style={{ backgroundColor: "#D76B1A" }}
               >
-                Register Your Rescue
+                Join the rescue waitlist
               </Link>
               <Link
                 href="/for-fosters"
@@ -239,7 +239,7 @@ export default function Home() {
                     className="inline-block px-8 py-3.5 rounded-full font-semibold text-base hover:opacity-90 transition-all text-white shadow-md hover:shadow-lg hover:-translate-y-0.5"
                     style={{ backgroundColor: "#5a4a42" }}
                   >
-                    Register Your Rescue
+                    Join the rescue waitlist
                   </Link>
                 </div>
               </div>
@@ -378,7 +378,7 @@ export default function Home() {
                 href="/sign-up/rescue"
                 className="inline-flex items-center justify-center w-full sm:w-fit bg-white text-[#D76B1A] rounded-full font-semibold text-base px-8 py-4 hover:bg-gray-50 transition-colors"
               >
-                Register Your Rescue →
+                Join the waitlist →
               </Link>
             </div>
 

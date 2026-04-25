@@ -110,7 +110,7 @@ export function SiteHeader() {
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">Rescue Org</div>
-                      <div className="text-xs text-gray-500 font-normal">Create your account</div>
+                      <div className="text-xs text-gray-500 font-normal">Join the waitlist</div>
                     </div>
                   </Link>
                   <div className="h-px bg-gray-100" />
@@ -162,7 +162,7 @@ export function SiteHeader() {
                     <Users className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-base">Register Your Rescue</div>
+                    <div className="font-semibold text-base">Join the rescue waitlist</div>
                     <div className="text-xs text-white/80">Manage your foster network</div>
                   </div>
                 </Link>

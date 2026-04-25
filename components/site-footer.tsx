@@ -24,7 +24,7 @@ export function SiteFooter() {
               Sign Up to Foster
             </Link>
             <Link href="/sign-up/rescue" className="text-white/90 hover:text-white transition-colors text-sm">
-              Register a Rescue
+              Rescue Waitlist
             </Link>
           </div>
         </div>

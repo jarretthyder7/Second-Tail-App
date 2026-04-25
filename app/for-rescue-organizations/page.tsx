@@ -29,7 +29,7 @@ export default function ForRescueOrganizationsPage() {
               className="inline-block w-full sm:w-auto px-6 sm:px-10 py-3 sm:py-5 text-white rounded-full font-semibold text-sm sm:text-base hover:opacity-90 transition-colors shadow-lg"
               style={{ backgroundColor: "#50402B" }}
             >
-              Register a Rescue
+              Join the waitlist
             </Link>
           </div>
         </div>
@@ -263,14 +263,14 @@ export default function ForRescueOrganizationsPage() {
                   href="/sign-up/rescue"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-white text-[#D76B1A] rounded-full font-semibold text-base sm:text-lg hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
                 >
-                  Register Your Rescue
+                  Join the waitlist
                   <ArrowRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/login/rescue"
                   className="text-sm sm:text-base font-semibold text-white/90 hover:text-white hover:underline underline-offset-4 transition-colors"
                 >
-                  Already have an account? Log in →
+                  Already invited? Log in →
                 </Link>
               </div>
               <p className="text-xs sm:text-sm text-white/70 pt-6">

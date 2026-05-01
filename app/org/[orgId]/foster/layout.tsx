@@ -277,9 +277,15 @@ export default function OrgFosterLayout({
                         <BookOpen className="w-4 h-4 text-gray-400" />
                         Learn
                       </Link>
+                      {/*
+                        Reimbursements lives in the desktop top-tab nav, so it's
+                        redundant in the dropdown there. Mobile bottom nav
+                        doesn't include it, so keep it in the dropdown on mobile
+                        only.
+                      */}
                       <Link
                         href={`/org/${orgId}/foster/reimbursements`}
-                        className="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
+                        className="md:hidden flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
                         onClick={() => setShowUserMenu(false)}
                       >
                         <DollarSign className="w-4 h-4 text-gray-400" />

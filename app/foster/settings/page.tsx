@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { ArrowLeft, Bell, User, LogOut, Save } from "lucide-react"
+import { ArrowLeft, Bell, User, LogOut, Save, HelpCircle, X, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
 
 export default function FosterSettingsPage() {
@@ -18,6 +18,9 @@ export default function FosterSettingsPage() {
     email_messages: true,
     email_reminders: true,
   })
+  const [showSupportModal, setShowSupportModal] = useState(false)
+  const [submittingTicket, setSubmittingTicket] = useState(false)
+  const [ticketSubmitted, setTicketSubmitted] = useState(false)
 
   useEffect(() => {
     async function loadProfile() {
@@ -92,6 +95,46 @@ export default function FosterSettingsPage() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/login/foster")
+  }
+
+  const handleSubmitTicket = async (formData: FormData) => {
+    setSubmittingTicket(true)
+    try {
+      // Client-side size guard so the user gets an immediate, clear error
+      // instead of a slow upload that the server then rejects.
+      const MAX_TOTAL_BYTES = 25 * 1024 * 1024
+      const files = formData
+        .getAll("attachments")
+        .filter((f): f is File => f instanceof File && f.size > 0)
+      const totalBytes = files.reduce((acc, f) => acc + f.size, 0)
+      if (totalBytes > MAX_TOTAL_BYTES) {
+        alert(
+          `Attachments are too large (${(totalBytes / 1024 / 1024).toFixed(1)}MB). Max ${
+            MAX_TOTAL_BYTES / 1024 / 1024
+          }MB total.`,
+        )
+        setSubmittingTicket(false)
+        return
+      }
+
+      // Don't set Content-Type — let the browser set the multipart boundary.
+      const response = await fetch("/api/foster/support-tickets", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) throw new Error("Failed to submit ticket")
+      setTicketSubmitted(true)
+      setTimeout(() => {
+        setShowSupportModal(false)
+        setTicketSubmitted(false)
+      }, 2000)
+    } catch (error) {
+      console.error("Error submitting ticket:", error)
+      alert("Failed to submit support ticket. Please try again.")
+    } finally {
+      setSubmittingTicket(false)
+    }
   }
 
   if (loading) {
@@ -210,6 +253,25 @@ export default function FosterSettingsPage() {
           </button>
         </div>
 
+        {/* Support */}
+        <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <HelpCircle className="w-5 h-5 text-[#D76B1A]" />
+            <h2 className="text-lg font-semibold text-[#5A4A42]">Support</h2>
+          </div>
+          <p className="text-sm text-[#2E2E2E]/70 mb-4">
+            Run into a bug, have a question, or want to suggest a feature? Send us a note and
+            we'll get back to you.
+          </p>
+          <button
+            onClick={() => setShowSupportModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#D76B1A] text-white text-sm font-semibold hover:bg-[#D76B1A]/90 transition"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Contact Support
+          </button>
+        </div>
+
         {/* Account Actions */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <h2 className="text-lg font-semibold text-[#5A4A42] mb-4">Account</h2>
@@ -225,6 +287,116 @@ export default function FosterSettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Support Modal */}
+      {showSupportModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-[#F7E2BD]">
+              <div className="flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-[#D76B1A]" />
+                <h2 className="text-lg font-semibold text-[#5A4A42]">Contact Support</h2>
+              </div>
+              <button
+                onClick={() => setShowSupportModal(false)}
+                className="p-1 hover:bg-[#FBF8F4] rounded-lg transition"
+              >
+                <X className="w-5 h-5 text-[#5A4A42]" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              {ticketSubmitted ? (
+                <div className="text-center py-8">
+                  <CheckCircle2 className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-semibold text-[#5A4A42] mb-2">Ticket Submitted!</h3>
+                  <p className="text-sm text-[#2E2E2E]/70">Thank you for reaching out. We'll be in touch soon.</p>
+                </div>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    handleSubmitTicket(new FormData(e.currentTarget))
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Category</label>
+                    <select
+                      name="category"
+                      required
+                      className="w-full px-4 py-2 border-2 border-[#F7E2BD] rounded-lg focus:border-[#D76B1A] focus:outline-none"
+                    >
+                      <option value="">Select a category</option>
+                      <option value="Technical Issue">Technical Issue</option>
+                      <option value="Account Help">Account Help</option>
+                      <option value="Feature Request">Feature Request</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Subject</label>
+                    <input
+                      type="text"
+                      name="subject"
+                      required
+                      placeholder="Brief description of your issue"
+                      className="w-full px-4 py-2 border-2 border-[#F7E2BD] bg-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">Message</label>
+                    <textarea
+                      name="message"
+                      required
+                      rows={4}
+                      placeholder="Please provide details about your request..."
+                      className="w-full px-4 py-2 border-2 border-[#F7E2BD] bg-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">
+                      Attachments{" "}
+                      <span className="text-[#5A4A42]/60 font-normal">
+                        (optional · photos or videos · 25MB max total)
+                      </span>
+                    </label>
+                    <input
+                      type="file"
+                      name="attachments"
+                      multiple
+                      accept="image/*,video/*"
+                      className="w-full text-sm text-[#5A4A42] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-[#F7E2BD] file:text-sm file:font-medium file:bg-white file:text-[#5A4A42] hover:file:bg-[#FBF8F4] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowSupportModal(false)}
+                      className="flex-1 px-4 py-2 border-2 border-[#D76B1A] text-[#D76B1A] font-medium rounded-lg hover:bg-[#FBF8F4] transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={submittingTicket}
+                      className="flex-1 px-4 py-2 bg-[#D76B1A] text-white font-medium rounded-lg hover:bg-[#D76B1A]/90 transition disabled:opacity-50"
+                    >
+                      {submittingTicket ? "Submitting..." : "Submit"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

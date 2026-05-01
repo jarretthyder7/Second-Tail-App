@@ -3,7 +3,18 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { BookOpen, Heart, Lightbulb, MessageCircle, Users, Award, ExternalLink } from "lucide-react"
+import {
+  BookOpen,
+  Heart,
+  Lightbulb,
+  MessageCircle,
+  Users,
+  Award,
+  ExternalLink,
+  Smartphone,
+  Share2,
+  MoreVertical,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function LearnPage() {
@@ -44,6 +55,165 @@ export default function LearnPage() {
         <p className="text-lg text-text-muted max-w-2xl mx-auto">
           Everything you need to know about using Second Tail and making a difference
         </p>
+      </div>
+
+      {/* Install on Your Phone (PWA) */}
+      <div className="rounded-3xl p-8 space-y-6 bg-gradient-to-br from-primary-orange/10 to-primary-orange/5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary-orange/15 flex items-center justify-center flex-shrink-0">
+            <Smartphone className="w-5 h-5 text-primary-orange" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-primary-bark">Install Second Tail on Your Phone</h2>
+            <p className="text-sm text-text-muted">One-tap access from your home screen — no app store needed.</p>
+          </div>
+        </div>
+
+        <p className="text-sm md:text-base text-text-muted max-w-3xl">
+          Second Tail works as an installable app on iPhone and Android. Once installed, it
+          opens fullscreen (no browser bar), gets its own home-screen icon, and stays signed in
+          so you can update logs, photos, and messages in seconds.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* iOS card */}
+          <div className="bg-white rounded-2xl p-6 space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-primary-orange/10">
+              {/* Apple mark */}
+              <svg
+                viewBox="0 0 16 20"
+                className="w-6 h-6 text-primary-bark"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M11.624 0c.066 0 .133 0 .203.005C12.052 1.41 11.55 2.69 10.792 3.6c-.81.974-2.135 1.726-3.41 1.625-.094-1.355.557-2.776 1.275-3.65C9.428.66 10.875.027 11.624 0zM15.27 14.59c-.426.985-.628 1.425-1.176 2.296-.764 1.215-1.84 2.728-3.176 2.74-1.187.012-1.493-.77-3.106-.762-1.612.008-1.95.776-3.137.764-1.336-.012-2.357-1.378-3.121-2.594C-.422 13.652-.65 9.523 1.087 7.32c1.234-1.566 3.18-2.482 4.998-2.482 1.852 0 3.018.94 4.55.94 1.488 0 2.394-.94 4.534-.94.832 0 2.844.073 4.286 2.21-3.768 2.064-3.156 7.45.815 7.542z" />
+              </svg>
+              <h3 className="text-lg font-semibold text-primary-bark">iPhone (Safari)</h3>
+            </div>
+
+            <ol className="space-y-4">
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  1
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Open Second Tail in Safari</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    It has to be Safari, not Chrome — Apple only allows installs from Safari.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  2
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Tap the Share button</p>
+                  <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <span>Look for the</span>
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-100 border border-gray-200">
+                      <Share2 className="w-3.5 h-3.5 text-primary-bark" />
+                    </span>
+                    <span>icon at the bottom (or top) of Safari.</span>
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  3
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Choose "Add to Home Screen"</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    Scroll down in the share sheet if you don't see it right away.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  4
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Tap "Add" — done!</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    The Second Tail icon appears on your home screen like any other app.
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </div>
+
+          {/* Android card */}
+          <div className="bg-white rounded-2xl p-6 space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-primary-orange/10">
+              <Smartphone className="w-6 h-6 text-primary-bark" />
+              <h3 className="text-lg font-semibold text-primary-bark">Android (Chrome)</h3>
+            </div>
+
+            <ol className="space-y-4">
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  1
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Open Second Tail in Chrome</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    You may see an "Install app" banner at the bottom — if you do, just tap it and skip the next step.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  2
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Otherwise, tap the menu</p>
+                  <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <span>The</span>
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded bg-gray-100 border border-gray-200">
+                      <MoreVertical className="w-3.5 h-3.5 text-primary-bark" />
+                    </span>
+                    <span>icon in the top-right of Chrome.</span>
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  3
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">
+                    Choose "Install app" or "Add to Home screen"
+                  </p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    The exact wording varies a bit between Android versions.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-orange/10 text-primary-orange font-bold text-sm flex items-center justify-center">
+                  4
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-primary-bark">Confirm — done!</p>
+                  <p className="text-xs text-text-muted mt-0.5">
+                    Second Tail will sit alongside your other apps in your launcher.
+                  </p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </div>
+
+        {/* Heads-up tip */}
+        <div className="bg-white/60 rounded-xl p-4 flex gap-3">
+          <Lightbulb className="w-5 h-5 text-primary-orange flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-text-muted">
+            <strong className="text-primary-bark">Heads up:</strong> push notifications from the
+            installed app are coming soon. For now, we'll email you whenever there's a new
+            message or update from your rescue.
+          </div>
+        </div>
       </div>
 
       <div className="bg-gradient-to-br from-primary-orange/10 to-primary-orange/5 rounded-3xl p-8 space-y-6">

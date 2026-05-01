@@ -302,12 +302,12 @@ export default function OrgAdminLayout({
     },
     {
       href: `/org/${orgId}/admin/team-chat`,
-      label: "Chat",
+      label: "Channels",
       icon: MessageSquare,
       adminOnly: false,
       section: "staff",
       staffOnly: true,
-      description: "Internal chat for rescue staff only",
+      description: "Internal channels for rescue staff only",
     },
     // Admin tools
     { href: `/org/${orgId}/admin/import`, label: "Import Data", icon: Upload, adminOnly: true, section: "admin" },

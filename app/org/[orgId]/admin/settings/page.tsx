@@ -176,15 +176,29 @@ function OrgSettingsContent() {
   const handleSubmitTicket = async (formData: FormData) => {
     setSubmittingTicket(true)
     try {
+      formData.append("orgId", orgId)
+
+      // Client-side size guard so the user gets an immediate, clear error
+      // instead of a slow upload that the server then rejects.
+      const MAX_TOTAL_BYTES = 25 * 1024 * 1024
+      const files = formData
+        .getAll("attachments")
+        .filter((f): f is File => f instanceof File && f.size > 0)
+      const totalBytes = files.reduce((acc, f) => acc + f.size, 0)
+      if (totalBytes > MAX_TOTAL_BYTES) {
+        alert(
+          `Attachments are too large (${(totalBytes / 1024 / 1024).toFixed(1)}MB). Max ${
+            MAX_TOTAL_BYTES / 1024 / 1024
+          }MB total.`,
+        )
+        setSubmittingTicket(false)
+        return
+      }
+
+      // Don't set Content-Type — let the browser set the multipart boundary.
       const response = await fetch("/api/admin/support-tickets", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orgId,
-          subject: formData.get("subject"),
-          message: formData.get("message"),
-          category: formData.get("category"),
-        }),
+        body: formData,
       })
 
       if (!response.ok) throw new Error("Failed to submit ticket")
@@ -866,6 +880,22 @@ function OrgSettingsContent() {
                       rows={4}
                       placeholder="Please provide details about your request..."
                       className="w-full px-4 py-2 border-2 border-[#F7E2BD] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 resize-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#5A4A42] mb-2">
+                      Attachments{" "}
+                      <span className="text-[#5A4A42]/60 font-normal">
+                        (optional · photos or videos · 25MB max total)
+                      </span>
+                    </label>
+                    <input
+                      type="file"
+                      name="attachments"
+                      multiple
+                      accept="image/*,video/*"
+                      className="w-full text-sm text-[#5A4A42] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-2 file:border-[#F7E2BD] file:text-sm file:font-medium file:bg-white file:text-[#5A4A42] hover:file:bg-[#FBF8F4] cursor-pointer"
                     />
                   </div>
 

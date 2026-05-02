@@ -555,6 +555,25 @@ function ImportDataContent() {
       }
 
       if (importType === "fosters") {
+        // invitations.invited_by is NOT NULL — must be the current user's id
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
+        if (!user) {
+          setError("You're not signed in. Refresh and try again.")
+          setImporting(false)
+          return
+        }
+
+        // 12-char unique code per invitation (used in the signup link). Matches
+        // generateInvitationCode in lib/supabase/queries.ts.
+        const generateCode = () => {
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+          let code = ""
+          for (let i = 0; i < 12; i++) code += chars.charAt(Math.floor(Math.random() * chars.length))
+          return code
+        }
+
         for (const row of selectedRows) {
           const fullName = [row.data.first_name?.trim(), row.data.last_name?.trim()].filter(Boolean).join(" ")
           const displayName = fullName || row.data.email?.trim() || "Unknown"
@@ -562,6 +581,8 @@ function ImportDataContent() {
             organization_id: orgId,
             email: row.data.email?.trim(),
             status: "pending",
+            invited_by: user.id,
+            code: generateCode(),
           })
 
           if (!error) {
@@ -1401,18 +1422,20 @@ function ImportDataContent() {
               <h2 className="text-2xl font-bold text-[#5A4A42] mb-2">
                 {allSucceeded
                   ? "You're Ready to Go!"
-                  : failCount === successCount + failCount
+                  : successCount === 0
                     ? "Import didn't go through"
                     : "Imported with some errors"}
               </h2>
-              <p className="text-[#5A4A42]/70 mb-2">
-                {importResults.animals > 0 &&
-                  `${importResults.animals} animal${importResults.animals === 1 ? "" : "s"}`}
-                {importResults.animals > 0 && importResults.fosters > 0 && " and "}
-                {importResults.fosters > 0 &&
-                  `${importResults.fosters} foster${importResults.fosters === 1 ? "" : "s"}`}{" "}
-                imported successfully.
-              </p>
+              {successCount > 0 && (
+                <p className="text-[#5A4A42]/70 mb-2">
+                  {importResults.animals > 0 &&
+                    `${importResults.animals} animal${importResults.animals === 1 ? "" : "s"}`}
+                  {importResults.animals > 0 && importResults.fosters > 0 && " and "}
+                  {importResults.fosters > 0 &&
+                    `${importResults.fosters} foster${importResults.fosters === 1 ? "" : "s"}`}{" "}
+                  imported successfully.
+                </p>
+              )}
               {failCount > 0 && (
                 <p className="text-sm text-yellow-700 mb-6">
                   {failCount} row{failCount === 1 ? "" : "s"} couldn't be imported. See details below.

@@ -6,9 +6,16 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dog, Mail, UserPlus, X, Clock, AlertCircle, UserX, User, Users, Plus, Eye, Upload } from "lucide-react"
+import { Dog, Mail, UserPlus, X, Clock, AlertCircle, UserX, User, Users, Plus, Eye, Upload, Trash2 } from "lucide-react"
 import { createInvitation, cancelInvitation } from "@/lib/supabase/queries"
 import Link from "next/link"
 
@@ -71,6 +78,10 @@ export default function AdminFostersPage() {
   const [inviteEmail, setInviteEmail] = useState("")
   const [isInviting, setIsInviting] = useState(false)
   const [isAssigning, setIsAssigning] = useState(false)
+  const [selectedInviteIds, setSelectedInviteIds] = useState<Set<string>>(new Set())
+  const [showBulkCancelDialog, setShowBulkCancelDialog] = useState(false)
+  const [isBulkCanceling, setIsBulkCanceling] = useState(false)
+  const [bulkCancelError, setBulkCancelError] = useState<string | null>(null)
 
   const handleAssignDog = async () => {
     if (!selectedFoster || !selectedDogId || isAssigning) return
@@ -235,6 +246,72 @@ export default function AdminFostersPage() {
     }
   }
 
+  const toggleInviteSelect = (id: string) => {
+    setSelectedInviteIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allPendingSelected =
+    pendingInvitations.length > 0 && pendingInvitations.every((i: any) => selectedInviteIds.has(i.id))
+
+  const togglePendingSelectAll = () => {
+    setSelectedInviteIds((prev) => {
+      if (allPendingSelected) {
+        const next = new Set(prev)
+        pendingInvitations.forEach((i: any) => next.delete(i.id))
+        return next
+      }
+      const next = new Set(prev)
+      pendingInvitations.forEach((i: any) => next.add(i.id))
+      return next
+    })
+  }
+
+  const handleBulkCancelInvitations = async () => {
+    if (selectedInviteIds.size === 0) return
+    setIsBulkCanceling(true)
+    setBulkCancelError(null)
+
+    try {
+      const ids = Array.from(selectedInviteIds)
+      const supabase = createClient()
+      const { data, error } = await supabase.from("invitations").delete().in("id", ids).select("id")
+
+      if (error) {
+        console.error("Bulk cancel failed:", error)
+        setBulkCancelError(error.message || "Failed to cancel. You may not have permission for these records.")
+        return
+      }
+
+      const deleted = (data || []).length
+      if (deleted === 0) {
+        setBulkCancelError(
+          "No invitations were cancelled. They may have already been removed, or your account may not have permission.",
+        )
+        return
+      }
+
+      setSelectedInviteIds(new Set())
+      setShowBulkCancelDialog(false)
+      await mutateFosters()
+
+      if (deleted < ids.length) {
+        setBulkCancelError(
+          `Cancelled ${deleted} of ${ids.length}. Some couldn't be removed — refresh to see the current state.`,
+        )
+      }
+    } catch (err) {
+      console.error("Bulk cancel error:", err)
+      setBulkCancelError("Something went wrong. Please try again.")
+    } finally {
+      setIsBulkCanceling(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -348,23 +425,78 @@ export default function AdminFostersPage() {
       {/* Pending Invitations */}
       {pendingInvitations.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-amber-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-primary-bark flex items-center gap-2">
-              <Clock className="w-5 h-5 text-amber-600" />
-              Pending Invitations
-            </h2>
-            <p className="text-sm text-text-muted mt-1">Invitations waiting for response</p>
+          <div className="bg-amber-50 px-6 py-4 border-b border-gray-200 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-primary-bark flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-600" />
+                Pending Invitations
+              </h2>
+              <p className="text-sm text-text-muted mt-1">Invitations waiting for response</p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allPendingSelected}
+                onChange={togglePendingSelectAll}
+                aria-label="Select all pending invitations"
+                className="w-4 h-4 rounded border-gray-300 text-primary-orange focus:ring-primary-orange cursor-pointer"
+              />
+              Select all
+            </label>
           </div>
+
+          {selectedInviteIds.size > 0 && (
+            <div className="px-6 py-3 bg-amber-50/50 border-b border-amber-200 flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-gray-800">
+                {selectedInviteIds.size} invitation{selectedInviteIds.size === 1 ? "" : "s"} selected
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedInviteIds(new Set())}
+                  className="border-gray-200 text-gray-700 hover:bg-white"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setBulkCancelError(null)
+                    setShowBulkCancelDialog(true)
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Cancel {selectedInviteIds.size}
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="divide-y divide-gray-100">
-            {pendingInvitations.map((invitation) => (
-              <div key={invitation.id} className="p-6 hover:bg-gray-50 transition-colors">
+            {pendingInvitations.map((invitation: any) => (
+              <div
+                key={invitation.id}
+                className={`p-6 transition-colors ${
+                  selectedInviteIds.has(invitation.id) ? "bg-amber-50/40" : "hover:bg-gray-50"
+                }`}
+              >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedInviteIds.has(invitation.id)}
+                      onChange={() => toggleInviteSelect(invitation.id)}
+                      aria-label={`Select ${invitation.email}`}
+                      className="w-4 h-4 rounded border-gray-300 text-primary-orange focus:ring-primary-orange cursor-pointer flex-shrink-0"
+                    />
+                    <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                       <Mail className="w-6 h-6 text-amber-600" />
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{invitation.email}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 truncate">{invitation.email}</p>
                       <p className="text-sm text-text-muted">
                         Invited {new Date(invitation.created_at).toLocaleDateString()}
                       </p>
@@ -448,6 +580,51 @@ export default function AdminFostersPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk-cancel confirmation */}
+      <Dialog
+        open={showBulkCancelDialog}
+        onOpenChange={(open) => !isBulkCanceling && setShowBulkCancelDialog(open)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Cancel {selectedInviteIds.size} invitation{selectedInviteIds.size === 1 ? "" : "s"}?
+            </DialogTitle>
+            <DialogDescription>
+              The selected pending invitation{selectedInviteIds.size === 1 ? "" : "s"} will be deleted. The signup
+              link{selectedInviteIds.size === 1 ? "" : "s"} will stop working immediately. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {bulkCancelError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {bulkCancelError}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowBulkCancelDialog(false)}
+              disabled={isBulkCanceling}
+            >
+              Keep them
+            </Button>
+            <Button
+              type="button"
+              onClick={handleBulkCancelInvitations}
+              disabled={isBulkCanceling}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isBulkCanceling
+                ? "Canceling..."
+                : `Cancel ${selectedInviteIds.size} invitation${selectedInviteIds.size === 1 ? "" : "s"}`}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

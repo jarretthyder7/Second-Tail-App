@@ -1560,17 +1560,19 @@ function OrgAdminDashboardContent() {
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${
-        isCustomizing ? "bg-[#FBF8F4]" : "bg-gradient-to-b from-[#FBF8F4] via-[#FBF8F4] to-[#F5EFE5]"
-      }`}
+      className="min-h-screen transition-colors duration-300"
+      style={{ backgroundColor: "var(--brand-bg, #FBF8F4)" }}
     >
-      {/* Warm cream backdrop with brand-tinted dot pattern when customizing.
-          In display mode, a subtle radial highlight gives the page some warmth without grid clutter. */}
+      {/* Brand-aware backdrop. Dot pattern in customize mode signals "you're editing the
+          layout"; soft radial highlights in display mode add warmth. Both pull from
+          --brand-primary / --brand-accent via color-mix so a rescue with a blue or green
+          brand gets matching tints instead of locked-in orange. */}
       {isCustomizing ? (
         <div
           className="fixed inset-0 pointer-events-none z-0 opacity-60"
           style={{
-            backgroundImage: `radial-gradient(circle at center, rgba(215, 107, 26, 0.18) 1px, transparent 1.5px)`,
+            backgroundImage:
+              "radial-gradient(circle at center, color-mix(in srgb, var(--brand-primary, #D76B1A) 18%, transparent) 1px, transparent 1.5px)",
             backgroundSize: "22px 22px",
           }}
         />
@@ -1578,8 +1580,9 @@ function OrgAdminDashboardContent() {
         <div
           className="fixed inset-0 pointer-events-none z-0"
           style={{
-            backgroundImage: `radial-gradient(circle at top right, rgba(215, 107, 26, 0.05), transparent 60%),
-                              radial-gradient(circle at bottom left, rgba(143, 175, 153, 0.06), transparent 55%)`,
+            backgroundImage:
+              "radial-gradient(circle at top right, color-mix(in srgb, var(--brand-primary, #D76B1A) 6%, transparent), transparent 60%), " +
+              "radial-gradient(circle at bottom left, color-mix(in srgb, var(--brand-accent, #F7E2BD) 30%, transparent), transparent 55%)",
           }}
         />
       )}
@@ -1588,7 +1591,7 @@ function OrgAdminDashboardContent() {
         {/* ── Greeting + actions row ── */}
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-[#D76B1A] mb-1">
+            <p className="text-sm font-medium mb-1" style={{ color: "var(--brand-primary, #D76B1A)" }}>
               {new Date().getHours() < 12 ? "Good morning" : new Date().getHours() < 17 ? "Good afternoon" : "Good evening"}
               {profile?.name ? `, ${profile.name.split(" ")[0]}` : ""}! 👋
             </p>

@@ -7,7 +7,6 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { getDogs, createDog } from "@/lib/supabase/queries"
-import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { Search, Plus, Trash2, X } from "lucide-react"
 import {
@@ -237,17 +236,39 @@ function OrgDogsContent() {
 
     try {
       const ids = Array.from(selectedIds)
-      const supabase = createClient()
-      const { error } = await supabase.from("dogs").delete().in("id", ids)
-      if (error) {
-        console.error("Bulk delete failed:", error)
-        setDeleteError(error.message || "Failed to delete. You may not have permission for these records.")
+      const res = await fetch("/api/admin/dogs", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, orgId }),
+      })
+      const result = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setDeleteError(result.error || `Delete failed (${res.status})`)
         return
       }
 
+      const deleted: number = result.deleted ?? 0
+      const requested: number = result.requested ?? ids.length
+
+      if (deleted === 0) {
+        setDeleteError(
+          "No records were deleted. They may have already been removed, or your account may not have permission.",
+        )
+        return
+      }
+
+      // Optimistically remove the deleted ids from local state. If some weren't deleted (deleted < requested),
+      // re-fetch to reconcile.
       setDogs((prev) => prev.filter((d) => !selectedIds.has(d.id)))
       setSelectedIds(new Set())
       setIsDeleteOpen(false)
+
+      if (deleted < requested) {
+        setDeleteError(
+          `Deleted ${deleted} of ${requested}. Some records couldn't be removed — refresh to see the current state.`,
+        )
+      }
     } catch (err) {
       console.error("Bulk delete error:", err)
       setDeleteError("Something went wrong. Please try again.")

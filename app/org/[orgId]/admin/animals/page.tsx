@@ -7,8 +7,9 @@ import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { getDogs, createDog } from "@/lib/supabase/queries"
+import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
-import { Search, Plus } from "lucide-react"
+import { Search, Plus, Trash2, X } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -59,6 +60,10 @@ function OrgDogsContent() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadDogs() {
@@ -198,6 +203,57 @@ function OrgDogsContent() {
   const handleRemovePhoto = () => {
     setPhotoFile(null)
     setPhotoPreview(null)
+  }
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allFilteredSelected =
+    filteredDogs.length > 0 && filteredDogs.every((d) => selectedIds.has(d.id))
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      if (allFilteredSelected) {
+        const next = new Set(prev)
+        filteredDogs.forEach((d) => next.delete(d.id))
+        return next
+      }
+      const next = new Set(prev)
+      filteredDogs.forEach((d) => next.add(d.id))
+      return next
+    })
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return
+    setIsDeleting(true)
+    setDeleteError(null)
+
+    try {
+      const ids = Array.from(selectedIds)
+      const supabase = createClient()
+      const { error } = await supabase.from("dogs").delete().in("id", ids)
+      if (error) {
+        console.error("Bulk delete failed:", error)
+        setDeleteError(error.message || "Failed to delete. You may not have permission for these records.")
+        return
+      }
+
+      setDogs((prev) => prev.filter((d) => !selectedIds.has(d.id)))
+      setSelectedIds(new Set())
+      setIsDeleteOpen(false)
+    } catch (err) {
+      console.error("Bulk delete error:", err)
+      setDeleteError("Something went wrong. Please try again.")
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -433,11 +489,50 @@ function OrgDogsContent() {
         </div>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="mb-4 p-3 bg-[#D76B1A]/5 border border-[#D76B1A]/20 rounded-xl flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-[#5A4A42]">
+            {selectedIds.size} animal{selectedIds.size === 1 ? "" : "s"} selected
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedIds(new Set())}
+              className="border-[#F7E2BD] text-[#5A4A42] hover:bg-white"
+            >
+              <X className="w-4 h-4 mr-1" />
+              Clear
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => {
+                setDeleteError(null)
+                setIsDeleteOpen(true)
+              }}
+              className="bg-[#D97A68] hover:bg-[#C56858] text-white"
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete {selectedIds.size}
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[#FBF8F4]">
               <tr>
+                <th className="py-3 px-4 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleSelectAll}
+                    aria-label="Select all"
+                    className="w-4 h-4 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A] cursor-pointer"
+                  />
+                </th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-[#5A4A42]">Animal</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-[#5A4A42]">Species</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-[#5A4A42]">Breed</th>
@@ -450,8 +545,19 @@ function OrgDogsContent() {
               {filteredDogs.map((dog) => (
                 <tr
                   key={dog.id}
-                  className="border-t border-[#F7E2BD]/50 hover:bg-[#FBF8F4]/50 cursor-pointer transition"
+                  className={`border-t border-[#F7E2BD]/50 transition ${
+                    selectedIds.has(dog.id) ? "bg-[#D76B1A]/5" : "hover:bg-[#FBF8F4]/50"
+                  }`}
                 >
+                  <td className="py-3 px-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(dog.id)}
+                      onChange={() => toggleSelect(dog.id)}
+                      aria-label={`Select ${dog.name}`}
+                      className="w-4 h-4 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A] cursor-pointer"
+                    />
+                  </td>
                   <td className="py-3 px-4">
                     <Link href={`/org/${orgId}/admin/animals/${dog.id}`} className="flex items-center gap-3">
                       <img
@@ -514,6 +620,46 @@ function OrgDogsContent() {
           <p className="text-[#2E2E2E]/60">No animals found</p>
         </div>
       )}
+
+      <Dialog open={isDeleteOpen} onOpenChange={(open) => !isDeleting && setIsDeleteOpen(open)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-[#5A4A42]">
+              Delete {selectedIds.size} animal{selectedIds.size === 1 ? "" : "s"}?
+            </DialogTitle>
+            <DialogDescription className="text-[#2E2E2E]/70">
+              This permanently removes the selected animal record{selectedIds.size === 1 ? "" : "s"}, including any
+              associated foster assignments, medical history, and notes. This can't be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {deleteError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{deleteError}</div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDeleteOpen(false)}
+              disabled={isDeleting}
+              className="border-[#F7E2BD] text-[#5A4A42] hover:bg-[#FBF8F4]"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="bg-[#D97A68] hover:bg-[#C56858] text-white"
+            >
+              {isDeleting
+                ? "Deleting..."
+                : `Delete ${selectedIds.size} animal${selectedIds.size === 1 ? "" : "s"}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

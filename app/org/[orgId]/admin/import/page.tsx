@@ -34,6 +34,8 @@ type ParsedRow = {
   statusMessage?: string
   selected: boolean
   isDuplicate?: boolean
+  // "exists" = already in DB; "in_sheet" = appears more than once in this upload
+  duplicateReason?: "exists" | "in_sheet"
 }
 
 type FieldTier = "required" | "recommended" | "optional"
@@ -387,6 +389,7 @@ function ImportDataContent() {
     const existing = await fetchExistingKeys()
     setExistingKeys(existing)
 
+    // First pass — build rows, flag external duplicates (already in DB)
     const rows: ParsedRow[] = rawData.map((row, index) => {
       const data: Record<string, string> = {}
       const missingFields: string[] = []
@@ -408,15 +411,38 @@ function ImportDataContent() {
       const status: ParsedRow["status"] = missingFields.length > 0 ? "missing_info" : "ready"
       const statusMessage = missingFields.length > 0 ? `Missing: ${missingFields.join(", ")}` : ""
       const key = rowKey(data)
-      const isDuplicate = key != null && existing.has(key)
+      const existsInDb = key != null && existing.has(key)
 
       return {
         id: `row-${index}`,
         data,
         status,
         statusMessage,
-        selected: status === "ready" && !isDuplicate,
-        isDuplicate,
+        selected: status === "ready" && !existsInDb,
+        isDuplicate: existsInDb,
+        duplicateReason: existsInDb ? "exists" : undefined,
+      }
+    })
+
+    // Second pass — flag internal duplicates (same key appearing more than once in this upload).
+    // First occurrence stays selected/ready; later occurrences get marked + deselected so the
+    // unique-key constraint at insert time doesn't reject them silently.
+    const firstSeenAt = new Map<string, number>()
+    const dupKeyLabel = importType === "fosters" ? "email" : "name"
+    rows.forEach((r, i) => {
+      const key = rowKey(r.data)
+      if (!key) return
+      if (firstSeenAt.has(key)) {
+        const firstIndex = firstSeenAt.get(key)!
+        // External duplicates take priority — they need to be fixed regardless
+        if (r.duplicateReason !== "exists") {
+          r.isDuplicate = true
+          r.duplicateReason = "in_sheet"
+          r.statusMessage = `Same ${dupKeyLabel} as row ${firstIndex + 1} in your sheet`
+        }
+        r.selected = false
+      } else {
+        firstSeenAt.set(key, i)
       }
     })
 
@@ -655,20 +681,50 @@ function ImportDataContent() {
         const newStatus: ParsedRow["status"] = missing.length > 0 ? "missing_info" : "ready"
         const becameReady = wasMissing && newStatus === "ready"
 
-        // If the user edited the dup-key field (name/email), recheck against existing
+        // If the user edited the dup-key field, recheck both external (DB) and internal
+        // (other rows in this upload) duplicates so the badge stays accurate.
         let isDuplicate = row.isDuplicate
+        let duplicateReason = row.duplicateReason
+        let dupStatusMessage = row.statusMessage
+
         if (field === dupKeyField) {
           const newKey = newData[dupKeyField]?.toLowerCase().trim()
-          isDuplicate = !!newKey && existingKeys.has(newKey)
+          if (!newKey) {
+            isDuplicate = false
+            duplicateReason = undefined
+          } else if (existingKeys.has(newKey)) {
+            isDuplicate = true
+            duplicateReason = "exists"
+            dupStatusMessage = ""
+          } else {
+            // Look for the same key in OTHER rows of the upload
+            const conflict = prev.find((other) => {
+              if (other.id === rowId) return false
+              const k = rowKey(other.data)
+              return k === newKey
+            })
+            if (conflict) {
+              const idx = prev.findIndex((o) => o.id === conflict.id)
+              isDuplicate = true
+              duplicateReason = "in_sheet"
+              dupStatusMessage = `Same ${dupKeyField === "email" ? "email" : "name"} as row ${idx + 1} in your sheet`
+            } else {
+              isDuplicate = false
+              duplicateReason = undefined
+              dupStatusMessage = missing.length > 0 ? `Missing: ${missing.join(", ")}` : ""
+            }
+          }
         }
 
         return {
           ...row,
           data: newData,
           status: newStatus,
-          statusMessage: missing.length > 0 ? `Missing: ${missing.join(", ")}` : "",
+          statusMessage:
+            missing.length > 0 ? `Missing: ${missing.join(", ")}` : duplicateReason === "in_sheet" ? dupStatusMessage : "",
           selected: row.selected || (becameReady && !isDuplicate),
           isDuplicate,
+          duplicateReason,
         }
       }),
     )
@@ -1175,7 +1231,12 @@ function ImportDataContent() {
                 <p className="text-2xl font-bold text-orange-600">
                   {parsedRows.filter((r) => r.isDuplicate).length}
                 </p>
-                <p className="text-sm text-orange-700">Already exist</p>
+                <p
+                  className="text-sm text-orange-700"
+                  title="Includes rows already in your org and duplicate rows within the same sheet"
+                >
+                  Duplicates
+                </p>
               </div>
               <div className="p-4 bg-[#FBF8F4] rounded-xl">
                 <p className="text-2xl font-bold text-[#D76B1A]">{parsedRows.filter((r) => r.selected).length}</p>
@@ -1335,10 +1396,16 @@ function ImportDataContent() {
                           {row.isDuplicate ? (
                             <span
                               className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-orange-100 text-orange-700"
-                              title={`An animal named "${row.data.name}" already exists in your org`}
+                              title={
+                                row.duplicateReason === "in_sheet"
+                                  ? row.statusMessage || "Appears more than once in your sheet"
+                                  : importType === "fosters"
+                                    ? `An invitation for this email already exists in your org`
+                                    : `An animal named "${row.data.name}" already exists in your org`
+                              }
                             >
                               <AlertCircle className="w-3 h-3" />
-                              Already exists
+                              {row.duplicateReason === "in_sheet" ? "Duplicate in sheet" : "Already exists"}
                             </span>
                           ) : (
                             <span
@@ -1367,12 +1434,16 @@ function ImportDataContent() {
             {/* Helper message */}
             <div className="p-4 bg-blue-50 rounded-xl mb-6">
               <p className="text-sm text-blue-700">
-                <strong>Tip:</strong> Click any cell to edit. Rows tagged{" "}
+                <strong>Tip:</strong> Click any cell to edit. Two kinds of duplicates get flagged:{" "}
                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-medium">
                   Already exists
                 </span>{" "}
-                match the name of an animal you already have — they're left unchecked so you don't create duplicates.
-                Rename them to something unique or check the box to import anyway.
+                means it's already in your org;{" "}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-medium">
+                  Duplicate in sheet
+                </span>{" "}
+                means the same {importType === "fosters" ? "email" : "name"} appears more than once in this upload.
+                Both are unchecked by default — edit the cell to make it unique, or leave it skipped.
               </p>
             </div>
 

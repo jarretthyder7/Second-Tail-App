@@ -516,7 +516,12 @@ function ImportDataContent() {
             if (col in insert) continue
             const val = row.data[col]
             if (val != null && val.trim() !== "") {
-              if (col === "gender") {
+              if (col === "age" || col === "weight") {
+                // dogs.age and dogs.weight are integer columns. parseInt handles "59.7" → 59,
+                // "2 years" → 2, "55 lbs" → 55. Skip the field if there's no parseable number.
+                const n = Number.parseInt(val.trim(), 10)
+                if (!Number.isNaN(n)) insert[col] = n
+              } else if (col === "gender") {
                 const g = normalizeGender(val)
                 if (g) insert[col] = g
               } else {

@@ -130,7 +130,14 @@ function ImportDataContent() {
   const [parsing, setParsing] = useState(false)
   const [showIgnored, setShowIgnored] = useState(false)
   const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null)
-  const [importResults, setImportResults] = useState<{ animals: number; fosters: number } | null>(null)
+  const [importResults, setImportResults] = useState<
+    | {
+        animals: number
+        fosters: number
+        failures: { name: string; reason: string }[]
+      }
+    | null
+  >(null)
   const [error, setError] = useState<string | null>(null)
 
   // Parse a CSV string into rows. Handles quoted fields with embedded commas.
@@ -371,7 +378,72 @@ function ImportDataContent() {
     return d.toISOString().split("T")[0]
   }
 
+  // Map free-form stage values from spreadsheets (Shelterluv etc.) to canonical snake_case
+  // values the dogs.stage column accepts. Unknown values fall through to "intake".
+  const STAGE_ALIASES: Record<string, string> = {
+    intake: "intake",
+    "in-take": "intake",
+    "intake-evaluation": "evaluation",
+    evaluation: "evaluation",
+    eval: "evaluation",
+    available: "available",
+    "available for adoption": "available",
+    "adoption ready": "available",
+    "in foster": "in_foster",
+    in_foster: "in_foster",
+    fostered: "in_foster",
+    "foster home": "in_foster",
+    "medical hold": "medical_hold",
+    medical_hold: "medical_hold",
+    "vet hold": "medical_hold",
+    "behavioral hold": "medical_hold",
+    "behavior hold": "medical_hold",
+    "behavior eval": "evaluation",
+    "on hold": "on_hold",
+    on_hold: "on_hold",
+    hold: "on_hold",
+    quarantine: "on_hold",
+    "pending adoption": "adoption_pending",
+    adoption_pending: "adoption_pending",
+    "adoption pending": "adoption_pending",
+    "pending adopter": "adoption_pending",
+    pending: "adoption_pending",
+    adopted: "adopted",
+    "in adopter home": "adopted",
+    returned: "returned",
+    "returned to shelter": "returned",
+    rto: "returned",
+    "stray hold": "intake",
+    stray: "intake",
+  }
+  const normalizeStage = (raw: string | undefined): string => {
+    const key = (raw || "").toLowerCase().trim()
+    if (!key) return "intake"
+    return STAGE_ALIASES[key] || "intake"
+  }
+
+  // Reduce gender to "male"/"female"; anything else returns null so we send NULL not garbage.
+  const normalizeGender = (raw: string | undefined): string | null => {
+    const key = (raw || "").toLowerCase().trim()
+    if (!key) return null
+    if (key === "m" || key.startsWith("male")) return "male"
+    if (key === "f" || key.startsWith("female")) return "female"
+    return null
+  }
+
+  // Best-effort species normalization. Unknown values pass through lowercased.
+  const normalizeSpecies = (raw: string | undefined): string => {
+    const key = (raw || "").toLowerCase().trim()
+    if (!key) return "dog"
+    if (key.startsWith("dog") || key === "k9" || key === "canine") return "dog"
+    if (key.startsWith("cat") || key === "feline") return "cat"
+    if (key.startsWith("rabbit") || key === "bunny") return "rabbit"
+    if (key.startsWith("bird")) return "bird"
+    return key
+  }
+
   // Handle import — insert all mapped fields that map to known dogs columns.
+  // Captures per-row failures so the user can see what didn't make it and why.
   const handleImport = async () => {
     setImporting(true)
     setError(null)
@@ -381,15 +453,17 @@ function ImportDataContent() {
 
     let animalsImported = 0
     let fostersImported = 0
+    const failures: { name: string; reason: string }[] = []
 
     try {
       if (importType === "animals") {
         for (const row of selectedRows) {
+          const displayName = row.data.name?.trim() || "Unnamed Animal"
           const insert: Record<string, unknown> = {
             organization_id: orgId,
-            name: row.data.name?.trim() || "Unnamed Animal",
-            species: row.data.species?.toLowerCase().trim() || "dog",
-            stage: row.data.stage?.trim() || "intake",
+            name: displayName,
+            species: normalizeSpecies(row.data.species),
+            stage: normalizeStage(row.data.stage),
             intake_date: toIsoDate(row.data.intake_date || "") || new Date().toISOString().split("T")[0],
           }
 
@@ -398,7 +472,12 @@ function ImportDataContent() {
             if (col in insert) continue
             const val = row.data[col]
             if (val != null && val.trim() !== "") {
-              insert[col] = val.trim()
+              if (col === "gender") {
+                const g = normalizeGender(val)
+                if (g) insert[col] = g
+              } else {
+                insert[col] = val.trim()
+              }
             }
           }
 
@@ -407,12 +486,14 @@ function ImportDataContent() {
             animalsImported++
           } else {
             console.error("Animal insert failed:", error, insert)
+            failures.push({ name: displayName, reason: error.message || "Unknown error" })
           }
         }
       }
 
       if (importType === "fosters") {
         for (const row of selectedRows) {
+          const displayName = row.data.email?.trim() || row.data.name?.trim() || "Unknown"
           const { error } = await supabase.from("invitations").insert({
             organization_id: orgId,
             email: row.data.email?.trim(),
@@ -423,11 +504,12 @@ function ImportDataContent() {
             fostersImported++
           } else {
             console.error("Foster invitation insert failed:", error)
+            failures.push({ name: displayName, reason: error.message || "Unknown error" })
           }
         }
       }
 
-      setImportResults({ animals: animalsImported, fosters: fostersImported })
+      setImportResults({ animals: animalsImported, fosters: fostersImported, failures })
       setCurrentStep("complete")
     } catch (err) {
       console.error("Import failed:", err)
@@ -1121,7 +1203,9 @@ function ImportDataContent() {
                                 "in_foster",
                                 "medical_hold",
                                 "on_hold",
+                                "adoption_pending",
                                 "adopted",
+                                "returned",
                               ])}
                             </td>
                           </>
@@ -1194,28 +1278,92 @@ function ImportDataContent() {
         )}
 
         {/* Step 5: Complete */}
-        {currentStep === "complete" && importResults && (
-          <div className="bg-white rounded-2xl border border-[#F7E2BD] p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-8 h-8 text-green-600" />
+        {currentStep === "complete" && importResults && (() => {
+          const successCount = importResults.animals + importResults.fosters
+          const failCount = importResults.failures.length
+          const allSucceeded = failCount === 0
+          return (
+          <div className="bg-white rounded-2xl border border-[#F7E2BD] p-8">
+            <div className="text-center">
+              <div
+                className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${
+                  allSucceeded ? "bg-green-100" : "bg-yellow-100"
+                }`}
+              >
+                {allSucceeded ? (
+                  <CheckCircle2 className="w-8 h-8 text-green-600" />
+                ) : (
+                  <AlertCircle className="w-8 h-8 text-yellow-600" />
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-[#5A4A42] mb-2">
+                {allSucceeded
+                  ? "You're Ready to Go!"
+                  : failCount === successCount + failCount
+                    ? "Import didn't go through"
+                    : "Imported with some errors"}
+              </h2>
+              <p className="text-[#5A4A42]/70 mb-2">
+                {importResults.animals > 0 &&
+                  `${importResults.animals} animal${importResults.animals === 1 ? "" : "s"}`}
+                {importResults.animals > 0 && importResults.fosters > 0 && " and "}
+                {importResults.fosters > 0 &&
+                  `${importResults.fosters} foster${importResults.fosters === 1 ? "" : "s"}`}{" "}
+                imported successfully.
+              </p>
+              {failCount > 0 && (
+                <p className="text-sm text-yellow-700 mb-6">
+                  {failCount} row{failCount === 1 ? "" : "s"} couldn't be imported. See details below.
+                </p>
+              )}
             </div>
-            <h2 className="text-2xl font-bold text-[#5A4A42] mb-2">You're Ready to Go!</h2>
-            <p className="text-[#5A4A42]/70 mb-8">
-              {importResults.animals > 0 && `${importResults.animals} animal${importResults.animals === 1 ? "" : "s"}`}
-              {importResults.animals > 0 && importResults.fosters > 0 && " and "}
-              {importResults.fosters > 0 && `${importResults.fosters} foster${importResults.fosters === 1 ? "" : "s"}`}{" "}
-              imported successfully.
-            </p>
+
+            {/* Failure details — surface specific errors so user can fix the source data or report a bug */}
+            {failCount > 0 && (
+              <div className="mt-2 mb-8 border border-yellow-200 rounded-xl overflow-hidden">
+                <div className="px-4 py-3 bg-yellow-50 border-b border-yellow-200">
+                  <p className="text-sm font-medium text-yellow-800">
+                    {failCount} failed row{failCount === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="max-h-64 overflow-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[#FBF8F4] sticky top-0">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-[#5A4A42]/70">Row</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-[#5A4A42]/70">Why it failed</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F7E2BD]">
+                      {importResults.failures.map((f, i) => (
+                        <tr key={i}>
+                          <td className="px-4 py-2 text-[#5A4A42] font-medium whitespace-nowrap">{f.name}</td>
+                          <td className="px-4 py-2 text-[#5A4A42]/70 break-words">{f.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-200">
+                  <p className="text-xs text-yellow-800">
+                    If the same error keeps showing up across many rows, it's likely a column constraint we need to
+                    handle (e.g. an unrecognized stage value). Send a screenshot of this list and we'll patch it.
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => router.push(`/org/${orgId}/admin/${importType === "fosters" ? "fosters" : "dogs"}`)}
-                className="px-6 py-3 bg-[#D76B1A] text-white rounded-xl font-medium hover:bg-[#C55F14] transition flex items-center justify-center gap-2"
-              >
-                {importType === "fosters" ? <Users className="w-4 h-4" /> : <Dog className="w-4 h-4" />}
-                View {importType === "fosters" ? "Fosters" : "Animals"}
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              {successCount > 0 && (
+                <button
+                  onClick={() => router.push(`/org/${orgId}/admin/${importType === "fosters" ? "fosters" : "dogs"}`)}
+                  className="px-6 py-3 bg-[#D76B1A] text-white rounded-xl font-medium hover:bg-[#C55F14] transition flex items-center justify-center gap-2"
+                >
+                  {importType === "fosters" ? <Users className="w-4 h-4" /> : <Dog className="w-4 h-4" />}
+                  View {importType === "fosters" ? "Fosters" : "Animals"}
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
               <button
                 onClick={() => {
                   setCurrentStep("upload")
@@ -1232,7 +1380,8 @@ function ImportDataContent() {
               </button>
             </div>
           </div>
-        )}
+          )
+        })()}
       </div>
     </div>
   )

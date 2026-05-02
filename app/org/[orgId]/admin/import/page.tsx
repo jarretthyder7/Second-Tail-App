@@ -16,7 +16,6 @@ import {
   Check,
   AlertCircle,
   CheckCircle2,
-  Info,
   X,
 } from "lucide-react"
 
@@ -54,15 +53,16 @@ const animalFields: FieldDef[] = [
 
   { value: "species", label: "Species", tier: "recommended", synonyms: ["species", "animal type", "type", "animal species"], hint: "Dog, cat, etc." },
   { value: "breed", label: "Breed", tier: "recommended", synonyms: ["breed", "primary breed", "breed 1"] },
-  { value: "age", label: "Age", tier: "recommended", synonyms: ["age", "age (years)", "age years"] },
+  { value: "age", label: "Age", tier: "recommended", synonyms: ["age", "age (years)", "age years", "age (months)", "age months"] },
   { value: "gender", label: "Gender", tier: "recommended", synonyms: ["gender", "sex"] },
+  { value: "weight", label: "Weight", tier: "recommended", synonyms: ["weight", "weight (lbs)", "weight lbs", "weight in lbs"] },
   { value: "intake_date", label: "Intake Date", tier: "recommended", synonyms: ["intake date", "date of intake", "intake", "in date", "arrival date"] },
   { value: "stage", label: "Status/Stage", tier: "recommended", synonyms: ["status", "stage", "current status", "animal status"], hint: "Available, in foster, adopted, etc." },
+  { value: "image_url", label: "Photo URL", tier: "recommended", synonyms: ["photo url", "photo", "image", "image url", "picture", "picture url", "primary photo", "primary photo url", "photos", "main photo", "thumbnail"], hint: "Link to the animal's photo — used as their profile picture." },
 
-  { value: "weight", label: "Weight", tier: "optional", synonyms: ["weight", "weight (lbs)", "weight lbs", "weight in lbs"] },
   { value: "medical_notes", label: "Medical Notes", tier: "optional", synonyms: ["medical notes", "medical", "vet notes", "health notes", "medical history"] },
   { value: "behavior_notes", label: "Behavior Notes", tier: "optional", synonyms: ["behavior notes", "behavior", "personality", "temperament", "behaviour notes"] },
-  { value: "foster_name", label: "Current Foster (Name)", tier: "optional", synonyms: ["foster name", "current foster", "foster", "foster home", "foster parent"] },
+  { value: "foster_name", label: "Current Foster (Name)", tier: "optional", synonyms: ["foster name", "current foster", "foster", "foster home", "foster parent", "foster current"] },
   { value: "foster_email", label: "Current Foster (Email)", tier: "optional", synonyms: ["foster email", "foster e-mail", "current foster email"] },
 ]
 
@@ -92,6 +92,7 @@ const DOG_COLUMNS: string[] = [
   "species",
   "stage",
   "intake_date",
+  "image_url",
   "medical_notes",
   "behavior_notes",
 ]
@@ -127,6 +128,7 @@ function ImportDataContent() {
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([])
   const [importing, setImporting] = useState(false)
   const [parsing, setParsing] = useState(false)
+  const [showIgnored, setShowIgnored] = useState(false)
   const [importResults, setImportResults] = useState<{ animals: number; fosters: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -434,6 +436,22 @@ function ImportDataContent() {
     }
   }
 
+  // Assign a target field to a source column. If `sourceColumn` is null, clears the assignment.
+  // If another column was previously assigned to this field, it gets unassigned (one-to-one mapping).
+  const assignField = (targetField: string, sourceColumn: string | null) => {
+    setColumnMappings((prev) =>
+      prev.map((m) => {
+        if (m.targetField === targetField && m.sourceColumn !== sourceColumn) {
+          return { ...m, targetField: null }
+        }
+        if (sourceColumn && m.sourceColumn === sourceColumn) {
+          return { ...m, targetField }
+        }
+        return m
+      }),
+    )
+  }
+
   // Toggle row selection
   const toggleRowSelection = (rowId: string) => {
     setParsedRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, selected: !row.selected } : row)))
@@ -584,9 +602,10 @@ function ImportDataContent() {
           <div className="bg-white rounded-2xl border border-[#F7E2BD] p-8">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-semibold text-[#5A4A42]">Map Your Columns</h2>
+                <h2 className="text-xl font-semibold text-[#5A4A42]">Match Your Sheet to Our Fields</h2>
                 <p className="text-[#5A4A42]/70 mt-1">
-                  We auto-matched what we recognized. Adjust anything that's wrong, or skip columns you don't need.
+                  For each field below, pick the matching column from your sheet. We've auto-matched what we
+                  recognized — adjust anything that's wrong.
                 </p>
               </div>
               <button
@@ -596,52 +615,6 @@ function ImportDataContent() {
                 <ArrowLeft className="w-4 h-4" />
                 Back
               </button>
-            </div>
-
-            {/* What we're looking for — onboarding guide */}
-            <div className="mb-6 p-4 bg-[#FBF8F4] border border-[#F7E2BD] rounded-xl">
-              <div className="flex items-start gap-2 mb-3">
-                <Info className="w-4 h-4 text-[#D76B1A] flex-shrink-0 mt-0.5" />
-                <p className="text-sm font-medium text-[#5A4A42]">
-                  What we use to {importType === "fosters" ? "create foster records" : "build each animal's profile"}
-                </p>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#D76B1A]" />
-                    <span className="font-semibold text-[#5A4A42]">Required</span>
-                  </div>
-                  <p className="text-[#5A4A42]/70 leading-relaxed">
-                    {requiredFields.map((f) => f.label).join(", ")}.{" "}
-                    {importType === "animals"
-                      ? "Without this we can't create the animal."
-                      : "Without these we can't invite the foster."}
-                  </p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="w-2 h-2 rounded-full bg-green-600" />
-                    <span className="font-semibold text-[#5A4A42]">Recommended</span>
-                  </div>
-                  <p className="text-[#5A4A42]/70 leading-relaxed">
-                    {recommendedFields.map((f) => f.label).join(", ")}. Map any you have — it builds a richer profile.
-                  </p>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#5A4A42]/40" />
-                    <span className="font-semibold text-[#5A4A42]">Optional</span>
-                  </div>
-                  <p className="text-[#5A4A42]/70 leading-relaxed">
-                    {optionalFields.map((f) => f.label).join(", ")}. Nice extras — skip anything you don't track.
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-[#5A4A42]/60 mt-3 pt-3 border-t border-[#F7E2BD]">
-                Anything else in your sheet (IDs, internal codes, columns we don't recognize) — leave on{" "}
-                <strong>Skip this column</strong>. It won't affect the import.
-              </p>
             </div>
 
             {/* Required mapping status */}
@@ -710,89 +683,154 @@ function ImportDataContent() {
               </div>
             )}
 
-            {/* Column mappings */}
-            <div className="space-y-3 mb-8">
-              {columnMappings.map((mapping, index) => {
-                const sample = rawData[0]?.[index] || ""
-                const matched = fields.find((f) => f.value === mapping.targetField)
+            {/* Field-first mapping: one row per field we save, dropdown picks the source column */}
+            {(() => {
+              // Build the column index lookup so we can show a sample value beside the chosen column
+              const columnIndexByName = new Map<string, number>()
+              headers.forEach((h, i) => columnIndexByName.set(h, i))
+
+              const sourceColumnFor = (fieldValue: string): string | null =>
+                columnMappings.find((m) => m.targetField === fieldValue)?.sourceColumn ?? null
+
+              const sampleFor = (sourceColumn: string | null): string => {
+                if (!sourceColumn) return ""
+                const idx = columnIndexByName.get(sourceColumn)
+                if (idx == null) return ""
+                return rawData[0]?.[idx] || ""
+              }
+
+              const ignoredColumns = columnMappings.filter((m) => !m.targetField)
+
+              const renderFieldRow = (field: FieldDef) => {
+                const assigned = sourceColumnFor(field.value)
+                const sample = sampleFor(assigned)
+                const tierColor =
+                  field.tier === "required"
+                    ? "bg-[#D76B1A]"
+                    : field.tier === "recommended"
+                      ? "bg-green-600"
+                      : "bg-[#5A4A42]/40"
+
                 return (
-                  <div key={index} className="flex items-center gap-4 p-3 bg-[#FBF8F4] rounded-xl">
+                  <div key={field.value} className="flex items-center gap-4 p-3 bg-[#FBF8F4] rounded-xl">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#5A4A42] truncate">{mapping.sourceColumn}</p>
-                      <p className="text-xs text-[#5A4A42]/60 truncate">
-                        Sample: {sample || <span className="italic">empty</span>}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tierColor}`} />
+                        <p className="text-sm font-medium text-[#5A4A42] truncate">
+                          {field.label}
+                          {field.tier === "required" && <span className="text-[#D76B1A]"> *</span>}
+                        </p>
+                      </div>
+                      {field.hint && <p className="text-xs text-[#5A4A42]/60 mt-0.5 ml-4">{field.hint}</p>}
                     </div>
-                    <ArrowRight className="w-4 h-4 text-[#5A4A42]/40 flex-shrink-0" />
-                    <div className="flex-1 flex items-center gap-2">
+                    <ArrowLeft className="w-4 h-4 text-[#5A4A42]/40 flex-shrink-0 rotate-180" />
+                    <div className="flex-1 min-w-0">
                       <select
-                        value={mapping.targetField || ""}
-                        onChange={(e) => {
-                          const newMappings = [...columnMappings]
-                          newMappings[index].targetField = e.target.value || null
-                          setColumnMappings(newMappings)
-                        }}
-                        className="flex-1 px-3 py-2 border border-[#F7E2BD] rounded-lg text-sm text-[#5A4A42] bg-white"
+                        value={assigned || ""}
+                        onChange={(e) => assignField(field.value, e.target.value || null)}
+                        className={`w-full px-3 py-2 border rounded-lg text-sm bg-white ${
+                          field.tier === "required" && !assigned
+                            ? "border-red-300 text-red-700"
+                            : "border-[#F7E2BD] text-[#5A4A42]"
+                        }`}
                       >
-                        <option value="">Skip this column</option>
-                        {requiredFields.length > 0 && (
-                          <optgroup label="── Required ──">
-                            {requiredFields.map((field) => (
-                              <option key={field.value} value={field.value}>
-                                {field.label} *
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {recommendedFields.length > 0 && (
-                          <optgroup label="── Recommended (builds the profile) ──">
-                            {recommendedFields.map((field) => (
-                              <option key={field.value} value={field.value}>
-                                {field.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {optionalFields.length > 0 && (
-                          <optgroup label="── Optional (extras) ──">
-                            {optionalFields.map((field) => (
-                              <option key={field.value} value={field.value}>
-                                {field.label}
-                              </option>
-                            ))}
-                          </optgroup>
-                        )}
+                        <option value="">
+                          {field.tier === "required" ? "— pick a column (required) —" : "— not in my sheet —"}
+                        </option>
+                        {headers.map((h) => (
+                          <option key={h} value={h}>
+                            {h}
+                          </option>
+                        ))}
                       </select>
-                      {matched && (
-                        <span
-                          className={`inline-flex items-center gap-1 text-xs flex-shrink-0 ${
-                            matched.tier === "required"
-                              ? "text-[#D76B1A] font-medium"
-                              : matched.tier === "recommended"
-                                ? "text-green-700"
-                                : "text-[#5A4A42]/60"
-                          }`}
-                          title={
-                            matched.tier === "required"
-                              ? "Required field"
-                              : matched.tier === "recommended"
-                                ? "Recommended — helps build a complete profile"
-                                : "Optional extra"
-                          }
-                        >
-                          <Check className="w-3 h-3" />
-                          {matched.tier === "required"
-                            ? "required"
-                            : matched.tier === "recommended"
-                              ? "recommended"
-                              : "optional"}
-                        </span>
+                      {assigned && (
+                        <p className="text-xs text-[#5A4A42]/60 mt-1 truncate" title={sample}>
+                          Sample: {sample || <span className="italic">empty</span>}
+                        </p>
                       )}
                     </div>
                   </div>
                 )
-              })}
-            </div>
+              }
+
+              return (
+                <div className="space-y-6 mb-8">
+                  {requiredFields.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#5A4A42] mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#D76B1A]" />
+                        Required
+                      </h3>
+                      <div className="space-y-2">{requiredFields.map(renderFieldRow)}</div>
+                    </div>
+                  )}
+
+                  {recommendedFields.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#5A4A42] mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-600" />
+                        Recommended <span className="font-normal text-[#5A4A42]/60">— builds the profile</span>
+                      </h3>
+                      <div className="space-y-2">{recommendedFields.map(renderFieldRow)}</div>
+                    </div>
+                  )}
+
+                  {optionalFields.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-[#5A4A42] mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#5A4A42]/40" />
+                        Optional <span className="font-normal text-[#5A4A42]/60">— nice extras</span>
+                      </h3>
+                      <div className="space-y-2">{optionalFields.map(renderFieldRow)}</div>
+                    </div>
+                  )}
+
+                  {/* Ignored columns — collapsible so users can verify nothing important is being dropped */}
+                  {ignoredColumns.length > 0 && (
+                    <div className="border border-[#F7E2BD] rounded-xl overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setShowIgnored((v) => !v)}
+                        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-[#FBF8F4] transition"
+                      >
+                        <span className="text-sm font-medium text-[#5A4A42]">
+                          {ignoredColumns.length} column{ignoredColumns.length === 1 ? "" : "s"} in your sheet will be
+                          ignored
+                        </span>
+                        <span className="text-xs text-[#5A4A42]/60">
+                          {showIgnored ? "Hide" : "Show"} {showIgnored ? "▲" : "▼"}
+                        </span>
+                      </button>
+                      {showIgnored && (
+                        <div className="px-4 py-3 border-t border-[#F7E2BD] bg-[#FBF8F4]">
+                          <p className="text-xs text-[#5A4A42]/70 mb-3">
+                            These columns aren't being saved. If something here should be — like a column we missed —
+                            scroll up and pick it from the appropriate field's dropdown.
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {ignoredColumns.map((m) => {
+                              const idx = columnIndexByName.get(m.sourceColumn)
+                              const sample = idx != null ? rawData[0]?.[idx] || "" : ""
+                              return (
+                                <div
+                                  key={m.sourceColumn}
+                                  className="px-3 py-2 bg-white border border-[#F7E2BD] rounded-lg text-xs"
+                                >
+                                  <p className="font-medium text-[#5A4A42] truncate">{m.sourceColumn}</p>
+                                  <p className="text-[#5A4A42]/60 truncate" title={sample}>
+                                    {sample || <span className="italic">empty</span>}
+                                  </p>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             <div className="flex justify-between items-center gap-4">
               <div className="flex items-center gap-3 text-xs text-[#5A4A42]/70 flex-wrap">
@@ -890,6 +928,9 @@ function ImportDataContent() {
                   <thead className="bg-[#FBF8F4] sticky top-0">
                     <tr>
                       <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70 w-10">✓</th>
+                      {importType === "animals" && (
+                        <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70 w-12">Photo</th>
+                      )}
                       <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Name</th>
                       {importType === "animals" ? (
                         <>
@@ -921,6 +962,28 @@ function ImportDataContent() {
                             className="w-4 h-4 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]"
                           />
                         </td>
+                        {importType === "animals" && (
+                          <td className="px-3 py-3">
+                            {row.data.image_url ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={row.data.image_url}
+                                alt=""
+                                className="w-8 h-8 rounded-full object-cover bg-[#F7E2BD]"
+                                onError={(e) => {
+                                  ;(e.currentTarget as HTMLImageElement).style.display = "none"
+                                }}
+                              />
+                            ) : (
+                              <div
+                                className="w-8 h-8 rounded-full bg-[#F7E2BD] flex items-center justify-center text-[#5A4A42]/40"
+                                title="No photo"
+                              >
+                                <Dog className="w-4 h-4" />
+                              </div>
+                            )}
+                          </td>
+                        )}
                         <td className="px-3 py-3 font-medium text-[#5A4A42]">{row.data.name || "(no name)"}</td>
                         {importType === "animals" ? (
                           <>

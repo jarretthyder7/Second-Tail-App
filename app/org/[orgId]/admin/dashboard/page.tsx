@@ -14,6 +14,8 @@ import {
   GripVertical,
   X,
   Plus,
+  Maximize2,
+  Minimize2,
   Users,
   MessageSquare,
   HelpCircle,
@@ -66,7 +68,7 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       id: "priority-inbox",
       name: "Priority Inbox",
       description: "Who needs a response? Messages + Support Requests + Appointment Requests",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: true,
     },
     {
@@ -80,21 +82,21 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       id: "foster-network-status",
       name: "Foster Network Status",
       description: "Capacity and foster wellbeing at a glance",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: true,
     },
     {
       id: "todays-schedule",
       name: "Today's Schedule",
       description: "What's happening today and next 48 hours",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
     {
       id: "recent-activity",
       name: "Recent Activity",
       description: "What happened in the last 24 hours",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
   ],
@@ -103,35 +105,35 @@ const AVAILABLE_WIDGETS: Record<string, { id: WidgetType; name: string; descript
       id: "team-load",
       name: "Team Load",
       description: "Is anyone overloaded? Staff workload overview",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
     {
       id: "outreach-communications",
       name: "Outreach & Communications",
       description: "Foster announcements and adoption pushes",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
     {
       id: "animals-without-updates",
       name: "Animals Without Updates",
       description: "Animals that haven't had a log entry in 3+ days",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
     {
       id: "reimbursements-pending",
       name: "Reimbursements Pending",
       description: "Foster reimbursement requests waiting for approval",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
     {
       id: "foster-checkins-needed",
       name: "Foster Check-ins Needed",
       description: "Fosters who haven't logged an update recently",
-      defaultSpan: 6,
+      defaultSpan: 12,
       isDefault: false,
     },
   ],
@@ -398,6 +400,18 @@ function OrgAdminDashboardContent() {
     setDashboardConfig({
       ...dashboardConfig,
       widgets: dashboardConfig.widgets.filter((w) => w.id !== widgetId),
+    })
+  }
+
+  // Toggle a widget between half-width (col_span=6) and full-width (col_span=12).
+  const resizeWidget = (widgetId: string) => {
+    if (!dashboardConfig) return
+
+    setDashboardConfig({
+      ...dashboardConfig,
+      widgets: dashboardConfig.widgets.map((w) =>
+        w.id === widgetId ? { ...w, col_span: w.col_span === 12 ? 6 : 12 } : w,
+      ),
     })
   }
 
@@ -1491,12 +1505,30 @@ function OrgAdminDashboardContent() {
         onMouseLeave={() => setHoveredWidget(null)}
       >
         {isCustomizing && (
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="px-2 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-medium flex items-center gap-1 shadow-lg">
-              <GripVertical className="w-3 h-3" />
-              Drag to reorder
+          <>
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="px-2 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-medium flex items-center gap-1 shadow-lg">
+                <GripVertical className="w-3 h-3" />
+                Drag to reorder
+              </div>
             </div>
-          </div>
+            {/* Resize toggle — top-right of the widget, only in customize mode */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation()
+                resizeWidget(widget.id)
+              }}
+              className="absolute top-2 right-10 z-10 p-1.5 rounded-md bg-white/90 border border-gray-200 text-gray-600 opacity-0 group-hover:opacity-100 hover:bg-white hover:border-primary-orange/50 hover:text-primary-orange transition shadow-sm"
+              title={widget.col_span === 12 ? "Make half width" : "Make full width"}
+            >
+              {widget.col_span === 12 ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </>
         )}
         {content}
       </div>
@@ -1527,16 +1559,27 @@ function OrgAdminDashboardContent() {
   )
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${isCustomizing ? "bg-gray-100" : "bg-[#FAFAF9]"}`}>
-      {isCustomizing && (
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        isCustomizing ? "bg-[#FBF8F4]" : "bg-gradient-to-b from-[#FBF8F4] via-[#FBF8F4] to-[#F5EFE5]"
+      }`}
+    >
+      {/* Warm cream backdrop with brand-tinted dot pattern when customizing.
+          In display mode, a subtle radial highlight gives the page some warmth without grid clutter. */}
+      {isCustomizing ? (
         <div
-          className="fixed inset-0 pointer-events-none z-0 opacity-40"
+          className="fixed inset-0 pointer-events-none z-0 opacity-60"
           style={{
-            backgroundImage: `
-              linear-gradient(to right, rgba(215, 107, 26, 0.06) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(215, 107, 26, 0.06) 1px, transparent 1px)
-            `,
-            backgroundSize: "32px 32px",
+            backgroundImage: `radial-gradient(circle at center, rgba(215, 107, 26, 0.18) 1px, transparent 1.5px)`,
+            backgroundSize: "22px 22px",
+          }}
+        />
+      ) : (
+        <div
+          className="fixed inset-0 pointer-events-none z-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at top right, rgba(215, 107, 26, 0.05), transparent 60%),
+                              radial-gradient(circle at bottom left, rgba(143, 175, 153, 0.06), transparent 55%)`,
           }}
         />
       )}

@@ -129,6 +129,7 @@ function ImportDataContent() {
   const [importing, setImporting] = useState(false)
   const [parsing, setParsing] = useState(false)
   const [showIgnored, setShowIgnored] = useState(false)
+  const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null)
   const [importResults, setImportResults] = useState<{ animals: number; fosters: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -455,6 +456,108 @@ function ImportDataContent() {
   // Toggle row selection
   const toggleRowSelection = (rowId: string) => {
     setParsedRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, selected: !row.selected } : row)))
+  }
+
+  // Update a single cell, recompute row status, exit edit mode. If a row that was missing
+  // required info just became ready, auto-select it (but don't deselect anything else).
+  const updateCell = (rowId: string, field: string, value: string) => {
+    const fields = importType === "fosters" ? fosterFields : animalFields
+    const requiredKeys = fields.filter((f) => f.tier === "required").map((f) => f.value)
+
+    setParsedRows((prev) =>
+      prev.map((row) => {
+        if (row.id !== rowId) return row
+        const trimmed = value.trim()
+        const newData = { ...row.data }
+        if (trimmed === "") {
+          delete newData[field]
+        } else {
+          newData[field] = trimmed
+        }
+
+        const missing: string[] = []
+        requiredKeys.forEach((key) => {
+          if (!newData[key] || newData[key].trim() === "") {
+            const def = fields.find((f) => f.value === key)
+            if (def) missing.push(def.label)
+          }
+        })
+
+        const wasMissing = row.status === "missing_info"
+        const newStatus: ParsedRow["status"] = missing.length > 0 ? "missing_info" : "ready"
+        const becameReady = wasMissing && newStatus === "ready"
+
+        return {
+          ...row,
+          data: newData,
+          status: newStatus,
+          statusMessage: missing.length > 0 ? `Missing: ${missing.join(", ")}` : "",
+          selected: row.selected || becameReady,
+        }
+      }),
+    )
+    setEditingCell(null)
+  }
+
+  // Render a click-to-edit cell. Pass `options` for select-style fields, omit for free text.
+  const editableCell = (
+    rowId: string,
+    field: string,
+    value: string,
+    options?: string[],
+    extraClass = "",
+  ) => {
+    const isEditing = editingCell?.rowId === rowId && editingCell?.field === field
+
+    if (isEditing) {
+      if (options) {
+        return (
+          <select
+            autoFocus
+            defaultValue={value}
+            onBlur={() => setEditingCell(null)}
+            onChange={(e) => updateCell(rowId, field, e.target.value)}
+            className="w-full px-2 py-1 border border-[#D76B1A] rounded text-sm bg-white focus:outline-none"
+          >
+            <option value="">—</option>
+            {options.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt}
+              </option>
+            ))}
+          </select>
+        )
+      }
+      return (
+        <input
+          autoFocus
+          defaultValue={value}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={(e) => updateCell(rowId, field, e.currentTarget.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              ;(e.target as HTMLInputElement).blur()
+            }
+            if (e.key === "Escape") {
+              ;(e.currentTarget as HTMLInputElement).value = value
+              setEditingCell(null)
+            }
+          }}
+          className="w-full px-2 py-1 border border-[#D76B1A] rounded text-sm bg-white focus:outline-none"
+        />
+      )
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={() => setEditingCell({ rowId, field })}
+        className={`group w-full text-left px-2 py-1 -mx-2 rounded hover:bg-white border border-transparent hover:border-[#F7E2BD] transition cursor-text ${extraClass}`}
+        title="Click to edit"
+      >
+        {value || <span className="text-[#5A4A42]/30 group-hover:text-[#5A4A42]/50">click to add</span>}
+      </button>
+    )
   }
 
   // Approve all ready rows (selects every row with status === "ready")
@@ -864,8 +967,8 @@ function ImportDataContent() {
               <div>
                 <h2 className="text-xl font-semibold text-[#5A4A42]">Review & Approve</h2>
                 <p className="text-[#5A4A42]/70 mt-1">
-                  Approve the rows you want to import. Anything missing required info is unchecked by default — you can
-                  still include it and clean up later.
+                  Approve the rows you want to import. <strong>Click any cell to edit</strong> it — fix typos, fill in
+                  blanks, or rename animals before importing.
                 </p>
               </div>
               <button
@@ -984,21 +1087,55 @@ function ImportDataContent() {
                             )}
                           </td>
                         )}
-                        <td className="px-3 py-3 font-medium text-[#5A4A42]">{row.data.name || "(no name)"}</td>
+                        <td className="px-3 py-2 font-medium text-[#5A4A42]">
+                          {editableCell(row.id, "name", row.data.name || "")}
+                        </td>
                         {importType === "animals" ? (
                           <>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.species || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.breed || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.age || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.gender || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.intake_date || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.stage || "—"}</td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "species", row.data.species || "", [
+                                "dog",
+                                "cat",
+                                "rabbit",
+                                "bird",
+                                "other",
+                              ])}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "breed", row.data.breed || "")}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "age", row.data.age || "")}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "gender", row.data.gender || "", ["male", "female"])}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "intake_date", row.data.intake_date || "")}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "stage", row.data.stage || "", [
+                                "intake",
+                                "evaluation",
+                                "available",
+                                "in_foster",
+                                "medical_hold",
+                                "on_hold",
+                                "adopted",
+                              ])}
+                            </td>
                           </>
                         ) : (
                           <>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.email || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.phone || "—"}</td>
-                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.city || "—"}</td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "email", row.data.email || "")}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "phone", row.data.phone || "")}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "city", row.data.city || "")}
+                            </td>
                           </>
                         )}
                         <td className="px-3 py-3">
@@ -1027,8 +1164,8 @@ function ImportDataContent() {
             {/* Helper message */}
             <div className="p-4 bg-blue-50 rounded-xl mb-6">
               <p className="text-sm text-blue-700">
-                <strong>Tip:</strong> You can import rows with missing data and clean them up later. This won't affect
-                foster access.
+                <strong>Tip:</strong> Click any cell to edit. Press Enter or click away to save, Esc to cancel. Filling
+                in a missing required field auto-checks the row.
               </p>
             </div>
 

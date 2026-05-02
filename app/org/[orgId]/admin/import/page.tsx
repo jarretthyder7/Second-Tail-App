@@ -16,6 +16,7 @@ import {
   Check,
   AlertCircle,
   CheckCircle2,
+  Info,
   X,
 } from "lucide-react"
 
@@ -35,41 +36,48 @@ type ParsedRow = {
   selected: boolean
 }
 
+type FieldTier = "required" | "recommended" | "optional"
+
 type FieldDef = {
   value: string
   label: string
-  required: boolean
+  tier: FieldTier
   synonyms: string[]
+  hint?: string
 }
 
-// Animal field options for mapping. `synonyms` covers common header variants from
-// Shelterluv, PetPoint, RescueGroups, and generic spreadsheets so auto-mapping just works.
+// Animal field options for mapping. Tiers: required (can't import without), recommended
+// (builds a useful profile), optional (nice extras). `synonyms` covers common header variants
+// from Shelterluv, PetPoint, RescueGroups, and generic spreadsheets so auto-mapping just works.
 const animalFields: FieldDef[] = [
-  { value: "name", label: "Animal Name", required: true, synonyms: ["name", "animal name", "pet name", "dog name", "cat name"] },
-  { value: "intake_date", label: "Intake Date", required: false, synonyms: ["intake date", "date of intake", "intake", "in date", "arrival date"] },
-  { value: "stage", label: "Status/Stage", required: false, synonyms: ["status", "stage", "current status", "animal status"] },
-  { value: "foster_name", label: "Current Foster (Name)", required: false, synonyms: ["foster name", "current foster", "foster", "foster home", "foster parent"] },
-  { value: "foster_email", label: "Current Foster (Email)", required: false, synonyms: ["foster email", "foster e-mail", "current foster email"] },
-  { value: "breed", label: "Breed", required: false, synonyms: ["breed", "primary breed", "breed 1"] },
-  { value: "age", label: "Age", required: false, synonyms: ["age", "age (years)", "age years"] },
-  { value: "gender", label: "Gender", required: false, synonyms: ["gender", "sex"] },
-  { value: "weight", label: "Weight", required: false, synonyms: ["weight", "weight (lbs)", "weight lbs", "weight in lbs"] },
-  { value: "species", label: "Species", required: false, synonyms: ["species", "animal type", "type", "animal species"] },
-  { value: "medical_notes", label: "Medical Notes", required: false, synonyms: ["medical notes", "medical", "vet notes", "health notes", "medical history"] },
-  { value: "behavior_notes", label: "Behavior Notes", required: false, synonyms: ["behavior notes", "behavior", "personality", "temperament", "behaviour notes"] },
-  { value: "internal_notes", label: "Internal Notes", required: false, synonyms: ["internal notes", "notes", "comments", "general notes", "description"] },
+  { value: "name", label: "Animal Name", tier: "required", synonyms: ["name", "animal name", "pet name", "dog name", "cat name"] },
+
+  { value: "species", label: "Species", tier: "recommended", synonyms: ["species", "animal type", "type", "animal species"], hint: "Dog, cat, etc." },
+  { value: "breed", label: "Breed", tier: "recommended", synonyms: ["breed", "primary breed", "breed 1"] },
+  { value: "age", label: "Age", tier: "recommended", synonyms: ["age", "age (years)", "age years"] },
+  { value: "gender", label: "Gender", tier: "recommended", synonyms: ["gender", "sex"] },
+  { value: "intake_date", label: "Intake Date", tier: "recommended", synonyms: ["intake date", "date of intake", "intake", "in date", "arrival date"] },
+  { value: "stage", label: "Status/Stage", tier: "recommended", synonyms: ["status", "stage", "current status", "animal status"], hint: "Available, in foster, adopted, etc." },
+
+  { value: "weight", label: "Weight", tier: "optional", synonyms: ["weight", "weight (lbs)", "weight lbs", "weight in lbs"] },
+  { value: "medical_notes", label: "Medical Notes", tier: "optional", synonyms: ["medical notes", "medical", "vet notes", "health notes", "medical history"] },
+  { value: "behavior_notes", label: "Behavior Notes", tier: "optional", synonyms: ["behavior notes", "behavior", "personality", "temperament", "behaviour notes"] },
+  { value: "foster_name", label: "Current Foster (Name)", tier: "optional", synonyms: ["foster name", "current foster", "foster", "foster home", "foster parent"] },
+  { value: "foster_email", label: "Current Foster (Email)", tier: "optional", synonyms: ["foster email", "foster e-mail", "current foster email"] },
 ]
 
 // Foster field options for mapping
 const fosterFields: FieldDef[] = [
-  { value: "name", label: "Foster Name", required: true, synonyms: ["name", "foster name", "full name", "first name"] },
-  { value: "email", label: "Email", required: true, synonyms: ["email", "e-mail", "email address"] },
-  { value: "phone", label: "Phone", required: false, synonyms: ["phone", "phone number", "mobile", "cell"] },
-  { value: "city", label: "City", required: false, synonyms: ["city"] },
-  { value: "state", label: "State", required: false, synonyms: ["state", "province"] },
-  { value: "zip", label: "Zip Code", required: false, synonyms: ["zip", "zip code", "postal code", "postcode"] },
-  { value: "status", label: "Approved Status", required: false, synonyms: ["status", "approved", "approval status"] },
-  { value: "notes", label: "Notes", required: false, synonyms: ["notes", "comments", "description"] },
+  { value: "name", label: "Foster Name", tier: "required", synonyms: ["name", "foster name", "full name", "first name"] },
+  { value: "email", label: "Email", tier: "required", synonyms: ["email", "e-mail", "email address"] },
+
+  { value: "phone", label: "Phone", tier: "recommended", synonyms: ["phone", "phone number", "mobile", "cell"] },
+  { value: "city", label: "City", tier: "recommended", synonyms: ["city"] },
+  { value: "state", label: "State", tier: "recommended", synonyms: ["state", "province"] },
+  { value: "zip", label: "Zip Code", tier: "recommended", synonyms: ["zip", "zip code", "postal code", "postcode"] },
+
+  { value: "status", label: "Approved Status", tier: "optional", synonyms: ["status", "approved", "approval status"] },
+  { value: "notes", label: "Notes", tier: "optional", synonyms: ["notes", "comments", "description"] },
 ]
 
 // Whitelist of `dogs` columns we'll actually insert. Anything else is ignored at import time
@@ -325,7 +333,7 @@ function ImportDataContent() {
       })
 
       fields
-        .filter((f) => f.required)
+        .filter((f) => f.tier === "required")
         .forEach((field) => {
           if (!data[field.value] || data[field.value].trim() === "") {
             missingFields.push(field.label)
@@ -563,7 +571,16 @@ function ImportDataContent() {
         )}
 
         {/* Step 3: Column Mapping */}
-        {currentStep === "mapping" && (
+        {currentStep === "mapping" && (() => {
+          const fields = importType === "fosters" ? fosterFields : animalFields
+          const requiredFields = fields.filter((f) => f.tier === "required")
+          const recommendedFields = fields.filter((f) => f.tier === "recommended")
+          const optionalFields = fields.filter((f) => f.tier === "optional")
+          const mappedTargets = new Set(columnMappings.map((m) => m.targetField).filter(Boolean) as string[])
+          const unmappedRequired = requiredFields.filter((f) => !mappedTargets.has(f.value))
+          const mappedRecommendedCount = recommendedFields.filter((f) => mappedTargets.has(f.value)).length
+
+          return (
           <div className="bg-white rounded-2xl border border-[#F7E2BD] p-8">
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -580,6 +597,79 @@ function ImportDataContent() {
                 Back
               </button>
             </div>
+
+            {/* What we're looking for — onboarding guide */}
+            <div className="mb-6 p-4 bg-[#FBF8F4] border border-[#F7E2BD] rounded-xl">
+              <div className="flex items-start gap-2 mb-3">
+                <Info className="w-4 h-4 text-[#D76B1A] flex-shrink-0 mt-0.5" />
+                <p className="text-sm font-medium text-[#5A4A42]">
+                  What we use to {importType === "fosters" ? "create foster records" : "build each animal's profile"}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#D76B1A]" />
+                    <span className="font-semibold text-[#5A4A42]">Required</span>
+                  </div>
+                  <p className="text-[#5A4A42]/70 leading-relaxed">
+                    {requiredFields.map((f) => f.label).join(", ")}.{" "}
+                    {importType === "animals"
+                      ? "Without this we can't create the animal."
+                      : "Without these we can't invite the foster."}
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-600" />
+                    <span className="font-semibold text-[#5A4A42]">Recommended</span>
+                  </div>
+                  <p className="text-[#5A4A42]/70 leading-relaxed">
+                    {recommendedFields.map((f) => f.label).join(", ")}. Map any you have — it builds a richer profile.
+                  </p>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#5A4A42]/40" />
+                    <span className="font-semibold text-[#5A4A42]">Optional</span>
+                  </div>
+                  <p className="text-[#5A4A42]/70 leading-relaxed">
+                    {optionalFields.map((f) => f.label).join(", ")}. Nice extras — skip anything you don't track.
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-[#5A4A42]/60 mt-3 pt-3 border-t border-[#F7E2BD]">
+                Anything else in your sheet (IDs, internal codes, columns we don't recognize) — leave on{" "}
+                <strong>Skip this column</strong>. It won't affect the import.
+              </p>
+            </div>
+
+            {/* Required mapping status */}
+            {unmappedRequired.length > 0 ? (
+              <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <p className="text-sm text-red-700">
+                  <strong>Missing required:</strong> map a column to{" "}
+                  {unmappedRequired.map((f, i) => (
+                    <span key={f.value}>
+                      <strong>{f.label}</strong>
+                      {i < unmappedRequired.length - 1 ? ", " : ""}
+                    </span>
+                  ))}{" "}
+                  before continuing.
+                </p>
+              </div>
+            ) : (
+              <div className="mb-6 p-3 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <p className="text-sm text-green-700">
+                  All required fields mapped. {mappedRecommendedCount} of {recommendedFields.length} recommended fields
+                  mapped — {mappedRecommendedCount === recommendedFields.length
+                    ? "looks great!"
+                    : "map more for a fuller profile, or proceed as-is."}
+                </p>
+              </div>
+            )}
 
             {/* Compact preview table — first 3 data rows */}
             {previewSampleRows.length > 0 && (
@@ -624,7 +714,6 @@ function ImportDataContent() {
             <div className="space-y-3 mb-8">
               {columnMappings.map((mapping, index) => {
                 const sample = rawData[0]?.[index] || ""
-                const fields = importType === "fosters" ? fosterFields : animalFields
                 const matched = fields.find((f) => f.value === mapping.targetField)
                 return (
                   <div key={index} className="flex items-center gap-4 p-3 bg-[#FBF8F4] rounded-xl">
@@ -646,20 +735,57 @@ function ImportDataContent() {
                         className="flex-1 px-3 py-2 border border-[#F7E2BD] rounded-lg text-sm text-[#5A4A42] bg-white"
                       >
                         <option value="">Skip this column</option>
-                        {fields.map((field) => (
-                          <option key={field.value} value={field.value}>
-                            {field.label}
-                            {field.required ? " *" : ""}
-                          </option>
-                        ))}
+                        {requiredFields.length > 0 && (
+                          <optgroup label="── Required ──">
+                            {requiredFields.map((field) => (
+                              <option key={field.value} value={field.value}>
+                                {field.label} *
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {recommendedFields.length > 0 && (
+                          <optgroup label="── Recommended (builds the profile) ──">
+                            {recommendedFields.map((field) => (
+                              <option key={field.value} value={field.value}>
+                                {field.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {optionalFields.length > 0 && (
+                          <optgroup label="── Optional (extras) ──">
+                            {optionalFields.map((field) => (
+                              <option key={field.value} value={field.value}>
+                                {field.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
                       </select>
                       {matched && (
                         <span
-                          className="inline-flex items-center gap-1 text-xs text-green-700 flex-shrink-0"
-                          title="Auto-matched"
+                          className={`inline-flex items-center gap-1 text-xs flex-shrink-0 ${
+                            matched.tier === "required"
+                              ? "text-[#D76B1A] font-medium"
+                              : matched.tier === "recommended"
+                                ? "text-green-700"
+                                : "text-[#5A4A42]/60"
+                          }`}
+                          title={
+                            matched.tier === "required"
+                              ? "Required field"
+                              : matched.tier === "recommended"
+                                ? "Recommended — helps build a complete profile"
+                                : "Optional extra"
+                          }
                         >
                           <Check className="w-3 h-3" />
-                          matched
+                          {matched.tier === "required"
+                            ? "required"
+                            : matched.tier === "recommended"
+                              ? "recommended"
+                              : "optional"}
                         </span>
                       )}
                     </div>
@@ -668,18 +794,30 @@ function ImportDataContent() {
               })}
             </div>
 
-            <div className="flex justify-between items-center">
-              <p className="text-sm text-[#5A4A42]/60">* Required fields</p>
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex items-center gap-3 text-xs text-[#5A4A42]/70 flex-wrap">
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#D76B1A]" /> Required
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-green-600" /> Recommended
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#5A4A42]/40" /> Optional
+                </span>
+              </div>
               <button
                 onClick={processDataForReview}
-                className="px-6 py-2 bg-[#D76B1A] text-white rounded-xl font-medium hover:bg-[#C55F14] transition flex items-center gap-2"
+                disabled={unmappedRequired.length > 0}
+                className="px-6 py-2 bg-[#D76B1A] text-white rounded-xl font-medium hover:bg-[#C55F14] transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Review Data
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
-        )}
+          )
+        })()}
 
         {/* Step 4: Review */}
         {currentStep === "review" && (

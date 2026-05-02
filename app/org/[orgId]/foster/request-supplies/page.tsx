@@ -13,6 +13,8 @@ import {
   AlertCircle,
   Plus,
   X,
+  Calendar,
+  MapPin,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -28,6 +30,9 @@ type SupplyRequest = {
   status: string
   priority: string
   created_at: string
+  pickup_time: string | null
+  pickup_location: string | null
+  pickup_notes: string | null
 }
 
 const DEFAULT_SUPPLIES = ["Food", "Pee Pads", "Crate", "Toys", "Leash", "Medications", "Other"]
@@ -73,7 +78,7 @@ export default function FosterRequestSuppliesPage() {
         fetch(`/api/admin/help-settings?orgId=${orgId}`).then((r) => (r.ok ? r.json() : null)),
         supabase
           .from("help_requests")
-          .select("id, title, description, status, priority, created_at")
+          .select("id, title, description, status, priority, created_at, pickup_time, pickup_location, pickup_notes")
           .eq("foster_id", user.id)
           .eq("organization_id", orgId)
           .eq("category", "supplies")
@@ -469,6 +474,35 @@ export default function FosterRequestSuppliesPage() {
                 <p className="text-xs text-text-muted mb-3 line-clamp-2 leading-relaxed">
                   {req.description}
                 </p>
+              )}
+              {/* Pickup details — shown once the rescue acknowledges */}
+              {req.status === "in_progress" && (req.pickup_time || req.pickup_location) && (
+                <div className="mb-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
+                  <p className="text-xs font-semibold text-blue-900 mb-1.5">Ready for pickup</p>
+                  {req.pickup_time && (
+                    <p className="text-xs text-blue-800 flex items-center gap-1.5">
+                      <Calendar className="w-3 h-3" />
+                      {new Date(req.pickup_time).toLocaleString(undefined, {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  )}
+                  {req.pickup_location && (
+                    <p className="text-xs text-blue-800 flex items-start gap-1.5 mt-1">
+                      <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                      <span className="whitespace-pre-wrap">{req.pickup_location}</span>
+                    </p>
+                  )}
+                  {req.pickup_notes && (
+                    <p className="text-[11px] text-blue-700/80 italic mt-1.5 whitespace-pre-wrap">
+                      {req.pickup_notes}
+                    </p>
+                  )}
+                </div>
               )}
               {/* Footer row: date + cancel */}
               <div className="flex items-center justify-between gap-2 pt-2 border-t border-neutral-100">

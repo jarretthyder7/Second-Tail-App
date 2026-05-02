@@ -141,6 +141,29 @@ export async function sendSupplyRequestEmail(
   return sendEmail({ to: rescueEmail, ...template })
 }
 
+// Sent to the foster after the rescue acknowledges their supply request and sets a pickup
+export async function sendSupplyAcknowledgedEmail(
+  fosterEmail: string,
+  fosterName: string,
+  rescueName: string,
+  requestTitle: string,
+  pickupTime: string,
+  pickupLocation: string,
+  pickupNotes: string | null,
+  orgId?: string,
+) {
+  const template = emailTemplates.supplyAcknowledged(
+    fosterName,
+    rescueName,
+    requestTitle,
+    pickupTime,
+    pickupLocation,
+    pickupNotes,
+    orgId,
+  )
+  return sendEmail({ to: fosterEmail, ...template })
+}
+
 // Send confirmation email to foster when admin schedules their appointment request
 export async function sendAppointmentConfirmedEmail(
   fosterEmail: string,

@@ -174,6 +174,52 @@ export const emailTemplates = {
     `,
   }),
 
+  // Sent to the FOSTER when a rescue admin acknowledges their supply request and sets a
+  // pickup time. Should feel personal and actionable — they know what was approved, when
+  // and where to pick it up, and any special instructions.
+  supplyAcknowledged: (
+    fosterName: string,
+    rescueName: string,
+    requestTitle: string,
+    pickupTime: string, // already-formatted human-readable string
+    pickupLocation: string,
+    pickupNotes: string | null,
+    orgId?: string,
+  ) => ({
+    subject: `Your supply request is ready — pickup ${pickupTime}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #166534;">Your supply request is ready</h1>
+        <p>Hi ${fosterName},</p>
+        <p><strong>${rescueName}</strong> has acknowledged your supply request:</p>
+        <p style="background-color: #f5f5f5; padding: 15px; border-radius: 8px;"><strong>${requestTitle}</strong></p>
+        <h3 style="color: #166534; margin-top: 24px;">Pickup details</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; vertical-align: top; width: 100px;"><strong>When:</strong></td>
+            <td style="padding: 8px 0;">${pickupTime}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; vertical-align: top;"><strong>Where:</strong></td>
+            <td style="padding: 8px 0; white-space: pre-wrap;">${pickupLocation}</td>
+          </tr>
+          ${pickupNotes ? `
+          <tr>
+            <td style="padding: 8px 0; vertical-align: top;"><strong>Notes:</strong></td>
+            <td style="padding: 8px 0; white-space: pre-wrap;">${pickupNotes}</td>
+          </tr>
+          ` : ""}
+        </table>
+        ${orgId ? `
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="https://getsecondtail.com/org/${orgId}/foster/request-supplies" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View in Second Tail</a>
+        </div>
+        ` : ""}
+        <p style="color: #666; font-size: 13px;">If anything about the pickup time or location doesn't work, reply to your rescue contact directly so they can adjust.</p>
+      </div>
+    `,
+  }),
+
   supplyRequest: (rescueName: string, fosterName: string, supplies: string, animalName?: string, orgId?: string) => ({
     subject: `${fosterName} has requested supplies${animalName ? ` for ${animalName}` : ""}`,
     html: `

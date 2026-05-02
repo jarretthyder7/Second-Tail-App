@@ -4,7 +4,16 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card } from "@/components/ui/card"
-import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings, MapPin, Calendar } from "lucide-react"
 
 type SupplyRequest = {
   id: string
@@ -13,6 +22,9 @@ type SupplyRequest = {
   priority: string
   status: string
   created_at: string
+  pickup_time: string | null
+  pickup_location: string | null
+  pickup_notes: string | null
   profiles: { name: string } | null
   dogs: { name: string } | null
 }
@@ -26,6 +38,13 @@ export default function AdminSupplyRequestsPage() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState("all")
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  // Acknowledge modal state — captures pickup details before sending the foster the email
+  const [ackTarget, setAckTarget] = useState<SupplyRequest | null>(null)
+  const [ackPickupTime, setAckPickupTime] = useState("")
+  const [ackPickupLocation, setAckPickupLocation] = useState("")
+  const [ackPickupNotes, setAckPickupNotes] = useState("")
+  const [ackError, setAckError] = useState<string | null>(null)
+  const [ackSubmitting, setAckSubmitting] = useState(false)
 
   useEffect(() => {
     loadRequests()
@@ -44,6 +63,9 @@ export default function AdminSupplyRequestsPage() {
         priority,
         status,
         created_at,
+        pickup_time,
+        pickup_location,
+        pickup_notes,
         profiles!help_requests_foster_id_fkey(name),
         dogs(name)
       `)
@@ -74,6 +96,63 @@ export default function AdminSupplyRequestsPage() {
       )
     }
     setUpdatingId(null)
+  }
+
+  // Acknowledge submits to the API so the server can stamp acknowledged_by/at AND send the
+  // foster a pickup-confirmation email — the direct supabase update above can't send emails.
+  const submitAcknowledge = async () => {
+    if (!ackTarget) return
+    setAckError(null)
+
+    if (!ackPickupTime) {
+      setAckError("Pickup time is required so the foster knows when to come.")
+      return
+    }
+    if (!ackPickupLocation.trim()) {
+      setAckError("Pickup location is required.")
+      return
+    }
+
+    setAckSubmitting(true)
+    try {
+      const res = await fetch("/api/admin/help-requests", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requestId: ackTarget.id,
+          orgId,
+          status: "in_progress",
+          pickupTime: new Date(ackPickupTime).toISOString(),
+          pickupLocation: ackPickupLocation.trim(),
+          pickupNotes: ackPickupNotes.trim() || null,
+        }),
+      })
+      const result = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setAckError(result.error || `Couldn't acknowledge (${res.status})`)
+        return
+      }
+
+      // Patch local state with the saved row so the UI shows the new pickup info immediately
+      const updated: SupplyRequest = {
+        ...ackTarget,
+        status: "in_progress",
+        pickup_time: result.request?.pickup_time ?? new Date(ackPickupTime).toISOString(),
+        pickup_location: result.request?.pickup_location ?? ackPickupLocation.trim(),
+        pickup_notes: result.request?.pickup_notes ?? (ackPickupNotes.trim() || null),
+      }
+      setRequests((prev) => prev.map((r) => (r.id === ackTarget.id ? updated : r)))
+      setAckTarget(null)
+      setAckPickupTime("")
+      setAckPickupLocation("")
+      setAckPickupNotes("")
+    } catch (err) {
+      console.error("Acknowledge failed:", err)
+      setAckError("Something went wrong. Please try again.")
+    } finally {
+      setAckSubmitting(false)
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -246,6 +325,34 @@ export default function AdminSupplyRequestsPage() {
                   {req.description && (
                     <p className="text-sm text-text-muted mb-2 line-clamp-2">{req.description}</p>
                   )}
+                  {req.status === "in_progress" && (req.pickup_time || req.pickup_location) && (
+                    <div className="mb-2 p-3 rounded-lg bg-blue-50 border border-blue-100 text-sm">
+                      <p className="font-semibold text-blue-900 mb-1">Pickup details</p>
+                      {req.pickup_time && (
+                        <p className="text-blue-800 flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {new Date(req.pickup_time).toLocaleString(undefined, {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                            hour: "numeric",
+                            minute: "2-digit",
+                          })}
+                        </p>
+                      )}
+                      {req.pickup_location && (
+                        <p className="text-blue-800 flex items-start gap-1.5 mt-0.5">
+                          <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                          <span className="whitespace-pre-wrap">{req.pickup_location}</span>
+                        </p>
+                      )}
+                      {req.pickup_notes && (
+                        <p className="text-blue-700/80 text-xs mt-1 italic whitespace-pre-wrap">
+                          {req.pickup_notes}
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center gap-3 text-sm text-text-muted flex-wrap">
                     <span>{req.profiles?.name || "Unknown Foster"}</span>
                     {req.dogs?.name && (
@@ -263,11 +370,17 @@ export default function AdminSupplyRequestsPage() {
                 <div className="flex gap-2 flex-shrink-0">
                   {req.status === "open" && (
                     <button
-                      onClick={() => updateStatus(req.id, "in_progress")}
+                      onClick={() => {
+                        setAckTarget(req)
+                        setAckPickupTime("")
+                        setAckPickupLocation("")
+                        setAckPickupNotes("")
+                        setAckError(null)
+                      }}
                       disabled={updatingId === req.id}
                       className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
                     >
-                      {updatingId === req.id ? "..." : "Acknowledge"}
+                      Acknowledge
                     </button>
                   )}
                   {(req.status === "open" || req.status === "in_progress") && (
@@ -294,6 +407,100 @@ export default function AdminSupplyRequestsPage() {
           ))}
         </div>
       )}
+
+      {/* Acknowledge → set pickup details modal. Closes on success / cancel.
+          Foster gets a pickup-confirmation email automatically when this submits. */}
+      <Dialog
+        open={!!ackTarget}
+        onOpenChange={(open) => {
+          if (!open && !ackSubmitting) setAckTarget(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Acknowledge supply request</DialogTitle>
+            <DialogDescription>
+              Set when and where the foster should pick up. They'll get an email with these
+              details right after you save.
+            </DialogDescription>
+          </DialogHeader>
+
+          {ackTarget && (
+            <div className="space-y-4">
+              <div className="p-3 bg-neutral-cream rounded-lg text-sm">
+                <p className="font-semibold text-primary-bark">{ackTarget.title}</p>
+                <p className="text-text-muted text-xs mt-0.5">
+                  {ackTarget.profiles?.name || "Unknown foster"}
+                  {ackTarget.dogs?.name ? ` • ${ackTarget.dogs.name}` : ""}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary-bark mb-1.5">
+                  Pickup time <span className="text-red-600">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={ackPickupTime}
+                  onChange={(e) => setAckPickupTime(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary-bark mb-1.5">
+                  Pickup location <span className="text-red-600">*</span>
+                </label>
+                <textarea
+                  value={ackPickupLocation}
+                  onChange={(e) => setAckPickupLocation(e.target.value)}
+                  rows={2}
+                  placeholder="Address, building, parking note, etc."
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary-bark mb-1.5">
+                  Notes <span className="text-text-muted font-normal">(optional)</span>
+                </label>
+                <textarea
+                  value={ackPickupNotes}
+                  onChange={(e) => setAckPickupNotes(e.target.value)}
+                  rows={2}
+                  placeholder='e.g. "Ring doorbell twice", "Supplies in the porch bin"'
+                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary-orange/40 resize-none"
+                />
+              </div>
+
+              {ackError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                  {ackError}
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAckTarget(null)}
+              disabled={ackSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={submitAcknowledge}
+              disabled={ackSubmitting}
+              className="bg-primary-orange hover:bg-primary-orange-hover text-white"
+            >
+              {ackSubmitting ? "Acknowledging..." : "Acknowledge & notify foster"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isRescueInOrg } from "@/lib/api/auth-helpers"
+import { sendSupplyAcknowledgedEmail } from "@/lib/email/send"
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -14,7 +15,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { requestId, status, orgId, internalNote } = body
+    const {
+      requestId,
+      status,
+      orgId,
+      internalNote,
+      pickupTime,
+      pickupLocation,
+      pickupNotes,
+    } = body
 
     if (!requestId || !orgId) {
       return NextResponse.json({ error: "Request ID and Organization ID required" }, { status: 400 })
@@ -31,7 +40,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const updateData: Record<string, any> = {}
-    
+
     if (status) {
       updateData.status = status
       if (status === "resolved") {
@@ -39,9 +48,18 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // If adding internal note, append to description or a notes field
+    // Acknowledge flow: pickupTime/pickupLocation arrive together with status="in_progress".
+    // Stamp acknowledged_by + acknowledged_at server-side so the timestamp is trustworthy.
+    const isAcknowledging = pickupTime || pickupLocation || pickupNotes != null
+    if (isAcknowledging) {
+      if (pickupTime) updateData.pickup_time = pickupTime
+      if (pickupLocation) updateData.pickup_location = pickupLocation
+      if (pickupNotes !== undefined) updateData.pickup_notes = pickupNotes
+      updateData.acknowledged_by = user.id
+      updateData.acknowledged_at = new Date().toISOString()
+    }
+
     if (internalNote) {
-      // Get current request to append note
       const { data: currentRequest } = await supabase
         .from("help_requests")
         .select("description")
@@ -60,21 +78,51 @@ export async function PATCH(request: NextRequest) {
       .from("help_requests")
       .update(updateData)
       .eq("id", requestId)
-      .select()
+      .select(`
+        *,
+        foster:profiles!help_requests_foster_id_fkey(id, name, email),
+        organization:organizations!organization_id(id, name)
+      `)
       .single()
 
     if (error) {
-      console.error('Error updating help request:', error)
+      console.error("Error updating help request:", error)
       return NextResponse.json({ error: "Failed to update help request" }, { status: 500 })
+    }
+
+    // Notify the foster on Acknowledge — best-effort, never fails the request
+    if (isAcknowledging && data?.foster?.email) {
+      try {
+        const formattedPickup = data.pickup_time
+          ? new Date(data.pickup_time).toLocaleString(undefined, {
+              weekday: "long",
+              month: "short",
+              day: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            })
+          : "(time not set)"
+        await sendSupplyAcknowledgedEmail(
+          data.foster.email,
+          data.foster.name?.split(" ")[0] || data.foster.name || "there",
+          data.organization?.name || "Your rescue",
+          data.title || "Supply request",
+          formattedPickup,
+          data.pickup_location || "(location pending)",
+          data.pickup_notes || null,
+          orgId,
+        )
+      } catch (emailErr) {
+        console.warn("Acknowledged email failed to send:", emailErr)
+      }
     }
 
     return NextResponse.json({ success: true, request: data })
   } catch (error) {
-    console.error('Error updating help request:', error)
-    const message = error instanceof Error ? error.message : "Something went wrong"
+    console.error("Error updating help request:", error)
     return NextResponse.json(
       { error: "Failed to update help request. Please try again." },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

@@ -33,6 +33,7 @@ type ParsedRow = {
   status: "ready" | "missing_info" | "needs_review" | "skipped"
   statusMessage?: string
   selected: boolean
+  isDuplicate?: boolean
 }
 
 type FieldTier = "required" | "recommended" | "optional"
@@ -130,6 +131,8 @@ function ImportDataContent() {
   const [parsing, setParsing] = useState(false)
   const [showIgnored, setShowIgnored] = useState(false)
   const [editingCell, setEditingCell] = useState<{ rowId: string; field: string } | null>(null)
+  // Lowercased trimmed names (animals) or emails (fosters) already in this org — used to flag duplicates
+  const [existingKeys, setExistingKeys] = useState<Set<string>>(new Set())
   const [importResults, setImportResults] = useState<
     | {
         animals: number
@@ -328,9 +331,47 @@ function ImportDataContent() {
     [handleFileUpload],
   )
 
+  // Fetch the set of existing keys (dog names or foster emails) already in this org so we can
+  // flag duplicates. Lowercased + trimmed for case-insensitive comparison. Best-effort — if the
+  // fetch fails we just skip dup detection rather than blocking the import.
+  const fetchExistingKeys = async (): Promise<Set<string>> => {
+    const supabase = createClient()
+    const keys = new Set<string>()
+    try {
+      if (importType === "animals") {
+        const { data } = await supabase.from("dogs").select("name").eq("organization_id", orgId)
+        data?.forEach((d: { name: string | null }) => {
+          const k = d.name?.toLowerCase().trim()
+          if (k) keys.add(k)
+        })
+      } else if (importType === "fosters") {
+        const { data } = await supabase
+          .from("invitations")
+          .select("email")
+          .eq("organization_id", orgId)
+        data?.forEach((d: { email: string | null }) => {
+          const k = d.email?.toLowerCase().trim()
+          if (k) keys.add(k)
+        })
+      }
+    } catch (err) {
+      console.error("Failed to fetch existing keys for duplicate detection:", err)
+    }
+    return keys
+  }
+
+  // The dup-key for a row: name (animals) or email (fosters), lowercased + trimmed
+  const rowKey = (data: Record<string, string>): string | null => {
+    const raw = importType === "fosters" ? data.email : data.name
+    const k = raw?.toLowerCase().trim()
+    return k || null
+  }
+
   // Process mappings and create preview rows
-  const processDataForReview = () => {
+  const processDataForReview = async () => {
     const fields = importType === "fosters" ? fosterFields : animalFields
+    const existing = await fetchExistingKeys()
+    setExistingKeys(existing)
 
     const rows: ParsedRow[] = rawData.map((row, index) => {
       const data: Record<string, string> = {}
@@ -352,13 +393,16 @@ function ImportDataContent() {
 
       const status: ParsedRow["status"] = missingFields.length > 0 ? "missing_info" : "ready"
       const statusMessage = missingFields.length > 0 ? `Missing: ${missingFields.join(", ")}` : ""
+      const key = rowKey(data)
+      const isDuplicate = key != null && existing.has(key)
 
       return {
         id: `row-${index}`,
         data,
         status,
         statusMessage,
-        selected: status === "ready",
+        selected: status === "ready" && !isDuplicate,
+        isDuplicate,
       }
     })
 
@@ -541,10 +585,11 @@ function ImportDataContent() {
   }
 
   // Update a single cell, recompute row status, exit edit mode. If a row that was missing
-  // required info just became ready, auto-select it (but don't deselect anything else).
+  // required info just became ready (and isn't a duplicate), auto-select it.
   const updateCell = (rowId: string, field: string, value: string) => {
     const fields = importType === "fosters" ? fosterFields : animalFields
     const requiredKeys = fields.filter((f) => f.tier === "required").map((f) => f.value)
+    const dupKeyField = importType === "fosters" ? "email" : "name"
 
     setParsedRows((prev) =>
       prev.map((row) => {
@@ -569,12 +614,20 @@ function ImportDataContent() {
         const newStatus: ParsedRow["status"] = missing.length > 0 ? "missing_info" : "ready"
         const becameReady = wasMissing && newStatus === "ready"
 
+        // If the user edited the dup-key field (name/email), recheck against existing
+        let isDuplicate = row.isDuplicate
+        if (field === dupKeyField) {
+          const newKey = newData[dupKeyField]?.toLowerCase().trim()
+          isDuplicate = !!newKey && existingKeys.has(newKey)
+        }
+
         return {
           ...row,
           data: newData,
           status: newStatus,
           statusMessage: missing.length > 0 ? `Missing: ${missing.join(", ")}` : "",
-          selected: row.selected || becameReady,
+          selected: row.selected || (becameReady && !isDuplicate),
+          isDuplicate,
         }
       }),
     )
@@ -642,12 +695,13 @@ function ImportDataContent() {
     )
   }
 
-  // Approve all ready rows (selects every row with status === "ready")
+  // Approve all ready rows that aren't duplicates. Duplicates stay unchecked — the user has to
+  // opt in explicitly if they really want to import a row that matches an existing animal.
   const approveAllReady = () => {
     setParsedRows((prev) =>
       prev.map((row) => ({
         ...row,
-        selected: row.status === "ready" ? true : row.selected,
+        selected: row.status === "ready" && !row.isDuplicate ? true : row.selected,
       })),
     )
   }
@@ -1063,10 +1117,10 @@ function ImportDataContent() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
               <div className="p-4 bg-green-50 rounded-xl">
                 <p className="text-2xl font-bold text-green-600">
-                  {parsedRows.filter((r) => r.status === "ready").length}
+                  {parsedRows.filter((r) => r.status === "ready" && !r.isDuplicate).length}
                 </p>
                 <p className="text-sm text-green-700">Ready to import</p>
               </div>
@@ -1075,6 +1129,12 @@ function ImportDataContent() {
                   {parsedRows.filter((r) => r.status === "missing_info").length}
                 </p>
                 <p className="text-sm text-yellow-700">Missing info</p>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-xl">
+                <p className="text-2xl font-bold text-orange-600">
+                  {parsedRows.filter((r) => r.isDuplicate).length}
+                </p>
+                <p className="text-sm text-orange-700">Already exist</p>
               </div>
               <div className="p-4 bg-[#FBF8F4] rounded-xl">
                 <p className="text-2xl font-bold text-[#D76B1A]">{parsedRows.filter((r) => r.selected).length}</p>
@@ -1089,7 +1149,7 @@ function ImportDataContent() {
                 className="px-3 py-1.5 bg-[#D76B1A]/10 text-[#D76B1A] rounded-lg text-sm font-medium hover:bg-[#D76B1A]/20 transition flex items-center gap-1.5"
               >
                 <CheckCircle2 className="w-4 h-4" />
-                Approve all ready ({parsedRows.filter((r) => r.status === "ready").length})
+                Approve all ready ({parsedRows.filter((r) => r.status === "ready" && !r.isDuplicate).length})
               </button>
               <button
                 onClick={() => setParsedRows((prev) => prev.map((r) => ({ ...r, selected: true })))}
@@ -1223,20 +1283,30 @@ function ImportDataContent() {
                           </>
                         )}
                         <td className="px-3 py-3">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
-                              row.status === "ready"
-                                ? "bg-green-100 text-green-700"
-                                : row.status === "missing_info"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-gray-100 text-gray-700"
-                            }`}
-                            title={row.statusMessage || ""}
-                          >
-                            {row.status === "ready" && <CheckCircle2 className="w-3 h-3" />}
-                            {row.status === "missing_info" && <AlertCircle className="w-3 h-3" />}
-                            {row.status === "ready" ? "Ready" : row.statusMessage || "Needs review"}
-                          </span>
+                          {row.isDuplicate ? (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-orange-100 text-orange-700"
+                              title={`An animal named "${row.data.name}" already exists in your org`}
+                            >
+                              <AlertCircle className="w-3 h-3" />
+                              Already exists
+                            </span>
+                          ) : (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
+                                row.status === "ready"
+                                  ? "bg-green-100 text-green-700"
+                                  : row.status === "missing_info"
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-gray-100 text-gray-700"
+                              }`}
+                              title={row.statusMessage || ""}
+                            >
+                              {row.status === "ready" && <CheckCircle2 className="w-3 h-3" />}
+                              {row.status === "missing_info" && <AlertCircle className="w-3 h-3" />}
+                              {row.status === "ready" ? "Ready" : row.statusMessage || "Needs review"}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1248,8 +1318,12 @@ function ImportDataContent() {
             {/* Helper message */}
             <div className="p-4 bg-blue-50 rounded-xl mb-6">
               <p className="text-sm text-blue-700">
-                <strong>Tip:</strong> Click any cell to edit. Press Enter or click away to save, Esc to cancel. Filling
-                in a missing required field auto-checks the row.
+                <strong>Tip:</strong> Click any cell to edit. Rows tagged{" "}
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 font-medium">
+                  Already exists
+                </span>{" "}
+                match the name of an animal you already have — they're left unchecked so you don't create duplicates.
+                Rename them to something unique or check the box to import anyway.
               </p>
             </div>
 

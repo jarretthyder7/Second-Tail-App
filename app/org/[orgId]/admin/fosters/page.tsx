@@ -82,6 +82,10 @@ export default function AdminFostersPage() {
   const [showBulkCancelDialog, setShowBulkCancelDialog] = useState(false)
   const [isBulkCanceling, setIsBulkCanceling] = useState(false)
   const [bulkCancelError, setBulkCancelError] = useState<string | null>(null)
+  const [selectedFosterIds, setSelectedFosterIds] = useState<Set<string>>(new Set())
+  const [showBulkRemoveDialog, setShowBulkRemoveDialog] = useState(false)
+  const [isBulkRemoving, setIsBulkRemoving] = useState(false)
+  const [bulkRemoveError, setBulkRemoveError] = useState<string | null>(null)
 
   const handleAssignDog = async () => {
     if (!selectedFoster || !selectedDogId || isAssigning) return
@@ -271,6 +275,80 @@ export default function AdminFostersPage() {
     })
   }
 
+  const toggleFosterSelect = (id: string) => {
+    setSelectedFosterIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allActiveSelected = fosters.length > 0 && fosters.every((f: any) => selectedFosterIds.has(f.id))
+
+  const toggleActiveSelectAll = () => {
+    setSelectedFosterIds((prev) => {
+      if (allActiveSelected) {
+        const next = new Set(prev)
+        fosters.forEach((f: any) => next.delete(f.id))
+        return next
+      }
+      const next = new Set(prev)
+      fosters.forEach((f: any) => next.add(f.id))
+      return next
+    })
+  }
+
+  const selectedFostersWithDogs = fosters
+    .filter((f: any) => selectedFosterIds.has(f.id))
+    .filter((f: any) => f.dogs && f.dogs.length > 0)
+
+  const handleBulkRemoveFromOrg = async () => {
+    if (selectedFosterIds.size === 0) return
+    setIsBulkRemoving(true)
+    setBulkRemoveError(null)
+
+    try {
+      const ids = Array.from(selectedFosterIds)
+      const res = await fetch("/api/admin/fosters", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, orgId }),
+      })
+      const result = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        setBulkRemoveError(result.error || `Remove failed (${res.status})`)
+        return
+      }
+
+      const removed: number = result.removed ?? 0
+      const requested: number = result.requested ?? ids.length
+
+      if (removed === 0) {
+        setBulkRemoveError(
+          "No fosters were removed. They may have already left the org, or your account may not have permission.",
+        )
+        return
+      }
+
+      setSelectedFosterIds(new Set())
+      setShowBulkRemoveDialog(false)
+      await mutateFosters()
+
+      if (removed < requested) {
+        setBulkRemoveError(
+          `Removed ${removed} of ${requested}. Some couldn't be removed — refresh to see the current state.`,
+        )
+      }
+    } catch (err) {
+      console.error("Bulk remove error:", err)
+      setBulkRemoveError("Something went wrong. Please try again.")
+    } finally {
+      setIsBulkRemoving(false)
+    }
+  }
+
   const handleBulkCancelInvitations = async () => {
     if (selectedInviteIds.size === 0) return
     setIsBulkCanceling(true)
@@ -349,21 +427,76 @@ export default function AdminFostersPage() {
       {/* Active Fosters */}
       {fosters.length > 0 && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-primary-bark flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary-orange" />
-              Active Fosters
-            </h2>
-            <p className="text-sm text-text-muted mt-1">Fosters currently in your organization</p>
+          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-primary-bark flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary-orange" />
+                Active Fosters
+              </h2>
+              <p className="text-sm text-text-muted mt-1">Fosters currently in your organization</p>
+            </div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allActiveSelected}
+                onChange={toggleActiveSelectAll}
+                aria-label="Select all active fosters"
+                className="w-4 h-4 rounded border-gray-300 text-primary-orange focus:ring-primary-orange cursor-pointer"
+              />
+              Select all
+            </label>
           </div>
+
+          {selectedFosterIds.size > 0 && (
+            <div className="px-6 py-3 bg-primary-orange/5 border-b border-primary-orange/20 flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-gray-800">
+                {selectedFosterIds.size} foster{selectedFosterIds.size === 1 ? "" : "s"} selected
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedFosterIds(new Set())}
+                  className="border-gray-200 text-gray-700 hover:bg-white"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setBulkRemoveError(null)
+                    setShowBulkRemoveDialog(true)
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  <UserX className="w-4 h-4 mr-1" />
+                  Remove from org
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="divide-y divide-gray-100">
-            {fosters.map((foster) => {
+            {fosters.map((foster: any) => {
               const assignedDog = foster.dogs && foster.dogs.length > 0 ? foster.dogs[0] : null
 
               return (
-                <div key={foster.id} className="p-4 hover:bg-gray-50 transition">
+                <div
+                  key={foster.id}
+                  className={`p-4 transition ${
+                    selectedFosterIds.has(foster.id) ? "bg-primary-orange/5" : "hover:bg-gray-50"
+                  }`}
+                >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-center gap-3 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={selectedFosterIds.has(foster.id)}
+                        onChange={() => toggleFosterSelect(foster.id)}
+                        aria-label={`Select ${foster.name || foster.email}`}
+                        className="w-4 h-4 rounded border-gray-300 text-primary-orange focus:ring-primary-orange cursor-pointer flex-shrink-0"
+                      />
                       <div className="w-12 h-12 rounded-full bg-primary-orange/10 flex items-center justify-center">
                         <User className="w-6 h-6 text-primary-orange" />
                       </div>
@@ -580,6 +713,74 @@ export default function AdminFostersPage() {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk remove-from-org confirmation */}
+      <Dialog
+        open={showBulkRemoveDialog}
+        onOpenChange={(open) => !isBulkRemoving && setShowBulkRemoveDialog(open)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Remove {selectedFosterIds.size} foster{selectedFosterIds.size === 1 ? "" : "s"} from your org?
+            </DialogTitle>
+            <DialogDescription>
+              This removes the foster{selectedFosterIds.size === 1 ? "" : "s"} from{" "}
+              <strong>your organization only</strong>. Their Second Tail account stays active so they can join
+              another rescue later.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedFostersWithDogs.length > 0 && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+              <p className="font-medium mb-1">
+                {selectedFostersWithDogs.length} of the selected foster
+                {selectedFostersWithDogs.length === 1 ? " has" : "s have"} an animal assigned:
+              </p>
+              <ul className="list-disc list-inside space-y-0.5">
+                {selectedFostersWithDogs.slice(0, 5).map((f: any) => (
+                  <li key={f.id}>
+                    {f.name || f.email} → {f.dogs.map((d: any) => d.name).join(", ")}
+                  </li>
+                ))}
+                {selectedFostersWithDogs.length > 5 && (
+                  <li>+ {selectedFostersWithDogs.length - 5} more</li>
+                )}
+              </ul>
+              <p className="mt-2">
+                Those animals will be unassigned and set back to <strong>available</strong>.
+              </p>
+            </div>
+          )}
+
+          {bulkRemoveError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+              {bulkRemoveError}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowBulkRemoveDialog(false)}
+              disabled={isBulkRemoving}
+            >
+              Keep them
+            </Button>
+            <Button
+              type="button"
+              onClick={handleBulkRemoveFromOrg}
+              disabled={isBulkRemoving}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {isBulkRemoving
+                ? "Removing..."
+                : `Remove ${selectedFosterIds.size} foster${selectedFosterIds.size === 1 ? "" : "s"}`}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

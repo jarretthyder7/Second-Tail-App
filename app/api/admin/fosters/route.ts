@@ -120,3 +120,88 @@ export async function GET(request: Request) {
     )
   }
 }
+
+// Remove fosters from an organization in bulk. Does NOT delete the foster's user account —
+// just sets profiles.organization_id = null so they can join another rescue later. Also
+// unassigns any dogs they were fostering and resets those dogs to "available" so the org's
+// data isn't left in a broken state.
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json().catch(() => null)
+    const ids: unknown = body?.ids
+    const orgId: unknown = body?.orgId
+
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((i) => typeof i === "string")) {
+      return NextResponse.json({ error: "ids must be a non-empty array of strings" }, { status: 400 })
+    }
+    if (typeof orgId !== "string" || !orgId) {
+      return NextResponse.json({ error: "orgId is required" }, { status: 400 })
+    }
+
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { data: adminProfile } = await supabase
+      .from("profiles")
+      .select("role, org_role, organization_id")
+      .eq("id", user.id)
+      .single()
+
+    if (
+      !adminProfile ||
+      adminProfile.role !== "rescue" ||
+      adminProfile.org_role !== "org_admin" ||
+      adminProfile.organization_id !== orgId
+    ) {
+      return NextResponse.json({ error: "Forbidden: Not an admin of this organization" }, { status: 403 })
+    }
+
+    const admin = createServiceRoleClient()
+
+    // 1) Unassign dogs they were fostering. Scoped to the org so we can't reach across.
+    const { error: dogsError } = await admin
+      .from("dogs")
+      .update({ foster_id: null, status: "available", stage: "available" })
+      .in("foster_id", ids as string[])
+      .eq("organization_id", orgId)
+
+    if (dogsError) {
+      console.error("Failed to unassign dogs while removing fosters:", dogsError)
+      return NextResponse.json(
+        { error: `Couldn't unassign dogs: ${dogsError.message}` },
+        { status: 500 },
+      )
+    }
+
+    // 2) Disassociate the foster from the org. role stays "foster" so they can rejoin later.
+    const { data: removed, error: profilesError } = await admin
+      .from("profiles")
+      .update({ organization_id: null, org_role: null })
+      .in("id", ids as string[])
+      .eq("organization_id", orgId)
+      .eq("role", "foster")
+      .select("id")
+
+    if (profilesError) {
+      console.error("Failed to remove fosters from org:", profilesError)
+      return NextResponse.json(
+        { error: `Couldn't remove fosters: ${profilesError.message}` },
+        { status: 500 },
+      )
+    }
+
+    return NextResponse.json({
+      removed: (removed || []).length,
+      requested: ids.length,
+    })
+  } catch (error) {
+    console.error("Bulk remove fosters error:", error)
+    const message = error instanceof Error ? error.message : "Something went wrong"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

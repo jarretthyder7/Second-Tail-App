@@ -67,11 +67,25 @@ const animalFields: FieldDef[] = [
   { value: "foster_email", label: "Current Foster (Email)", tier: "optional", synonyms: ["foster email", "foster e-mail", "current foster email"] },
 ]
 
-// Foster field options for mapping
+// Foster field options for mapping. Spreadsheets vary: some have one "Full Name" column,
+// others split first + last. The first_name field accepts either — last_name is optional.
 const fosterFields: FieldDef[] = [
-  { value: "name", label: "Foster Name", tier: "required", synonyms: ["name", "foster name", "full name", "first name"] },
+  {
+    value: "first_name",
+    label: "First Name",
+    tier: "required",
+    synonyms: ["first name", "fname", "given name", "name", "foster name", "full name"],
+    hint: "Map a single 'Full Name' column here if your sheet doesn't split first/last.",
+  },
   { value: "email", label: "Email", tier: "required", synonyms: ["email", "e-mail", "email address"] },
 
+  {
+    value: "last_name",
+    label: "Last Name",
+    tier: "recommended",
+    synonyms: ["last name", "surname", "family name", "lname"],
+    hint: "Skip if your sheet only has one combined name column.",
+  },
   { value: "phone", label: "Phone", tier: "recommended", synonyms: ["phone", "phone number", "mobile", "cell"] },
   { value: "city", label: "City", tier: "recommended", synonyms: ["city"] },
   { value: "state", label: "State", tier: "recommended", synonyms: ["state", "province"] },
@@ -542,7 +556,8 @@ function ImportDataContent() {
 
       if (importType === "fosters") {
         for (const row of selectedRows) {
-          const displayName = row.data.email?.trim() || row.data.name?.trim() || "Unknown"
+          const fullName = [row.data.first_name?.trim(), row.data.last_name?.trim()].filter(Boolean).join(" ")
+          const displayName = fullName || row.data.email?.trim() || "Unknown"
           const { error } = await supabase.from("invitations").insert({
             organization_id: orgId,
             email: row.data.email?.trim(),
@@ -1181,9 +1196,9 @@ function ImportDataContent() {
                       {importType === "animals" && (
                         <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70 w-12">Photo</th>
                       )}
-                      <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Name</th>
                       {importType === "animals" ? (
                         <>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Name</th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Species</th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Breed</th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Age</th>
@@ -1193,6 +1208,8 @@ function ImportDataContent() {
                         </>
                       ) : (
                         <>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">First Name</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Last Name</th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Email</th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Phone</th>
                           <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">City</th>
@@ -1234,11 +1251,11 @@ function ImportDataContent() {
                             )}
                           </td>
                         )}
-                        <td className="px-3 py-2 font-medium text-[#5A4A42]">
-                          {editableCell(row.id, "name", row.data.name || "")}
-                        </td>
                         {importType === "animals" ? (
                           <>
+                            <td className="px-3 py-2 font-medium text-[#5A4A42]">
+                              {editableCell(row.id, "name", row.data.name || "")}
+                            </td>
                             <td className="px-3 py-2 text-[#5A4A42]/80">
                               {editableCell(row.id, "species", row.data.species || "", [
                                 "dog",
@@ -1276,6 +1293,12 @@ function ImportDataContent() {
                           </>
                         ) : (
                           <>
+                            <td className="px-3 py-2 font-medium text-[#5A4A42]">
+                              {editableCell(row.id, "first_name", row.data.first_name || "")}
+                            </td>
+                            <td className="px-3 py-2 text-[#5A4A42]/80">
+                              {editableCell(row.id, "last_name", row.data.last_name || "")}
+                            </td>
                             <td className="px-3 py-2 text-[#5A4A42]/80">
                               {editableCell(row.id, "email", row.data.email || "")}
                             </td>

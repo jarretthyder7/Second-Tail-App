@@ -622,7 +622,7 @@ function OrgAdminDashboardContent() {
 
                   {openSupportRequests > 0 && (
                     <Link
-                      href={`/org/${orgId}/admin/settings/help-requests`}
+                      href={`/org/${orgId}/admin/request-supplies`}
                       className="flex items-center justify-between p-3 rounded-lg bg-amber-50 border border-amber-100 hover:shadow-sm transition-all"
                     >
                       <div className="flex items-center gap-3">

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useCallback, useEffect } from "react"
-import { useParams, useSearchParams } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
 import {
@@ -35,33 +35,57 @@ type ParsedRow = {
   selected: boolean
 }
 
-// Animal field options for mapping
-const animalFields = [
-  { value: "name", label: "Animal Name", required: true },
-  { value: "intake_date", label: "Intake Date", required: false },
-  { value: "stage", label: "Status/Stage", required: false },
-  { value: "foster_name", label: "Current Foster (Name)", required: false },
-  { value: "foster_email", label: "Current Foster (Email)", required: false },
-  { value: "breed", label: "Breed", required: false },
-  { value: "age", label: "Age", required: false },
-  { value: "gender", label: "Gender", required: false },
-  { value: "weight", label: "Weight", required: false },
-  { value: "species", label: "Species", required: false },
-  { value: "medical_notes", label: "Medical Notes", required: false },
-  { value: "behavior_notes", label: "Behavior Notes", required: false },
-  { value: "internal_notes", label: "Internal Notes", required: false },
+type FieldDef = {
+  value: string
+  label: string
+  required: boolean
+  synonyms: string[]
+}
+
+// Animal field options for mapping. `synonyms` covers common header variants from
+// Shelterluv, PetPoint, RescueGroups, and generic spreadsheets so auto-mapping just works.
+const animalFields: FieldDef[] = [
+  { value: "name", label: "Animal Name", required: true, synonyms: ["name", "animal name", "pet name", "dog name", "cat name"] },
+  { value: "intake_date", label: "Intake Date", required: false, synonyms: ["intake date", "date of intake", "intake", "in date", "arrival date"] },
+  { value: "stage", label: "Status/Stage", required: false, synonyms: ["status", "stage", "current status", "animal status"] },
+  { value: "foster_name", label: "Current Foster (Name)", required: false, synonyms: ["foster name", "current foster", "foster", "foster home", "foster parent"] },
+  { value: "foster_email", label: "Current Foster (Email)", required: false, synonyms: ["foster email", "foster e-mail", "current foster email"] },
+  { value: "breed", label: "Breed", required: false, synonyms: ["breed", "primary breed", "breed 1"] },
+  { value: "age", label: "Age", required: false, synonyms: ["age", "age (years)", "age years"] },
+  { value: "gender", label: "Gender", required: false, synonyms: ["gender", "sex"] },
+  { value: "weight", label: "Weight", required: false, synonyms: ["weight", "weight (lbs)", "weight lbs", "weight in lbs"] },
+  { value: "species", label: "Species", required: false, synonyms: ["species", "animal type", "type", "animal species"] },
+  { value: "medical_notes", label: "Medical Notes", required: false, synonyms: ["medical notes", "medical", "vet notes", "health notes", "medical history"] },
+  { value: "behavior_notes", label: "Behavior Notes", required: false, synonyms: ["behavior notes", "behavior", "personality", "temperament", "behaviour notes"] },
+  { value: "internal_notes", label: "Internal Notes", required: false, synonyms: ["internal notes", "notes", "comments", "general notes", "description"] },
 ]
 
 // Foster field options for mapping
-const fosterFields = [
-  { value: "name", label: "Foster Name", required: true },
-  { value: "email", label: "Email", required: true },
-  { value: "phone", label: "Phone", required: false },
-  { value: "city", label: "City", required: false },
-  { value: "state", label: "State", required: false },
-  { value: "zip", label: "Zip Code", required: false },
-  { value: "status", label: "Approved Status", required: false },
-  { value: "notes", label: "Notes", required: false },
+const fosterFields: FieldDef[] = [
+  { value: "name", label: "Foster Name", required: true, synonyms: ["name", "foster name", "full name", "first name"] },
+  { value: "email", label: "Email", required: true, synonyms: ["email", "e-mail", "email address"] },
+  { value: "phone", label: "Phone", required: false, synonyms: ["phone", "phone number", "mobile", "cell"] },
+  { value: "city", label: "City", required: false, synonyms: ["city"] },
+  { value: "state", label: "State", required: false, synonyms: ["state", "province"] },
+  { value: "zip", label: "Zip Code", required: false, synonyms: ["zip", "zip code", "postal code", "postcode"] },
+  { value: "status", label: "Approved Status", required: false, synonyms: ["status", "approved", "approval status"] },
+  { value: "notes", label: "Notes", required: false, synonyms: ["notes", "comments", "description"] },
+]
+
+// Whitelist of `dogs` columns we'll actually insert. Anything else is ignored at import time
+// (e.g. foster_name / foster_email need separate matching logic and aren't direct columns;
+// internal_notes isn't a column on dogs today — folded into medical_notes if mapped).
+const DOG_COLUMNS: string[] = [
+  "name",
+  "breed",
+  "age",
+  "gender",
+  "weight",
+  "species",
+  "stage",
+  "intake_date",
+  "medical_notes",
+  "behavior_notes",
 ]
 
 export default function ImportDataPage() {
@@ -74,6 +98,7 @@ export default function ImportDataPage() {
 
 function ImportDataContent() {
   const params = useParams()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const orgId = params.orgId as string
 
@@ -93,77 +118,177 @@ function ImportDataContent() {
   const [columnMappings, setColumnMappings] = useState<ColumnMapping[]>([])
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([])
   const [importing, setImporting] = useState(false)
+  const [parsing, setParsing] = useState(false)
   const [importResults, setImportResults] = useState<{ animals: number; fosters: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // Parse CSV content
-  const parseCSV = (content: string): { headers: string[]; rows: string[][] } => {
-    const lines = content.split(/\r?\n/).filter((line) => line.trim())
-    if (lines.length === 0) return { headers: [], rows: [] }
+  // Parse a CSV string into rows. Handles quoted fields with embedded commas.
+  const parseCSV = (content: string): string[][] => {
+    const rows: string[][] = []
+    let current = ""
+    let row: string[] = []
+    let inQuotes = false
 
-    const parseRow = (row: string): string[] => {
-      const result: string[] = []
-      let current = ""
-      let inQuotes = false
+    for (let i = 0; i < content.length; i++) {
+      const char = content[i]
+      const next = content[i + 1]
 
-      for (let i = 0; i < row.length; i++) {
-        const char = row[i]
-        if (char === '"') {
-          inQuotes = !inQuotes
-        } else if (char === "," && !inQuotes) {
-          result.push(current.trim())
-          current = ""
+      if (char === '"') {
+        if (inQuotes && next === '"') {
+          current += '"'
+          i++ // skip the escaped quote
         } else {
-          current += char
+          inQuotes = !inQuotes
         }
+      } else if (char === "," && !inQuotes) {
+        row.push(current)
+        current = ""
+      } else if ((char === "\n" || char === "\r") && !inQuotes) {
+        row.push(current)
+        rows.push(row)
+        row = []
+        current = ""
+        if (char === "\r" && next === "\n") i++ // swallow CRLF
+      } else {
+        current += char
       }
-      result.push(current.trim())
-      return result
     }
+    if (current.length > 0 || row.length > 0) {
+      row.push(current)
+      rows.push(row)
+    }
+    return rows
+  }
 
-    const headers = parseRow(lines[0])
-    const rows = lines.slice(1).map(parseRow)
+  // Normalize a 2D grid into { headers, rows }: skip leading blank rows, trim, drop fully-empty
+  // columns, fill blank header cells with placeholder names so the UI doesn't break.
+  const normalizeGrid = (grid: string[][]): { headers: string[]; rows: string[][] } => {
+    let headerIdx = 0
+    while (headerIdx < grid.length && grid[headerIdx].every((c) => !String(c ?? "").trim())) {
+      headerIdx++
+    }
+    if (headerIdx >= grid.length) return { headers: [], rows: [] }
+
+    const rawHeader = grid[headerIdx].map((c) => String(c ?? "").trim())
+    const dataRows = grid
+      .slice(headerIdx + 1)
+      .map((r) => r.map((c) => String(c ?? "").trim()))
+      .filter((r) => r.some((c) => c !== ""))
+
+    // Pad rows to header length
+    const width = rawHeader.length
+    const padded = dataRows.map((r) => {
+      if (r.length === width) return r
+      if (r.length < width) return [...r, ...Array(width - r.length).fill("")]
+      return r.slice(0, width)
+    })
+
+    // Drop columns where the header is blank AND all data cells are blank
+    const keep = rawHeader.map((h, i) => h !== "" || padded.some((r) => r[i] !== ""))
+    const headers = rawHeader
+      .map((h, i) => (h !== "" ? h : `Column ${i + 1}`))
+      .filter((_, i) => keep[i])
+    const rows = padded.map((r) => r.filter((_, i) => keep[i]))
 
     return { headers, rows }
+  }
+
+  // Parse any supported file type into a clean { headers, rows }.
+  const parseSpreadsheet = async (uploadedFile: File): Promise<{ headers: string[]; rows: string[][] }> => {
+    const lower = uploadedFile.name.toLowerCase()
+    const isExcel = lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".xlsm")
+
+    if (isExcel) {
+      // Lazy-load xlsx so we don't ship ~900KB on every page load
+      const XLSX = await import("xlsx")
+      const buffer = await uploadedFile.arrayBuffer()
+      const workbook = XLSX.read(buffer, { type: "array", cellDates: true })
+      const firstSheet = workbook.SheetNames[0]
+      if (!firstSheet) return { headers: [], rows: [] }
+      const sheet = workbook.Sheets[firstSheet]
+      const grid = XLSX.utils.sheet_to_json<unknown[]>(sheet, {
+        header: 1,
+        raw: false,
+        defval: "",
+        blankrows: false,
+      }) as unknown[][]
+      const stringGrid = grid.map((r) => r.map((c) => (c == null ? "" : String(c))))
+      return normalizeGrid(stringGrid)
+    }
+
+    const text = await uploadedFile.text()
+    return normalizeGrid(parseCSV(text))
+  }
+
+  // Auto-detect column mappings using exact-then-fuzzy matching against the synonym table.
+  const autoMapColumns = (parsedHeaders: string[], type: ImportType): ColumnMapping[] => {
+    const fields = type === "fosters" ? fosterFields : animalFields
+    const claimed = new Set<string>()
+
+    // Build a lookup from normalized synonym -> field value
+    const norm = (s: string) => s.toLowerCase().replace(/[_\-\s.()]+/g, " ").trim()
+    const exactMap = new Map<string, string>()
+    fields.forEach((f) => {
+      f.synonyms.forEach((syn) => exactMap.set(norm(syn), f.value))
+    })
+
+    return parsedHeaders.map((header) => {
+      const key = norm(header)
+      let match: string | null = exactMap.get(key) ?? null
+
+      if (!match) {
+        // Fuzzy: header contains a synonym OR synonym contains the header
+        for (const f of fields) {
+          if (claimed.has(f.value)) continue
+          if (f.synonyms.some((syn) => key.includes(norm(syn)) || norm(syn).includes(key))) {
+            match = f.value
+            break
+          }
+        }
+      }
+
+      // Don't claim the same target twice — second match falls back to skip
+      if (match && claimed.has(match)) match = null
+      if (match) claimed.add(match)
+
+      return { sourceColumn: header, targetField: match }
+    })
   }
 
   // Handle file upload
   const handleFileUpload = useCallback(
     async (uploadedFile: File) => {
+      if (!importType) return
       setError(null)
       setFile(uploadedFile)
+      setParsing(true)
 
       try {
-        const content = await uploadedFile.text()
-        const { headers: parsedHeaders, rows } = parseCSV(content)
+        const { headers: parsedHeaders, rows } = await parseSpreadsheet(uploadedFile)
 
         if (parsedHeaders.length === 0) {
-          setError("Could not parse file. Please ensure it's a valid CSV.")
+          setError(
+            "We couldn't find any columns in that file. Make sure the first row contains column names (like 'Name', 'Breed', 'Intake Date') and try again.",
+          )
+          return
+        }
+
+        if (rows.length === 0) {
+          setError("That file has headers but no data rows underneath. Add at least one row and re-upload.")
           return
         }
 
         setHeaders(parsedHeaders)
         setRawData(rows)
-
-        // Auto-detect initial column mappings based on header names
-        const fields = importType === "fosters" ? fosterFields : animalFields
-        const initialMappings: ColumnMapping[] = parsedHeaders.map((header) => {
-          const headerLower = header.toLowerCase()
-          const matchedField = fields.find(
-            (f) =>
-              headerLower.includes(f.value.toLowerCase()) ||
-              headerLower.includes(f.label.toLowerCase().split(" ")[0].toLowerCase()),
-          )
-          return {
-            sourceColumn: header,
-            targetField: matchedField?.value || null,
-          }
-        })
-
-        setColumnMappings(initialMappings)
+        setColumnMappings(autoMapColumns(parsedHeaders, importType))
         setCurrentStep("mapping")
       } catch (err) {
-        setError("Failed to read file. Please try again.")
+        console.error("Spreadsheet parse failed:", err)
+        setError(
+          "We couldn't read that file. It may be password-protected or corrupted. Try saving a fresh copy as .xlsx or .csv and re-upload.",
+        )
+      } finally {
+        setParsing(false)
       }
     },
     [importType],
@@ -174,10 +299,12 @@ function ImportDataContent() {
     (e: React.DragEvent) => {
       e.preventDefault()
       const droppedFile = e.dataTransfer.files[0]
-      if (droppedFile && (droppedFile.name.endsWith(".csv") || droppedFile.name.endsWith(".xlsx"))) {
+      if (!droppedFile) return
+      const lower = droppedFile.name.toLowerCase()
+      if (lower.endsWith(".csv") || lower.endsWith(".xlsx") || lower.endsWith(".xls") || lower.endsWith(".xlsm")) {
         handleFileUpload(droppedFile)
       } else {
-        setError("Please upload a CSV or Excel file.")
+        setError("Please upload a CSV or Excel file (.csv, .xlsx, .xls).")
       }
     },
     [handleFileUpload],
@@ -185,35 +312,28 @@ function ImportDataContent() {
 
   // Process mappings and create preview rows
   const processDataForReview = () => {
+    const fields = importType === "fosters" ? fosterFields : animalFields
+
     const rows: ParsedRow[] = rawData.map((row, index) => {
       const data: Record<string, string> = {}
-      let hasRequiredFields = true
       const missingFields: string[] = []
 
       columnMappings.forEach((mapping, colIndex) => {
-        if (mapping.targetField && row[colIndex]) {
-          data[mapping.targetField] = row[colIndex]
+        if (mapping.targetField && row[colIndex] != null && row[colIndex].trim() !== "") {
+          data[mapping.targetField] = row[colIndex].trim()
         }
       })
 
-      // Check required fields
-      const fields = importType === "fosters" ? fosterFields : animalFields
       fields
         .filter((f) => f.required)
         .forEach((field) => {
           if (!data[field.value] || data[field.value].trim() === "") {
-            hasRequiredFields = false
             missingFields.push(field.label)
           }
         })
 
-      let status: ParsedRow["status"] = "ready"
-      let statusMessage = ""
-
-      if (!hasRequiredFields) {
-        status = "missing_info"
-        statusMessage = `Missing: ${missingFields.join(", ")}`
-      }
+      const status: ParsedRow["status"] = missingFields.length > 0 ? "missing_info" : "ready"
+      const statusMessage = missingFields.length > 0 ? `Missing: ${missingFields.join(", ")}` : ""
 
       return {
         id: `row-${index}`,
@@ -228,7 +348,19 @@ function ImportDataContent() {
     setCurrentStep("review")
   }
 
-  // Handle import
+  // Convert a date string to ISO date (YYYY-MM-DD). Returns null if unparseable.
+  const toIsoDate = (raw: string): string | null => {
+    if (!raw) return null
+    const trimmed = raw.trim()
+    // Already ISO-ish?
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`
+    const d = new Date(trimmed)
+    if (isNaN(d.getTime())) return null
+    return d.toISOString().split("T")[0]
+  }
+
+  // Handle import — insert all mapped fields that map to known dogs columns.
   const handleImport = async () => {
     setImporting(true)
     setError(null)
@@ -242,37 +374,44 @@ function ImportDataContent() {
     try {
       if (importType === "animals") {
         for (const row of selectedRows) {
-          const { error } = await supabase.from("dogs").insert({
+          const insert: Record<string, unknown> = {
             organization_id: orgId,
-            name: row.data.name || "Unnamed Animal",
-            breed: row.data.breed || null,
-            age: row.data.age ? Number.parseInt(row.data.age) : null,
-            gender: row.data.gender || null,
-            weight: row.data.weight ? Number.parseInt(row.data.weight) : null,
-            species: row.data.species || "dog",
-            stage: row.data.stage || "intake",
-            intake_date: row.data.intake_date || new Date().toISOString().split("T")[0],
-            medical_notes: row.data.medical_notes || null,
-            behavior_notes: row.data.behavior_notes || null,
-          })
+            name: row.data.name?.trim() || "Unnamed Animal",
+            species: row.data.species?.toLowerCase().trim() || "dog",
+            stage: row.data.stage?.trim() || "intake",
+            intake_date: toIsoDate(row.data.intake_date || "") || new Date().toISOString().split("T")[0],
+          }
 
+          // Pass through any additional mapped fields that map to real columns
+          for (const col of DOG_COLUMNS) {
+            if (col in insert) continue
+            const val = row.data[col]
+            if (val != null && val.trim() !== "") {
+              insert[col] = val.trim()
+            }
+          }
+
+          const { error } = await supabase.from("dogs").insert(insert)
           if (!error) {
             animalsImported++
+          } else {
+            console.error("Animal insert failed:", error, insert)
           }
         }
       }
 
       if (importType === "fosters") {
         for (const row of selectedRows) {
-          // Create invitation for foster
           const { error } = await supabase.from("invitations").insert({
             organization_id: orgId,
-            email: row.data.email,
+            email: row.data.email?.trim(),
             status: "pending",
           })
 
           if (!error) {
             fostersImported++
+          } else {
+            console.error("Foster invitation insert failed:", error)
           }
         }
       }
@@ -280,6 +419,7 @@ function ImportDataContent() {
       setImportResults({ animals: animalsImported, fosters: fostersImported })
       setCurrentStep("complete")
     } catch (err) {
+      console.error("Import failed:", err)
       setError("Import failed. Please try again.")
     } finally {
       setImporting(false)
@@ -291,12 +431,12 @@ function ImportDataContent() {
     setParsedRows((prev) => prev.map((row) => (row.id === rowId ? { ...row, selected: !row.selected } : row)))
   }
 
-  // Select all ready rows
-  const selectAllReady = () => {
+  // Approve all ready rows (selects every row with status === "ready")
+  const approveAllReady = () => {
     setParsedRows((prev) =>
       prev.map((row) => ({
         ...row,
-        selected: row.status === "ready",
+        selected: row.status === "ready" ? true : row.selected,
       })),
     )
   }
@@ -328,6 +468,8 @@ function ImportDataContent() {
     </div>
   )
 
+  const previewSampleRows = rawData.slice(0, 3)
+
   return (
     <div className="min-h-screen bg-[#FBF8F4] p-6">
       <div className="max-w-4xl mx-auto">
@@ -342,10 +484,10 @@ function ImportDataContent() {
         <StepIndicator />
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-            <p className="text-red-700">{error}</p>
-            <button onClick={() => setError(null)} className="ml-auto">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-red-700 flex-1">{error}</p>
+            <button onClick={() => setError(null)} aria-label="Dismiss error">
               <X className="w-4 h-4 text-red-500" />
             </button>
           </div>
@@ -389,16 +531,29 @@ function ImportDataContent() {
               <div
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
-                className="border-2 border-dashed border-[#F7E2BD] rounded-xl p-12 text-center hover:border-[#D76B1A] transition cursor-pointer"
-                onClick={() => document.getElementById("file-input")?.click()}
+                className={`border-2 border-dashed rounded-xl p-12 text-center transition cursor-pointer ${
+                  parsing
+                    ? "border-[#D76B1A] bg-[#D76B1A]/5"
+                    : "border-[#F7E2BD] hover:border-[#D76B1A]"
+                }`}
+                onClick={() => !parsing && document.getElementById("file-input")?.click()}
               >
-                <Upload className="w-12 h-12 text-[#5A4A42]/40 mx-auto mb-4" />
-                <p className="text-[#5A4A42] font-medium">Drop your file here or click to browse</p>
-                <p className="text-sm text-[#5A4A42]/60 mt-1">Supports CSV and Excel files</p>
+                {parsing ? (
+                  <>
+                    <div className="w-12 h-12 border-4 border-[#D76B1A]/30 border-t-[#D76B1A] rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-[#5A4A42] font-medium">Reading {file?.name}...</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-12 h-12 text-[#5A4A42]/40 mx-auto mb-4" />
+                    <p className="text-[#5A4A42] font-medium">Drop your file here or click to browse</p>
+                    <p className="text-sm text-[#5A4A42]/60 mt-1">Supports CSV and Excel files (.csv, .xlsx, .xls)</p>
+                  </>
+                )}
                 <input
                   id="file-input"
                   type="file"
-                  accept=".csv,.xlsx,.xls"
+                  accept=".csv,.xlsx,.xls,.xlsm"
                   className="hidden"
                   onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
                 />
@@ -414,7 +569,7 @@ function ImportDataContent() {
               <div>
                 <h2 className="text-xl font-semibold text-[#5A4A42]">Map Your Columns</h2>
                 <p className="text-[#5A4A42]/70 mt-1">
-                  Match your spreadsheet columns to the fields we need. Skip any you don't have.
+                  We auto-matched what we recognized. Adjust anything that's wrong, or skip columns you don't need.
                 </p>
               </div>
               <button
@@ -426,50 +581,94 @@ function ImportDataContent() {
               </button>
             </div>
 
-            {/* Preview of first row */}
-            {rawData.length > 0 && (
-              <div className="mb-6 p-4 bg-[#FBF8F4] rounded-xl">
-                <p className="text-sm font-medium text-[#5A4A42] mb-2">Preview (first row):</p>
-                <div className="flex flex-wrap gap-2">
-                  {headers.map((header, i) => (
-                    <span key={i} className="px-2 py-1 bg-white rounded text-xs text-[#5A4A42]">
-                      {header}: {rawData[0]?.[i] || "(empty)"}
-                    </span>
-                  ))}
+            {/* Compact preview table — first 3 data rows */}
+            {previewSampleRows.length > 0 && (
+              <div className="mb-6 border border-[#F7E2BD] rounded-xl overflow-hidden">
+                <div className="px-4 py-2 bg-[#FBF8F4] border-b border-[#F7E2BD]">
+                  <p className="text-sm font-medium text-[#5A4A42]">
+                    Preview — first {previewSampleRows.length} of {rawData.length} row{rawData.length === 1 ? "" : "s"}
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead className="bg-white">
+                      <tr>
+                        {headers.map((header, i) => (
+                          <th key={i} className="px-3 py-2 text-left font-medium text-[#5A4A42] whitespace-nowrap">
+                            {header}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F7E2BD]">
+                      {previewSampleRows.map((row, rowIdx) => (
+                        <tr key={rowIdx}>
+                          {headers.map((_, colIdx) => (
+                            <td
+                              key={colIdx}
+                              className="px-3 py-2 text-[#5A4A42]/80 whitespace-nowrap max-w-[200px] truncate"
+                              title={row[colIdx] || ""}
+                            >
+                              {row[colIdx] || <span className="text-[#5A4A42]/30">—</span>}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             )}
 
             {/* Column mappings */}
             <div className="space-y-3 mb-8">
-              {columnMappings.map((mapping, index) => (
-                <div key={index} className="flex items-center gap-4 p-3 bg-[#FBF8F4] rounded-xl">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-[#5A4A42]">{mapping.sourceColumn}</p>
-                    <p className="text-xs text-[#5A4A42]/60">Sample: {rawData[0]?.[index] || "(empty)"}</p>
+              {columnMappings.map((mapping, index) => {
+                const sample = rawData[0]?.[index] || ""
+                const fields = importType === "fosters" ? fosterFields : animalFields
+                const matched = fields.find((f) => f.value === mapping.targetField)
+                return (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-[#FBF8F4] rounded-xl">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#5A4A42] truncate">{mapping.sourceColumn}</p>
+                      <p className="text-xs text-[#5A4A42]/60 truncate">
+                        Sample: {sample || <span className="italic">empty</span>}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-[#5A4A42]/40 flex-shrink-0" />
+                    <div className="flex-1 flex items-center gap-2">
+                      <select
+                        value={mapping.targetField || ""}
+                        onChange={(e) => {
+                          const newMappings = [...columnMappings]
+                          newMappings[index].targetField = e.target.value || null
+                          setColumnMappings(newMappings)
+                        }}
+                        className="flex-1 px-3 py-2 border border-[#F7E2BD] rounded-lg text-sm text-[#5A4A42] bg-white"
+                      >
+                        <option value="">Skip this column</option>
+                        {fields.map((field) => (
+                          <option key={field.value} value={field.value}>
+                            {field.label}
+                            {field.required ? " *" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {matched && (
+                        <span
+                          className="inline-flex items-center gap-1 text-xs text-green-700 flex-shrink-0"
+                          title="Auto-matched"
+                        >
+                          <Check className="w-3 h-3" />
+                          matched
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <ArrowRight className="w-4 h-4 text-[#5A4A42]/40" />
-                  <select
-                    value={mapping.targetField || ""}
-                    onChange={(e) => {
-                      const newMappings = [...columnMappings]
-                      newMappings[index].targetField = e.target.value || null
-                      setColumnMappings(newMappings)
-                    }}
-                    className="flex-1 px-3 py-2 border border-[#F7E2BD] rounded-lg text-sm text-[#5A4A42] bg-white"
-                  >
-                    <option value="">Skip this column</option>
-                    {(importType === "fosters" ? fosterFields : animalFields).map((field) => (
-                      <option key={field.value} value={field.value}>
-                        {field.label} {field.required && "*"}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
+                )
+              })}
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center">
               <p className="text-sm text-[#5A4A42]/60">* Required fields</p>
               <button
                 onClick={processDataForReview}
@@ -489,7 +688,8 @@ function ImportDataContent() {
               <div>
                 <h2 className="text-xl font-semibold text-[#5A4A42]">Review & Approve</h2>
                 <p className="text-[#5A4A42]/70 mt-1">
-                  Review your data before importing. You can skip or edit any rows.
+                  Approve the rows you want to import. Anything missing required info is unchecked by default — you can
+                  still include it and clean up later.
                 </p>
               </div>
               <button
@@ -515,48 +715,67 @@ function ImportDataContent() {
                 </p>
                 <p className="text-sm text-yellow-700">Missing info</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-xl">
-                <p className="text-2xl font-bold text-gray-600">{parsedRows.filter((r) => r.selected).length}</p>
-                <p className="text-sm text-gray-700">Selected</p>
+              <div className="p-4 bg-[#FBF8F4] rounded-xl">
+                <p className="text-2xl font-bold text-[#D76B1A]">{parsedRows.filter((r) => r.selected).length}</p>
+                <p className="text-sm text-[#5A4A42]/70">Approved</p>
               </div>
             </div>
 
             {/* Bulk actions */}
-            <div className="flex items-center gap-4 mb-4">
-              <button onClick={selectAllReady} className="text-sm text-[#D76B1A] hover:underline">
-                Select all ready rows
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <button
+                onClick={approveAllReady}
+                className="px-3 py-1.5 bg-[#D76B1A]/10 text-[#D76B1A] rounded-lg text-sm font-medium hover:bg-[#D76B1A]/20 transition flex items-center gap-1.5"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Approve all ready ({parsedRows.filter((r) => r.status === "ready").length})
               </button>
-              <span className="text-[#5A4A42]/30">|</span>
               <button
                 onClick={() => setParsedRows((prev) => prev.map((r) => ({ ...r, selected: true })))}
                 className="text-sm text-[#5A4A42]/70 hover:text-[#5A4A42]"
               >
-                Select all
+                Approve all
               </button>
+              <span className="text-[#5A4A42]/30">|</span>
               <button
                 onClick={() => setParsedRows((prev) => prev.map((r) => ({ ...r, selected: false })))}
                 className="text-sm text-[#5A4A42]/70 hover:text-[#5A4A42]"
               >
-                Deselect all
+                Reject all
               </button>
             </div>
 
             {/* Data table */}
             <div className="border border-[#F7E2BD] rounded-xl overflow-hidden mb-6">
-              <div className="max-h-96 overflow-y-auto">
-                <table className="w-full">
+              <div className="max-h-96 overflow-auto">
+                <table className="w-full text-sm">
                   <thead className="bg-[#FBF8F4] sticky top-0">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Select</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Name</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Key Info</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Status</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70 w-10">✓</th>
+                      <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Name</th>
+                      {importType === "animals" ? (
+                        <>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Species</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Breed</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Age</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Gender</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Intake</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Stage</th>
+                        </>
+                      ) : (
+                        <>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Email</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Phone</th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">City</th>
+                        </>
+                      )}
+                      <th className="px-3 py-3 text-left text-xs font-medium text-[#5A4A42]/70">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F7E2BD]">
                     {parsedRows.map((row) => (
                       <tr key={row.id} className={row.selected ? "bg-[#D76B1A]/5" : ""}>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3">
                           <input
                             type="checkbox"
                             checked={row.selected}
@@ -564,21 +783,33 @@ function ImportDataContent() {
                             className="w-4 h-4 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]"
                           />
                         </td>
-                        <td className="px-4 py-3 text-sm font-medium text-[#5A4A42]">{row.data.name || "(No name)"}</td>
-                        <td className="px-4 py-3 text-sm text-[#5A4A42]/70">
-                          {importType === "fosters"
-                            ? row.data.email || "(No email)"
-                            : `${row.data.breed || "Unknown"} • ${row.data.age || "?"} yrs`}
-                        </td>
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3 font-medium text-[#5A4A42]">{row.data.name || "(no name)"}</td>
+                        {importType === "animals" ? (
+                          <>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.species || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.breed || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.age || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.gender || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.intake_date || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.stage || "—"}</td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.email || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.phone || "—"}</td>
+                            <td className="px-3 py-3 text-[#5A4A42]/70">{row.data.city || "—"}</td>
+                          </>
+                        )}
+                        <td className="px-3 py-3">
                           <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${
                               row.status === "ready"
                                 ? "bg-green-100 text-green-700"
                                 : row.status === "missing_info"
                                   ? "bg-yellow-100 text-yellow-700"
                                   : "bg-gray-100 text-gray-700"
                             }`}
+                            title={row.statusMessage || ""}
                           >
                             {row.status === "ready" && <CheckCircle2 className="w-3 h-3" />}
                             {row.status === "missing_info" && <AlertCircle className="w-3 h-3" />}
@@ -595,8 +826,8 @@ function ImportDataContent() {
             {/* Helper message */}
             <div className="p-4 bg-blue-50 rounded-xl mb-6">
               <p className="text-sm text-blue-700">
-                <strong>Tip:</strong> You can import rows with missing data - you can always clean them up later. This
-                won't affect foster access.
+                <strong>Tip:</strong> You can import rows with missing data and clean them up later. This won't affect
+                foster access.
               </p>
             </div>
 
@@ -613,8 +844,10 @@ function ImportDataContent() {
                   </>
                 ) : (
                   <>
-                    Import {parsedRows.filter((r) => r.selected).length} Records
-                    <ArrowRight className="w-4 h-4" />
+                    <CheckCircle2 className="w-4 h-4" />
+                    Approve & Import {parsedRows.filter((r) => r.selected).length}{" "}
+                    {importType === "animals" ? "Animal" : "Foster"}
+                    {parsedRows.filter((r) => r.selected).length === 1 ? "" : "s"}
                   </>
                 )}
               </button>
@@ -630,43 +863,36 @@ function ImportDataContent() {
             </div>
             <h2 className="text-2xl font-bold text-[#5A4A42] mb-2">You're Ready to Go!</h2>
             <p className="text-[#5A4A42]/70 mb-8">
-              {importResults.animals > 0 && `${importResults.animals} animals`}
+              {importResults.animals > 0 && `${importResults.animals} animal${importResults.animals === 1 ? "" : "s"}`}
               {importResults.animals > 0 && importResults.fosters > 0 && " and "}
-              {importResults.fosters > 0 && `${importResults.fosters} fosters`} imported successfully.
+              {importResults.fosters > 0 && `${importResults.fosters} foster${importResults.fosters === 1 ? "" : "s"}`}{" "}
+              imported successfully.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a
-                href={`/org/${orgId}/admin/dogs`}
+              <button
+                onClick={() => router.push(`/org/${orgId}/admin/${importType === "fosters" ? "fosters" : "dogs"}`)}
                 className="px-6 py-3 bg-[#D76B1A] text-white rounded-xl font-medium hover:bg-[#C55F14] transition flex items-center justify-center gap-2"
               >
-                <Dog className="w-4 h-4" />
-                View Animals
-              </a>
-              <a
-                href={`/org/${orgId}/admin/fosters`}
+                {importType === "fosters" ? <Users className="w-4 h-4" /> : <Dog className="w-4 h-4" />}
+                View {importType === "fosters" ? "Fosters" : "Animals"}
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setCurrentStep("upload")
+                  setFile(null)
+                  setHeaders([])
+                  setRawData([])
+                  setColumnMappings([])
+                  setParsedRows([])
+                  setImportResults(null)
+                }}
                 className="px-6 py-3 border border-[#F7E2BD] text-[#5A4A42] rounded-xl font-medium hover:bg-[#FBF8F4] transition flex items-center justify-center gap-2"
               >
-                <Users className="w-4 h-4" />
-                View Fosters
-              </a>
+                Import more data
+              </button>
             </div>
-
-            <button
-              onClick={() => {
-                setCurrentStep("upload")
-                setFile(null)
-                setImportType(null)
-                setHeaders([])
-                setRawData([])
-                setColumnMappings([])
-                setParsedRows([])
-                setImportResults(null)
-              }}
-              className="mt-6 text-sm text-[#5A4A42]/70 hover:text-[#5A4A42]"
-            >
-              Import more data
-            </button>
           </div>
         )}
       </div>

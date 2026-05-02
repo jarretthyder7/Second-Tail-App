@@ -1638,7 +1638,11 @@ function OrgAdminDashboardContent() {
         {/* ── Stats Summary Bar ── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {/* Animals in Care */}
-          <div className="bg-gradient-to-br from-orange-50 to-orange-100/60 rounded-xl border border-orange-200/70 p-4 shadow-sm">
+          <Link
+            href={`/org/${orgId}/admin/animals`}
+            aria-label={`View ${totalAnimalsInCare} animals in care`}
+            className="block bg-gradient-to-br from-orange-50 to-orange-100/60 rounded-xl border border-orange-200/70 p-4 shadow-sm hover:shadow-md hover:border-orange-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40"
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold text-orange-700/70 uppercase tracking-wide">Animals in Care</span>
               <div className="w-8 h-8 rounded-lg bg-white/70 border border-orange-200/60 flex items-center justify-center">
@@ -1647,10 +1651,14 @@ function OrgAdminDashboardContent() {
             </div>
             <div className="text-3xl font-bold text-orange-900">{totalAnimalsInCare}</div>
             <p className="text-xs text-orange-700/50 mt-1">Active placements</p>
-          </div>
+          </Link>
 
           {/* Active Fosters */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100/60 rounded-xl border border-blue-200/70 p-4 shadow-sm">
+          <Link
+            href={`/org/${orgId}/admin/fosters`}
+            aria-label={`View ${activeFosters} active fosters`}
+            className="block bg-gradient-to-br from-blue-50 to-blue-100/60 rounded-xl border border-blue-200/70 p-4 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-blue-400/40"
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold text-blue-700/70 uppercase tracking-wide">Active Fosters</span>
               <div className="w-8 h-8 rounded-lg bg-white/70 border border-blue-200/60 flex items-center justify-center">
@@ -1659,11 +1667,15 @@ function OrgAdminDashboardContent() {
             </div>
             <div className="text-3xl font-bold text-blue-900">{activeFosters}</div>
             <p className="text-xs text-blue-700/50 mt-1">Registered fosters</p>
-          </div>
+          </Link>
 
           {/* Need Response */}
           {totalInboxItems > 0 ? (
-            <div className="bg-gradient-to-br from-red-50 to-red-100/60 rounded-xl border border-red-200/70 p-4 shadow-sm">
+            <Link
+              href={`/org/${orgId}/admin/messages`}
+              aria-label={`Open ${totalInboxItems} messages awaiting reply`}
+              className="block bg-gradient-to-br from-red-50 to-red-100/60 rounded-xl border border-red-200/70 p-4 shadow-sm hover:shadow-md hover:border-red-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-red-400/40"
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-red-700/70 uppercase tracking-wide">Need Response</span>
                 <div className="w-8 h-8 rounded-lg bg-white/70 border border-red-200/60 flex items-center justify-center">
@@ -1672,9 +1684,13 @@ function OrgAdminDashboardContent() {
               </div>
               <div className="text-3xl font-bold text-red-700">{totalInboxItems}</div>
               <p className="text-xs text-red-600/60 mt-1">Awaiting reply</p>
-            </div>
+            </Link>
           ) : (
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/60 rounded-xl border border-emerald-200/70 p-4 shadow-sm">
+            <Link
+              href={`/org/${orgId}/admin/messages`}
+              aria-label="Open messages"
+              className="block bg-gradient-to-br from-emerald-50 to-emerald-100/60 rounded-xl border border-emerald-200/70 p-4 shadow-sm hover:shadow-md hover:border-emerald-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-emerald-400/40"
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[11px] font-semibold text-emerald-700/70 uppercase tracking-wide">Need Response</span>
                 <div className="w-8 h-8 rounded-lg bg-white/70 border border-emerald-200/60 flex items-center justify-center">
@@ -1683,11 +1699,15 @@ function OrgAdminDashboardContent() {
               </div>
               <div className="text-3xl font-bold text-emerald-700">0</div>
               <p className="text-xs text-emerald-700/50 mt-1">All caught up ✓</p>
-            </div>
+            </Link>
           )}
 
           {/* Appointments */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100/60 rounded-xl border border-purple-200/70 p-4 shadow-sm">
+          <Link
+            href={`/org/${orgId}/admin/appointments`}
+            aria-label={`View ${todaysAppointments.length} upcoming appointments in the next 48 hours`}
+            className="block bg-gradient-to-br from-purple-50 to-purple-100/60 rounded-xl border border-purple-200/70 p-4 shadow-sm hover:shadow-md hover:border-purple-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-purple-400/40"
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold text-purple-700/70 uppercase tracking-wide">Appts (48h)</span>
               <div className="w-8 h-8 rounded-lg bg-white/70 border border-purple-200/60 flex items-center justify-center">
@@ -1696,7 +1716,7 @@ function OrgAdminDashboardContent() {
             </div>
             <div className="text-3xl font-bold text-purple-900">{todaysAppointments.length}</div>
             <p className="text-xs text-purple-700/50 mt-1">Upcoming visits</p>
-          </div>
+          </Link>
         </div>
 
         <div

@@ -1632,7 +1632,7 @@ function OrgAdminDashboardContent() {
         <div className="flex flex-wrap gap-2 mb-6">
           <Link
             href={`/org/${orgId}/admin/animals`}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#D76B1A] text-white rounded-lg text-xs font-semibold hover:bg-[#D76B1A]/90 transition shadow-sm"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-primary-orange text-white rounded-lg text-xs font-semibold hover:bg-primary-orange-hover transition shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Animal

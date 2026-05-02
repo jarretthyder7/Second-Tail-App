@@ -122,15 +122,18 @@
      Clean, modern SaaS with punchy accents
      ======================================== */
 
-  /* Core Brand Colors */
-  --color-primary-orange: #d76b1a;
-  --color-primary-orange-hover: #c25f15;
-  --color-primary-orange-light: #fff7f0;
-  --color-accent-beige: #f7e2bd;
+  /* Core Brand Colors
+     These follow the org's branding settings (--brand-primary / --brand-accent / --brand-bg
+     injected by lib/branding/branding-loader.ts). The hex on the right of each var() is
+     the Second Tail default, used when no org branding is set or before it loads. */
+  --color-primary-orange: var(--brand-primary, #d76b1a);
+  --color-primary-orange-hover: color-mix(in srgb, var(--brand-primary, #d76b1a), black 12%);
+  --color-primary-orange-light: color-mix(in srgb, var(--brand-primary, #d76b1a) 6%, white);
+  --color-accent-beige: var(--brand-accent, #f7e2bd);
   --color-accent-brown: #50402b;
-  --color-background-cream: #fbf8f4;
+  --color-background-cream: var(--brand-bg, #fbf8f4);
   --color-primary-bark: #5a4a42;
-  --color-neutral-cream: #fbf8f4;
+  --color-neutral-cream: var(--brand-bg, #fbf8f4);
 
   /* Bold Status Colors - Vibrant & Clear */
   --color-status-success: #16a34a;

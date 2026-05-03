@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Lora, Geist } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
 import { PostHogProvider } from '@/components/posthog-provider'
 import { validateEnvironmentVariables } from '@/lib/env-validation'
 import './globals.css'
@@ -168,6 +169,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <PostHogProvider>{children}</PostHogProvider>
+        <Toaster richColors position="top-right" />
         <Analytics />
       </body>
     </html>

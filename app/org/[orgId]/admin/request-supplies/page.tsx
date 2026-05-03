@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
+import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { Card } from "@/components/ui/card"
 import {
@@ -13,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings, MapPin, Calendar } from "lucide-react"
+import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings, MapPin, Calendar, Pencil } from "lucide-react"
 
 type SupplyRequest = {
   id: string
@@ -93,8 +94,9 @@ export default function AdminSupplyRequestsPage() {
     setUpdatingId(null)
   }
 
-  // Acknowledge submits to the API so the server can stamp acknowledged_by/at AND send the
-  // foster a pickup-confirmation email — the direct supabase update above can't send emails.
+  // Acknowledge / Edit submits to the API so the server can stamp acknowledged_by/at AND
+  // send the foster a pickup-confirmation email — the direct supabase update above can't
+  // send emails. Same handler covers both new acknowledge and edit-pickup.
   const submitAcknowledge = async () => {
     if (!ackTarget) return
     setAckError(null)
@@ -108,6 +110,7 @@ export default function AdminSupplyRequestsPage() {
       return
     }
 
+    const isEdit = ackTarget.status === "in_progress"
     setAckSubmitting(true)
     try {
       const res = await fetch("/api/admin/help-requests", {
@@ -125,7 +128,7 @@ export default function AdminSupplyRequestsPage() {
       const result = await res.json().catch(() => ({}))
 
       if (!res.ok) {
-        setAckError(result.error || `Couldn't acknowledge (${res.status})`)
+        setAckError(result.error || `Couldn't ${isEdit ? "update pickup" : "acknowledge"} (${res.status})`)
         return
       }
 
@@ -138,6 +141,23 @@ export default function AdminSupplyRequestsPage() {
         pickup_notes: result.request?.pickup_notes ?? (ackPickupNotes.trim() || null),
       }
       setRequests((prev) => prev.map((r) => (r.id === ackTarget.id ? updated : r)))
+
+      const fosterName = ackTarget.profiles?.name?.split(" ")[0] || "the foster"
+      toast.success(
+        isEdit ? `Pickup details updated` : `Acknowledged — ${fosterName} will get an email`,
+        {
+          description: isEdit
+            ? `${fosterName} will get an email with the new pickup time and location.`
+            : `Pickup at ${new Date(ackPickupTime).toLocaleString(undefined, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+              })}.`,
+        },
+      )
+
       setAckTarget(null)
       setAckPickupTime("")
       setAckPickupLocation("")
@@ -148,6 +168,22 @@ export default function AdminSupplyRequestsPage() {
     } finally {
       setAckSubmitting(false)
     }
+  }
+
+  // Open the modal in "edit" mode — pre-fills with existing pickup details
+  const openEditPickup = (req: SupplyRequest) => {
+    setAckTarget(req)
+    // datetime-local needs YYYY-MM-DDTHH:mm format in local time
+    if (req.pickup_time) {
+      const d = new Date(req.pickup_time)
+      const tzOffset = d.getTimezoneOffset() * 60000
+      setAckPickupTime(new Date(d.getTime() - tzOffset).toISOString().slice(0, 16))
+    } else {
+      setAckPickupTime("")
+    }
+    setAckPickupLocation(req.pickup_location || "")
+    setAckPickupNotes(req.pickup_notes || "")
+    setAckError(null)
   }
 
   const getStatusBadge = (status: string) => {
@@ -378,6 +414,17 @@ export default function AdminSupplyRequestsPage() {
                       Acknowledge
                     </button>
                   )}
+                  {req.status === "in_progress" && (
+                    <button
+                      onClick={() => openEditPickup(req)}
+                      disabled={updatingId === req.id}
+                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 transition disabled:opacity-50 inline-flex items-center gap-1.5"
+                      title="Update pickup time or location and re-notify the foster"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      Edit pickup
+                    </button>
+                  )}
                   {(req.status === "open" || req.status === "in_progress") && (
                     <button
                       onClick={() => updateStatus(req.id, "resolved")}
@@ -413,10 +460,13 @@ export default function AdminSupplyRequestsPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Acknowledge supply request</DialogTitle>
+            <DialogTitle>
+              {ackTarget?.status === "in_progress" ? "Edit pickup details" : "Acknowledge supply request"}
+            </DialogTitle>
             <DialogDescription>
-              Set when and where the foster should pick up. They'll get an email with these
-              details right after you save.
+              {ackTarget?.status === "in_progress"
+                ? "Update when or where the pickup happens. The foster will get a fresh email with the new details."
+                : "Set when and where the foster should pick up. They'll get an email with these details right after you save."}
             </DialogDescription>
           </DialogHeader>
 
@@ -491,7 +541,13 @@ export default function AdminSupplyRequestsPage() {
               disabled={ackSubmitting}
               className="bg-primary-orange hover:bg-primary-orange-hover text-white"
             >
-              {ackSubmitting ? "Acknowledging..." : "Acknowledge & notify foster"}
+              {ackSubmitting
+                ? ackTarget?.status === "in_progress"
+                  ? "Updating..."
+                  : "Acknowledging..."
+                : ackTarget?.status === "in_progress"
+                  ? "Update & re-notify foster"
+                  : "Acknowledge & notify foster"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -141,7 +141,9 @@ export async function sendSupplyRequestEmail(
   return sendEmail({ to: rescueEmail, ...template })
 }
 
-// Sent to the foster after the rescue acknowledges their supply request and sets a pickup
+// Sent to the foster after the rescue acknowledges their supply request and sets a pickup.
+// `isUpdate=true` means a previously-acknowledged request had its pickup details edited —
+// the email subject and heading reflect this so the foster recognizes it as an update.
 export async function sendSupplyAcknowledgedEmail(
   fosterEmail: string,
   fosterName: string,
@@ -151,6 +153,7 @@ export async function sendSupplyAcknowledgedEmail(
   pickupLocation: string,
   pickupNotes: string | null,
   orgId?: string,
+  isUpdate: boolean = false,
 ) {
   const template = emailTemplates.supplyAcknowledged(
     fosterName,
@@ -160,6 +163,7 @@ export async function sendSupplyAcknowledgedEmail(
     pickupLocation,
     pickupNotes,
     orgId,
+    isUpdate,
   )
   return sendEmail({ to: fosterEmail, ...template })
 }

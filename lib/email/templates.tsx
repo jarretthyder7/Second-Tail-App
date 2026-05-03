@@ -177,6 +177,8 @@ export const emailTemplates = {
   // Sent to the FOSTER when a rescue admin acknowledges their supply request and sets a
   // pickup time. Should feel personal and actionable — they know what was approved, when
   // and where to pick it up, and any special instructions.
+  // `isUpdate` flips the subject/heading so a re-sent email after the rescue edits the
+  // pickup details reads as "Updated" instead of "ready" — the foster knows it changed.
   supplyAcknowledged: (
     fosterName: string,
     rescueName: string,
@@ -185,13 +187,16 @@ export const emailTemplates = {
     pickupLocation: string,
     pickupNotes: string | null,
     orgId?: string,
+    isUpdate: boolean = false,
   ) => ({
-    subject: `Your supply request is ready — pickup ${pickupTime}`,
+    subject: isUpdate
+      ? `Updated pickup — ${pickupTime}`
+      : `Your supply request is ready — pickup ${pickupTime}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h1 style="color: #166534;">Your supply request is ready</h1>
+        <h1 style="color: #166534;">${isUpdate ? "Updated pickup details" : "Your supply request is ready"}</h1>
         <p>Hi ${fosterName},</p>
-        <p><strong>${rescueName}</strong> has acknowledged your supply request:</p>
+        <p><strong>${rescueName}</strong> ${isUpdate ? "updated the pickup details for" : "has acknowledged"} your supply request:</p>
         <p style="background-color: #f5f5f5; padding: 15px; border-radius: 8px;"><strong>${requestTitle}</strong></p>
         <h3 style="color: #166534; margin-top: 24px;">Pickup details</h3>
         <table style="width: 100%; border-collapse: collapse;">

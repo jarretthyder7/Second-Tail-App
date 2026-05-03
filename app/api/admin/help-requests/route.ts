@@ -50,13 +50,27 @@ export async function PATCH(request: NextRequest) {
 
     // Acknowledge flow: pickupTime/pickupLocation arrive together with status="in_progress".
     // Stamp acknowledged_by + acknowledged_at server-side so the timestamp is trustworthy.
+    // Detect "edit" vs "first acknowledge" by checking if acknowledged_at was already set
+    // — drives whether the foster's email subject says "Updated" or first-time.
     const isAcknowledging = pickupTime || pickupLocation || pickupNotes != null
+    let isUpdateOfPickup = false
     if (isAcknowledging) {
+      const { data: existingRow } = await supabase
+        .from("help_requests")
+        .select("acknowledged_at")
+        .eq("id", requestId)
+        .single()
+      isUpdateOfPickup = !!existingRow?.acknowledged_at
+
       if (pickupTime) updateData.pickup_time = pickupTime
       if (pickupLocation) updateData.pickup_location = pickupLocation
       if (pickupNotes !== undefined) updateData.pickup_notes = pickupNotes
-      updateData.acknowledged_by = user.id
-      updateData.acknowledged_at = new Date().toISOString()
+      // Only stamp acknowledged_by/at on the FIRST acknowledge — preserves who originally
+      // confirmed even if a different staff member later edits the pickup details.
+      if (!isUpdateOfPickup) {
+        updateData.acknowledged_by = user.id
+        updateData.acknowledged_at = new Date().toISOString()
+      }
     }
 
     if (internalNote) {
@@ -111,6 +125,7 @@ export async function PATCH(request: NextRequest) {
           data.pickup_location || "(location pending)",
           data.pickup_notes || null,
           orgId,
+          isUpdateOfPickup,
         )
       } catch (emailErr) {
         console.warn("Acknowledged email failed to send:", emailErr)

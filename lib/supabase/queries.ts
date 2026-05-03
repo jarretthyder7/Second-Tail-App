@@ -44,18 +44,25 @@ export async function getDogById(dogId: string) {
 export async function createDog(orgId: string, dogData: any) {
   const supabase = await createClient()
 
+  // `stage` is the canonical lifecycle field (intake, in_foster, available, adopted, etc.)
+  // The legacy `status` column gets the same value so any old reader still works while
+  // the rest of the codebase migrates to `stage`. Form passes dogData.stage, so accept it.
+  const stageValue = dogData.stage || dogData.status || "intake"
+
   const { data, error } = await supabase
     .from("dogs")
     .insert({
       organization_id: orgId,
       name: dogData.name,
       breed: dogData.breed,
+      species: dogData.species || "dog",
       age: dogData.age || null,
       gender: dogData.gender || null,
       weight: dogData.weight || null,
       image_url: dogData.image || null,
       intake_date: dogData.intakeDate || null,
-      status: dogData.status || "available",
+      stage: stageValue,
+      status: stageValue,
       medical_notes: dogData.medicalNotes || null,
       behavior_notes: dogData.behavioralNotes || null,
     })
@@ -73,20 +80,28 @@ export async function createDog(orgId: string, dogData: any) {
 export async function updateDog(dogId: string, updates: any) {
   const supabase = await createClient()
 
+  // Build update object dynamically so we don't overwrite columns that weren't passed.
+  const updateBody: Record<string, any> = { updated_at: new Date().toISOString() }
+  if (updates.name !== undefined) updateBody.name = updates.name
+  if (updates.breed !== undefined) updateBody.breed = updates.breed
+  if (updates.species !== undefined) updateBody.species = updates.species
+  if (updates.age !== undefined) updateBody.age = updates.age
+  if (updates.gender !== undefined) updateBody.gender = updates.gender
+  if (updates.weight !== undefined) updateBody.weight = updates.weight
+  if (updates.medicalNotes !== undefined) updateBody.medical_notes = updates.medicalNotes
+  if (updates.behavioralNotes !== undefined) updateBody.behavior_notes = updates.behavioralNotes
+  if (updates.fosterId !== undefined) updateBody.foster_id = updates.fosterId
+
+  // Stage = canonical. Mirror to status for legacy readers. Accept either field name.
+  const stageValue = updates.stage ?? updates.status
+  if (stageValue !== undefined) {
+    updateBody.stage = stageValue
+    updateBody.status = stageValue
+  }
+
   const { data, error } = await supabase
     .from("dogs")
-    .update({
-      name: updates.name,
-      breed: updates.breed,
-      age: updates.age,
-      gender: updates.gender,
-      weight: updates.weight,
-      status: updates.status,
-      medical_notes: updates.medicalNotes,
-      behavior_notes: updates.behavioralNotes,
-      foster_id: updates.fosterId,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateBody)
     .eq("id", dogId)
     .select()
     .single()

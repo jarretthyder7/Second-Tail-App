@@ -288,10 +288,13 @@ function OrgAdminDashboardContent() {
         setReimbursements(reimbursementsData.reimbursements || [])
         setDailyLogs(dailyLogsData.logs || [])
 
-        const inShelter = dogsData.dogs.filter(d => d.status !== "adopted" && !d.foster_id).length
+        // Read `stage` (canonical) with `status` fallback so animals created before the
+        // queries.ts fix still count correctly. Canonical values use snake_case.
+        const stageOf = (d: any) => d.stage || d.status
+        const inShelter = dogsData.dogs.filter(d => stageOf(d) !== "adopted" && !d.foster_id).length
         const inFoster = dogsData.dogs.filter(d => d.foster_id).length
-        const pendingAdoption = dogsData.dogs.filter(d => d.status === "pending_adoption").length
-        const medicalHoldsCount = dogsData.dogs.filter(d => d.status === "medical-hold" || d.medical_notes?.includes("urgent")).length
+        const pendingAdoption = dogsData.dogs.filter(d => stageOf(d) === "adoption_pending").length
+        const medicalHoldsCount = dogsData.dogs.filter(d => stageOf(d) === "medical_hold" || d.medical_notes?.includes("urgent")).length
         const staleRecordsCount = dogsData.dogs.filter(d => {
           const lastUpdate = new Date(d.updated_at || d.created_at || "")
           return lastUpdate < new Date(new Date().getTime() - 3 * 24 * 60 * 60 * 1000)
@@ -475,18 +478,19 @@ function OrgAdminDashboardContent() {
   const pendingAppointmentRequests = appointmentRequests.filter((r) => r.status === "pending").length
   const totalInboxItems = unansweredMessages + openSupportRequests + pendingAppointmentRequests
 
-  // Animals Needing Attention metrics
-  const totalAnimalsInCare = dogs.filter((d) => d.status !== "adopted").length
-  const medicalFlags = dogs.filter((d) => d.status === "medical-hold" || d.medical_notes?.includes("urgent")).length
+  // Animals Needing Attention metrics. Read `stage` (canonical) with `status` fallback.
+  const stageOf = (d: any) => d.stage || d.status
+  const totalAnimalsInCare = dogs.filter((d) => stageOf(d) !== "adopted").length
+  const medicalFlags = dogs.filter((d) => stageOf(d) === "medical_hold" || d.medical_notes?.includes("urgent")).length
   const behaviorAlerts = dogs.filter((d) => d.behavior_notes?.includes("caution") || d.behavior_notes?.includes("alert")).length
-  const animalsWithoutFoster = dogs.filter((d) => !d.foster_id && d.status !== "adopted").length
+  const animalsWithoutFoster = dogs.filter((d) => !d.foster_id && stageOf(d) !== "adopted").length
   const staleRecords = dogs.filter((d) => {
     const lastUpdate = new Date(d.updated_at || d.created_at || "")
     return lastUpdate < threeDaysAgo
   }).length
   // Get top 3 animals by urgency
   const urgentAnimals = dogs
-    .filter((d) => d.status === "medical-hold" || !d.foster_id || d.behavior_notes)
+    .filter((d) => stageOf(d) === "medical_hold" || !d.foster_id || d.behavior_notes)
     .slice(0, 3)
 
   // Foster Network Status metrics  

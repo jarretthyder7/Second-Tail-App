@@ -1719,23 +1719,41 @@ function OrgAdminDashboardContent() {
             <p className="text-xs text-blue-700/50 mt-1">Registered fosters</p>
           </Link>
 
-          {/* Need Response */}
-          {totalInboxItems > 0 ? (
-            <Link
-              href={`/org/${orgId}/admin/messages`}
-              aria-label={`Open ${totalInboxItems} messages awaiting reply`}
-              className="block bg-gradient-to-br from-red-50 to-red-100/60 rounded-xl border border-red-200/70 p-4 shadow-sm hover:shadow-md hover:border-red-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-red-400/40"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[11px] font-semibold text-red-700/70 uppercase tracking-wide">Need Response</span>
-                <div className="w-8 h-8 rounded-lg bg-white/70 border border-red-200/60 flex items-center justify-center">
-                  <Inbox className="w-4 h-4 text-red-600" />
+          {/* Need Response — total covers messages + support + appointments. Route to whichever
+              bucket is the largest contributor so the click lands on something actionable
+              (clicking when only support requests are open would otherwise dump the user on an
+              empty messages page). Sublabel honestly reflects the mixed nature. */}
+          {totalInboxItems > 0 ? (() => {
+            // Pick the dominant bucket; ties prefer messages → support → appointments
+            const counts = [
+              { count: unansweredMessages, href: `/org/${orgId}/admin/messages`, label: "messages" },
+              { count: openSupportRequests, href: `/org/${orgId}/admin/request-supplies`, label: "support requests" },
+              { count: pendingAppointmentRequests, href: `/org/${orgId}/admin/appointments`, label: "appointment requests" },
+            ]
+            const top = counts.reduce((a, b) => (b.count > a.count ? b : a))
+            const subLabel =
+              counts.filter((c) => c.count > 0).length > 1
+                ? "Items need attention"
+                : top.count > 0
+                  ? `Open ${top.label}`
+                  : "Items need attention"
+            return (
+              <Link
+                href={top.href}
+                aria-label={`${totalInboxItems} items need attention — opening ${top.label}`}
+                className="block bg-gradient-to-br from-red-50 to-red-100/60 rounded-xl border border-red-200/70 p-4 shadow-sm hover:shadow-md hover:border-red-300 hover:-translate-y-0.5 transition focus:outline-none focus:ring-2 focus:ring-red-400/40"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-semibold text-red-700/70 uppercase tracking-wide">Need Response</span>
+                  <div className="w-8 h-8 rounded-lg bg-white/70 border border-red-200/60 flex items-center justify-center">
+                    <Inbox className="w-4 h-4 text-red-600" />
+                  </div>
                 </div>
-              </div>
-              <div className="text-3xl font-bold text-red-700">{totalInboxItems}</div>
-              <p className="text-xs text-red-600/60 mt-1">Awaiting reply</p>
-            </Link>
-          ) : (
+                <div className="text-3xl font-bold text-red-700">{totalInboxItems}</div>
+                <p className="text-xs text-red-600/60 mt-1">{subLabel}</p>
+              </Link>
+            )
+          })() : (
             <Link
               href={`/org/${orgId}/admin/messages`}
               aria-label="Open messages"

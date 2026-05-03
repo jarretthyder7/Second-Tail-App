@@ -28,10 +28,30 @@ export default function HelpRequestSettingsPage() {
   const [newAppointment, setNewAppointment] = useState("")
   const newSupplyInputRef = useRef<HTMLInputElement>(null)
   const newAppointmentInputRef = useRef<HTMLInputElement>(null)
+  // Tracks whether the corresponding onboarding step is done — drives the "Setup Step"
+  // badge in the header so it disappears once the user has finished onboarding.
+  const [isHelpSettingsStepComplete, setIsHelpSettingsStepComplete] = useState(true)
 
   useEffect(() => {
     fetchSettings()
+    fetchSetupStatus()
   }, [orgId])
+
+  const fetchSetupStatus = async () => {
+    try {
+      const res = await fetch(`/api/admin/setup-status?orgId=${orgId}`)
+      if (!res.ok) return
+      const data = await res.json()
+      const completed: string[] = (data?.completedSteps || data?.steps || []).map((s: any) =>
+        typeof s === "string" ? s : s.setup_step_id || s.id,
+      )
+      setIsHelpSettingsStepComplete(completed.includes("help_settings"))
+    } catch {
+      // Best-effort — if it fails, default to hiding the badge (assume complete) so we
+      // don't show a "Setup Step" tag forever to existing users.
+      setIsHelpSettingsStepComplete(true)
+    }
+  }
 
   const fetchSettings = async () => {
     try {
@@ -134,10 +154,15 @@ export default function HelpRequestSettingsPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-[#5A4A42] mb-2">Foster Support Settings</h1>
             <p className="text-[#2E2E2E]/70">Configure how foster parents can request help and support</p>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-200">
-            <CheckCircle2 className="w-4 h-4 text-green-600" />
-            <p className="text-xs font-semibold text-green-700">Setup Step</p>
-          </div>
+          {!isHelpSettingsStepComplete && (
+            <div
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 border border-green-200"
+              title="This page is part of your one-time setup"
+            >
+              <CheckCircle2 className="w-4 h-4 text-green-600" />
+              <p className="text-xs font-semibold text-green-700">Setup Step</p>
+            </div>
+          )}
         </div>
 
         {error && (

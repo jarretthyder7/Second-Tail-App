@@ -45,8 +45,10 @@ export async function createDog(orgId: string, dogData: any) {
   const supabase = await createClient()
 
   // `stage` is the canonical lifecycle field (intake, in_foster, available, adopted, etc.)
-  // The legacy `status` column gets the same value so any old reader still works while
-  // the rest of the codebase migrates to `stage`. Form passes dogData.stage, so accept it.
+  // We deliberately do NOT write the legacy `status` column — it has a CHECK constraint
+  // expecting legacy values like "fostered" / "medical-hold" and would reject our canonical
+  // snake_case values. The dashboard reads stage with a status fallback, so old rows still
+  // count correctly during the transition.
   const stageValue = dogData.stage || dogData.status || "intake"
 
   const { data, error } = await supabase
@@ -62,7 +64,6 @@ export async function createDog(orgId: string, dogData: any) {
       image_url: dogData.image || null,
       intake_date: dogData.intakeDate || null,
       stage: stageValue,
-      status: stageValue,
       medical_notes: dogData.medicalNotes || null,
       behavior_notes: dogData.behavioralNotes || null,
     })
@@ -92,11 +93,11 @@ export async function updateDog(dogId: string, updates: any) {
   if (updates.behavioralNotes !== undefined) updateBody.behavior_notes = updates.behavioralNotes
   if (updates.fosterId !== undefined) updateBody.foster_id = updates.fosterId
 
-  // Stage = canonical. Mirror to status for legacy readers. Accept either field name.
+  // Stage = canonical. Don't write `status` — its CHECK constraint expects legacy values
+  // and would reject canonical snake_case ones. Accept either field name as input.
   const stageValue = updates.stage ?? updates.status
   if (stageValue !== undefined) {
     updateBody.stage = stageValue
-    updateBody.status = stageValue
   }
 
   const { data, error } = await supabase

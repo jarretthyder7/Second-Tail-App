@@ -1,7 +1,9 @@
 -- Backfill dogs.stage from dogs.status for any rows where stage is null.
--- The codebase has migrated to stage as the canonical field; this catches
--- animals that were created via the manual Add Animal form (which used to
--- only write status) so their stage badges display correctly.
+-- The codebase has migrated to `stage` as the canonical lifecycle field.
+-- We deliberately do NOT touch dogs.status here — that column has a CHECK
+-- constraint expecting legacy values (`fostered`, `medical-hold`, etc.)
+-- and writing our new canonical snake_case values would violate it.
+-- The legacy status column is read with a fallback in code; just leave it.
 --
 -- Idempotent — safe to re-run.
 
@@ -23,12 +25,8 @@ SET stage = CASE
 END
 WHERE stage IS NULL OR stage = '';
 
--- Optional: also normalize any existing stage values that have legacy formatting
+-- Normalize any existing stage values that have legacy formatting
 -- (e.g. "medical-hold" with a hyphen instead of underscore).
 UPDATE dogs SET stage = 'medical_hold' WHERE stage = 'medical-hold';
 UPDATE dogs SET stage = 'adoption_pending' WHERE stage = 'pending_adoption';
 UPDATE dogs SET stage = 'in_foster' WHERE stage = 'fostered';
-
--- Mirror the cleaned-up stage back to status so legacy readers stay consistent
--- until those callsites are migrated.
-UPDATE dogs SET status = stage WHERE stage IS NOT NULL AND (status IS NULL OR status != stage);

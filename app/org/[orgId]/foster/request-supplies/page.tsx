@@ -78,7 +78,10 @@ export default function FosterRequestSuppliesPage() {
         fetch(`/api/admin/help-settings?orgId=${orgId}`).then((r) => (r.ok ? r.json() : null)),
         supabase
           .from("help_requests")
-          .select("id, title, description, status, priority, created_at, pickup_time, pickup_location, pickup_notes")
+          // SELECT * so the foster page works before the pickup_* migration is run.
+          // Once the migration adds pickup_time/pickup_location/pickup_notes, the spread
+          // picks them up automatically.
+          .select("*")
           .eq("foster_id", user.id)
           .eq("organization_id", orgId)
           .eq("category", "supplies")

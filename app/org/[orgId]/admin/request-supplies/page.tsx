@@ -54,18 +54,13 @@ export default function AdminSupplyRequestsPage() {
     setLoading(true)
     const supabase = createClient()
 
+    // Use SELECT * so the query doesn't fail before the pickup_* migration is run.
+    // After running scripts/add-pickup-to-help-requests.sql, the new columns flow through
+    // automatically via the spread without needing a code change here.
     let query = supabase
       .from("help_requests")
       .select(`
-        id,
-        title,
-        description,
-        priority,
-        status,
-        created_at,
-        pickup_time,
-        pickup_location,
-        pickup_notes,
+        *,
         profiles!help_requests_foster_id_fkey(name),
         dogs(name)
       `)

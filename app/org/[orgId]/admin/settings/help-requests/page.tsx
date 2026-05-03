@@ -3,6 +3,14 @@
 import { useParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
 import { Phone, AlertCircle, Package, Calendar, CheckCircle2, Plus, X, GripVertical } from "lucide-react"
+import {
+  DAY_KEYS,
+  DAY_LABELS,
+  DEFAULT_HOURS_OF_OPERATION,
+  normalizeHours,
+  type DayKey,
+  type HoursOfOperation,
+} from "@/lib/hours-of-operation"
 
 const PRESET_SUPPLIES = ["Food", "Pee Pads", "Crate", "Toys", "Leash", "Medications", "Other"]
 const PRESET_APPOINTMENTS = ["Vet Visit", "Checkup", "Vaccination", "Dental", "Emergency", "Behavioral Consult", "Training", "Grooming"]
@@ -402,22 +410,128 @@ export default function HelpRequestSettingsPage() {
 
             {/* Hours of Operation */}
             <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-6">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-2">
                 <Calendar className="w-6 h-6 text-[#D76B1A]" />
                 <h2 className="text-2xl font-bold text-[#5A4A42]">Hours of Operation</h2>
               </div>
+              <p className="text-sm text-[#2E2E2E]/60 -mt-2">
+                Fosters see these hours when they access emergency support. Toggle Closed for any day you're not
+                available.
+              </p>
 
-              <div>
-                <label className="block text-sm font-medium text-[#5A4A42] mb-2">Hours (displayed during emergency support)</label>
-                <textarea
-                  value={settings.hours_of_operation || ""}
-                  onChange={(e) => setSettings({ ...settings, hours_of_operation: e.target.value })}
-                  placeholder="e.g. Mon-Fri 9am-5pm EST, Sat 10am-2pm EST, Sun Closed"
-                  rows={4}
-                  className="w-full px-4 py-2 rounded-xl border border-[#F7E2BD] focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 font-mono text-sm"
-                />
-                <p className="text-xs text-[#2E2E2E]/60 mt-2">Fosters will see these hours when they access emergency support</p>
-              </div>
+              {(() => {
+                // Local handle to keep the JSX below readable. normalizeHours coerces null /
+                // legacy strings / partial objects into a usable shape.
+                const hours: HoursOfOperation = normalizeHours(settings.hours_of_operation)
+
+                const updateDay = (day: DayKey, patch: Partial<HoursOfOperation[DayKey]>) => {
+                  setSettings({
+                    ...settings,
+                    hours_of_operation: {
+                      ...hours,
+                      [day]: { ...hours[day], ...patch },
+                    },
+                  })
+                }
+
+                const applyToWeekdays = () => {
+                  // Copy Monday's open/close to Tue–Fri (and uncloses them) — common rescue pattern
+                  const mon = hours.monday
+                  if (mon.closed || !mon.open || !mon.close) return
+                  const next = { ...hours }
+                  ;(["tuesday", "wednesday", "thursday", "friday"] as const).forEach((d) => {
+                    next[d] = { open: mon.open, close: mon.close, closed: false }
+                  })
+                  setSettings({ ...settings, hours_of_operation: next })
+                }
+
+                const resetToDefault = () => {
+                  setSettings({ ...settings, hours_of_operation: { ...DEFAULT_HOURS_OF_OPERATION } })
+                }
+
+                return (
+                  <div>
+                    <div className="space-y-2">
+                      {DAY_KEYS.map((day) => {
+                        const d = hours[day]
+                        return (
+                          <div
+                            key={day}
+                            className={`flex flex-wrap items-center gap-3 p-3 rounded-xl border ${
+                              d.closed
+                                ? "bg-[#FBF8F4]/50 border-[#F7E2BD]/60"
+                                : "bg-white border-[#F7E2BD]"
+                            }`}
+                          >
+                            <div className="w-24 text-sm font-medium text-[#5A4A42]">{DAY_LABELS[day]}</div>
+
+                            <div className="flex items-center gap-2 flex-1 min-w-[260px]">
+                              <input
+                                type="time"
+                                value={d.open || ""}
+                                disabled={d.closed}
+                                onChange={(e) => updateDay(day, { open: e.target.value || null })}
+                                className="px-3 py-1.5 rounded-lg border border-[#F7E2BD] text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                              />
+                              <span className="text-sm text-[#5A4A42]/60">to</span>
+                              <input
+                                type="time"
+                                value={d.close || ""}
+                                disabled={d.closed}
+                                onChange={(e) => updateDay(day, { close: e.target.value || null })}
+                                className="px-3 py-1.5 rounded-lg border border-[#F7E2BD] text-sm focus:outline-none focus:ring-2 focus:ring-[#D76B1A]/40 disabled:opacity-50 disabled:cursor-not-allowed"
+                              />
+                            </div>
+
+                            <label className="flex items-center gap-2 text-sm text-[#5A4A42] cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={d.closed}
+                                onChange={(e) =>
+                                  updateDay(day, {
+                                    closed: e.target.checked,
+                                    // When marking closed, don't lose existing open/close — they'll
+                                    // come back if they uncheck. When reopening from closed, fall
+                                    // back to default 9-5 if open/close were null.
+                                    ...(e.target.checked
+                                      ? {}
+                                      : {
+                                          open: d.open || "09:00",
+                                          close: d.close || "17:00",
+                                        }),
+                                  })
+                                }
+                                className="w-4 h-4 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A] cursor-pointer"
+                              />
+                              Closed
+                            </label>
+                          </div>
+                        )
+                      })}
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t border-[#F7E2BD]">
+                      <button
+                        type="button"
+                        onClick={applyToWeekdays}
+                        disabled={hours.monday.closed || !hours.monday.open || !hours.monday.close}
+                        className="text-xs font-medium text-[#D76B1A] hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline"
+                        title="Copy Monday's hours to Tuesday–Friday"
+                      >
+                        Apply Monday's hours to weekdays
+                      </button>
+                      <span className="text-[#5A4A42]/30 text-xs">|</span>
+                      <button
+                        type="button"
+                        onClick={resetToDefault}
+                        className="text-xs font-medium text-[#5A4A42]/70 hover:text-[#5A4A42] hover:underline"
+                      >
+                        Reset to default
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
 
             {/* Emergency Support */}

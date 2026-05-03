@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { AlertTriangle, Phone, MessageSquare, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { formatHoursOfOperation } from "@/lib/hours-of-operation"
 
 export default function EmergencyPage() {
   const params = useParams()
@@ -156,12 +157,16 @@ export default function EmergencyPage() {
                       <p className="text-xs text-orange-600 font-semibold uppercase tracking-wide mb-1">Support Line</p>
                       <p className="text-2xl md:text-3xl font-bold text-orange-600 font-mono">{settings.contact_phone}</p>
                     </div>
-                    {settings?.hours_of_operation && (
-                      <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-4">
-                        <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-2">Hours of Operation</p>
-                        <p className="text-sm text-blue-900 whitespace-pre-wrap font-mono">{settings.hours_of_operation}</p>
-                      </div>
-                    )}
+                    {settings?.hours_of_operation && (() => {
+                      const formatted = formatHoursOfOperation(settings.hours_of_operation)
+                      if (!formatted) return null
+                      return (
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mt-4">
+                          <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide mb-2">Hours of Operation</p>
+                          <p className="text-sm text-blue-900 whitespace-pre-wrap">{formatted}</p>
+                        </div>
+                      )
+                    })()}
                   </div>
                   <a
                     href={`tel:${settings.contact_phone}`}

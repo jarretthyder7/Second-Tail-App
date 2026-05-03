@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import { Phone, AlertTriangle, MessageSquare, X, Loader2, CheckCircle2, Clock, AlertCircle } from "lucide-react"
+import { formatHoursOfOperation } from "@/lib/hours-of-operation"
 
 interface RequestHelpModalProps {
   dog: any
@@ -183,15 +184,19 @@ export function RequestHelpModal({ dog, onClose, initialView = "menu" }: Request
                       </div>
                       
                       {/* Hours of Operation */}
-                      {settings?.hours_of_operation && (
-                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Clock className="w-4 h-4 text-blue-600" />
-                            <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Hours of Operation</p>
+                      {settings?.hours_of_operation && (() => {
+                        const formatted = formatHoursOfOperation(settings.hours_of_operation)
+                        if (!formatted) return null
+                        return (
+                          <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Clock className="w-4 h-4 text-blue-600" />
+                              <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Hours of Operation</p>
+                            </div>
+                            <p className="text-sm text-blue-900 whitespace-pre-wrap">{formatted}</p>
                           </div>
-                          <p className="text-sm text-blue-900 whitespace-pre-wrap">{settings.hours_of_operation}</p>
-                        </div>
-                      )}
+                        )
+                      })()}
                       
                       <a
                         href={`tel:${settings.contact_phone}`}

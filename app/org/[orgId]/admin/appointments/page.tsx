@@ -521,7 +521,8 @@ export default function AppointmentsPage() {
       })
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}))
-        throw new Error(errBody.error || "Failed to decline request")
+        const reason = errBody?.debug?.reason ? ` (${errBody.debug.reason})` : ""
+        throw new Error((errBody.error || "Failed to decline request") + reason)
       }
 
       const supabase = createClient()

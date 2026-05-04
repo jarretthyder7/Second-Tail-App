@@ -60,7 +60,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: "Request not found" }, { status: 404 })
   }
   if (!isRescueInOrg(profile, existing.organization_id)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    return NextResponse.json(
+      {
+        error: "Forbidden",
+        debug: {
+          reason:
+            profile.role !== "rescue"
+              ? `Profile role is "${profile.role}", expected "rescue"`
+              : `Profile org "${profile.organization_id}" doesn't match request org "${existing.organization_id}"`,
+        },
+      },
+      { status: 403 },
+    )
   }
 
   const admin = createServiceRoleClient()

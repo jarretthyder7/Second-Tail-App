@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { put } from "@vercel/blob"
-import { ArrowLeft, Send, Paperclip, ImageIcon, X } from "lucide-react"
+import { ArrowLeft, Send, Paperclip, ImageIcon, X, ExternalLink } from "lucide-react"
 import { shouldSendEmailNotification } from "@/lib/messaging/should-notify"
 
 export default function AdminConversationPage() {
@@ -284,7 +284,20 @@ export default function AdminConversationPage() {
                   </span>
                 )}
               </div>
-              <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">{dog ? `About ${dog.name}` : "General"}</p>
+              {dog ? (
+                <Link
+                  href={`/org/${orgId}/admin/animals/${dog.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm text-[#D76B1A] hover:text-[#C25E15] hover:underline truncate inline-flex items-center gap-1"
+                  title={`Open ${dog.name}'s profile in a new tab`}
+                >
+                  About {dog.name}
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </Link>
+              ) : (
+                <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">General</p>
+              )}
             </div>
           </div>
         </div>

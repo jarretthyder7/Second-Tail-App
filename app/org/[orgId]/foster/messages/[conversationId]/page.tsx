@@ -16,6 +16,17 @@ const ArrowLeftIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const ExternalLink = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+    />
+  </svg>
+)
+
 const SendIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -319,7 +330,20 @@ export default function ConversationPage() {
             </Link>
             <div className="flex-1 min-w-0">
               <h1 className="font-bold text-base sm:text-lg text-[#5A4A42]">{organization?.name || "Rescue Team"}</h1>
-              <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">{dog ? `About ${dog.name}` : "General"}</p>
+              {dog ? (
+                <Link
+                  href={`/org/${orgId}/foster/dog/${dog.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs sm:text-sm text-[#D76B1A] hover:text-[#C25E15] hover:underline truncate inline-flex items-center gap-1"
+                  title={`Open ${dog.name}'s profile in a new tab`}
+                >
+                  About {dog.name}
+                  <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                </Link>
+              ) : (
+                <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">General</p>
+              )}
             </div>
           </div>
         </div>

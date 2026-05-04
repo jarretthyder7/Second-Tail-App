@@ -4,7 +4,8 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import TimelineTab from "@/components/admin/timeline-tab"
-import { Plus, Save, X, MessageSquare, User } from "lucide-react"
+import { DocumentUploadSection } from "@/components/admin/document-upload-section"
+import { Plus, Save, X, MessageSquare, User, FileText, Download, Trash2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AdminDogTabsProps {
@@ -28,9 +29,9 @@ export function AdminDogTabs({
   onCarePlanChange,
   fosterConversations = [],
 }: AdminDogTabsProps) {
-  const [activeTab, setActiveTab] = useState<"timeline" | "logs" | "medical" | "behavior" | "notes" | "messages">(
-    "timeline",
-  )
+  const [activeTab, setActiveTab] = useState<
+    "timeline" | "logs" | "medical" | "documents" | "behavior" | "notes" | "messages"
+  >("timeline")
   const [messages, setMessages] = useState<any[]>(initialMessages)
   const [internalNotes, setInternalNotes] = useState("")
   const [behaviorNotes, setBehaviorNotes] = useState("")
@@ -58,6 +59,9 @@ export function AdminDogTabs({
   })
   const [isSavingLog, setIsSavingLog] = useState(false)
   const [isSavingCarePlan, setIsSavingCarePlan] = useState(false)
+  // Documents tab — populated from timeline_events where type='file_uploaded'.
+  const [documents, setDocuments] = useState<any[]>([])
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false)
   const [selectedConversation, setSelectedConversation] = useState<any>(null)
   const [conversationMessages, setConversationMessages] = useState<any[]>([])
   const { toast } = useToast()
@@ -75,6 +79,49 @@ export function AdminDogTabs({
     }
     loadCurrentUser()
   }, [])
+
+  // Fetch uploaded documents whenever the Documents tab becomes active or the dog changes.
+  // Documents are stored as timeline_events with type='file_uploaded' (per /api/upload/document).
+  const fetchDocuments = async () => {
+    if (!dog?.id) return
+    setIsLoadingDocuments(true)
+    try {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from("timeline_events")
+        .select("id, title, description, event_date, metadata, visible_to_foster, created_at")
+        .eq("animal_id", dog.id)
+        .eq("type", "file_uploaded")
+        .order("event_date", { ascending: false })
+      setDocuments(data || [])
+    } catch (err) {
+      console.error("Failed to fetch documents:", err)
+    } finally {
+      setIsLoadingDocuments(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === "documents") fetchDocuments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, dog?.id])
+
+  const handleDeleteDocument = async (documentId: string) => {
+    if (!confirm("Delete this document? This can't be undone.")) return
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from("timeline_events").delete().eq("id", documentId)
+      if (error) throw error
+      setDocuments((prev) => prev.filter((d) => d.id !== documentId))
+      toast({ title: "Document deleted" })
+    } catch (err: any) {
+      toast({
+        title: "Couldn't delete",
+        description: err.message || "Try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   useEffect(() => {
     setMessages(initialMessages)
@@ -264,6 +311,7 @@ export function AdminDogTabs({
     { id: "timeline", label: "Timeline" },
     { id: "logs", label: "Foster Updates" },
     { id: "medical", label: "Medical" },
+    { id: "documents", label: "Documents" },
     { id: "behavior", label: "Behavior" },
     { id: "notes", label: "Internal Notes" },
     { id: "messages", label: "Messages" },
@@ -656,6 +704,114 @@ export function AdminDogTabs({
                 )}
               </div>
             )}
+          </div>
+        )}
+
+        {activeTab === "documents" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-lg font-semibold text-[#5A4A42]">Documents</h4>
+              <p className="text-xs text-[#5A4A42]/60">
+                {documents.length} document{documents.length === 1 ? "" : "s"} on file
+              </p>
+            </div>
+
+            <DocumentUploadSection dogId={dog.id} onUploadComplete={fetchDocuments} />
+
+            <div className="bg-white rounded-2xl shadow-sm border border-[#E5DED4] p-6">
+              <h5 className="text-sm font-semibold text-[#5A4A42] mb-3">Uploaded files</h5>
+
+              {isLoadingDocuments ? (
+                <p className="text-sm text-[#5A4A42]/60 py-4 text-center">Loading documents…</p>
+              ) : documents.length === 0 ? (
+                <div className="text-center py-8 text-sm text-[#5A4A42]/60">
+                  <FileText className="w-8 h-8 mx-auto mb-2 text-[#5A4A42]/30" />
+                  <p>No documents uploaded yet.</p>
+                  <p className="text-xs mt-1">
+                    Upload prescriptions, vaccination records, intake forms, and other files above.
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#E5DED4]">
+                  {documents.map((doc) => {
+                    const meta = doc.metadata || {}
+                    const fileUrl: string | undefined = meta.file_url
+                    const fileName: string = meta.file_name || doc.title || "Document"
+                    const fileType: string = meta.document_type || "general"
+                    const fileSize: number | undefined = meta.file_size
+                    const uploadedAt = doc.event_date
+                      ? new Date(doc.event_date).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : ""
+                    const sizeLabel =
+                      typeof fileSize === "number"
+                        ? fileSize > 1024 * 1024
+                          ? `${(fileSize / (1024 * 1024)).toFixed(1)} MB`
+                          : `${Math.max(1, Math.round(fileSize / 1024))} KB`
+                        : ""
+                    const typeLabel =
+                      fileType === "medical"
+                        ? "Medical record"
+                        : fileType === "vaccination"
+                          ? "Vaccination"
+                          : fileType === "adoption"
+                            ? "Adoption paper"
+                            : fileType === "behavior"
+                              ? "Behavior assessment"
+                              : fileType === "intake"
+                                ? "Intake form"
+                                : "Document"
+
+                    return (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                      >
+                        <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="w-10 h-10 rounded-lg bg-[#F7E2BD]/40 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-[#D76B1A]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-[#5A4A42] truncate" title={fileName}>
+                              {fileName}
+                            </p>
+                            <p className="text-xs text-[#5A4A42]/60">
+                              {typeLabel}
+                              {uploadedAt && ` · ${uploadedAt}`}
+                              {sizeLabel && ` · ${sizeLabel}`}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {fileUrl && (
+                            <a
+                              href={fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-2 rounded-lg text-[#5A4A42]/70 hover:bg-[#F7E2BD]/30 hover:text-[#D76B1A] transition"
+                              title="Open / download"
+                            >
+                              <Download className="w-4 h-4" />
+                            </a>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="p-2 rounded-lg text-[#5A4A42]/70 hover:bg-red-50 hover:text-red-600 transition"
+                            title="Delete document"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

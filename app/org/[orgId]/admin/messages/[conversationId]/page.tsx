@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { put } from "@vercel/blob"
-import { ArrowLeft, Send, Paperclip, ImageIcon, X, ExternalLink } from "lucide-react"
+import { ArrowLeft, Send, Paperclip, ImageIcon, X, ExternalLink, Plus, Users } from "lucide-react"
 import { shouldSendEmailNotification } from "@/lib/messaging/should-notify"
 
 export default function AdminConversationPage() {
@@ -28,6 +28,11 @@ export default function AdminConversationPage() {
   const [attachments, setAttachments] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [sending, setSending] = useState(false)
+  // Participants beyond the original recipient — additional rescue staff brought into the chat.
+  const [participants, setParticipants] = useState<any[]>([])
+  const [showParticipantPicker, setShowParticipantPicker] = useState(false)
+  const [orgStaff, setOrgStaff] = useState<any[]>([])
+  const [addingParticipant, setAddingParticipant] = useState<string | null>(null)
 
   const supabase = createClient()
 
@@ -93,10 +98,13 @@ export default function AdminConversationPage() {
       const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser.id).single()
       setUser(profile)
 
-      // Get conversation
+      // Get conversation including the primary recipient (so we can render them as the
+      // first chip alongside any added participants)
       const { data: convs, error: convsError } = await supabase
         .from("conversations")
-        .select("*, dog:dogs(*)")
+        .select(
+          "*, dog:dogs(*), recipient:profiles!conversations_recipient_id_fkey(id, name, email, role, org_role)",
+        )
         .eq("id", conversationId)
         .single()
 
@@ -121,12 +129,87 @@ export default function AdminConversationPage() {
         .order("created_at", { ascending: true })
 
       setMessages(msgs || [])
+
+      // Load participants (additional staff added to the conversation)
+      try {
+        const partsRes = await fetch(`/api/admin/conversations/${conversationId}/participants`)
+        if (partsRes.ok) {
+          const partsData = await partsRes.json()
+          setParticipants(partsData.participants || [])
+        }
+      } catch (err) {
+        console.warn("Could not load participants:", err)
+      }
+
       setLoading(false)
     } catch (error) {
       console.error("Error loading conversation:", error)
       setLoading(false)
     }
   }
+
+  const openParticipantPicker = async () => {
+    if (orgStaff.length === 0) {
+      // Lazy-load org rescue staff once
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id, name, email, role, org_role")
+          .eq("organization_id", orgId)
+          .eq("role", "rescue")
+        setOrgStaff(data || [])
+      } catch (err) {
+        console.warn("Could not load org staff:", err)
+      }
+    }
+    setShowParticipantPicker(true)
+  }
+
+  const addParticipant = async (userId: string) => {
+    setAddingParticipant(userId)
+    try {
+      const res = await fetch(`/api/admin/conversations/${conversationId}/participants`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      })
+      const result = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        console.error("Add participant failed:", result.error)
+        return
+      }
+      if (result.alreadyParticipant) {
+        // No-op — already there
+      } else if (result.participant) {
+        setParticipants((prev) => [...prev, result.participant])
+      }
+      setShowParticipantPicker(false)
+    } catch (err) {
+      console.error("Add participant error:", err)
+    } finally {
+      setAddingParticipant(null)
+    }
+  }
+
+  // The recipient is the "primary" rescue contact already on the conversation. We surface them
+  // alongside the explicitly-added participants so the foster sees a complete roster.
+  const allRescueInChat = (() => {
+    const primary = conversation?.recipient
+    const list: any[] = []
+    if (primary && primary.role === "rescue") {
+      list.push({ id: primary.id, user: primary, isPrimary: true })
+    }
+    participants.forEach((p) => {
+      if (p?.user?.id && !list.some((x) => x.id === p.user.id)) {
+        list.push({ id: p.user.id, user: p.user, isPrimary: false })
+      }
+    })
+    return list
+  })()
+
+  const eligibleStaffToAdd = orgStaff.filter(
+    (s) => s.id !== user?.id && !allRescueInChat.some((p) => p.user?.id === s.id),
+  )
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -298,10 +381,104 @@ export default function AdminConversationPage() {
               ) : (
                 <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">General</p>
               )}
+
+              {/* Participant chips — rescue staff in the conversation. Shows the primary
+                  recipient + any teammates that have been added via the picker below. */}
+              <div className="flex items-center flex-wrap gap-1.5 mt-2">
+                <Users className="w-3 h-3 text-[#5A4A42]/50 flex-shrink-0" />
+                {allRescueInChat.length === 0 && (
+                  <span className="text-xs text-[#5A4A42]/50">Just you</span>
+                )}
+                {allRescueInChat.map((p) => (
+                  <span
+                    key={p.id}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#FBF8F4] border border-[#F7E2BD] text-[11px] text-[#5A4A42]"
+                    title={p.user?.email || ""}
+                  >
+                    {p.user?.name || p.user?.email || "Staff"}
+                  </span>
+                ))}
+                <button
+                  type="button"
+                  onClick={openParticipantPicker}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-dashed border-[#D76B1A]/40 text-[11px] text-[#D76B1A] hover:bg-[#D76B1A]/5 transition"
+                  title="Add a teammate to this chat"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add teammate
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Participant picker modal */}
+      {showParticipantPicker && (
+        <div
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setShowParticipantPicker(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 py-4 border-b border-[#F7E2BD] flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-[#5A4A42]">Add teammate to chat</h3>
+                <p className="text-xs text-[#5A4A42]/60 mt-0.5">
+                  They'll be able to see and reply to this conversation. The foster will see them in the chat.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowParticipantPicker(false)}
+                className="p-1 hover:bg-[#FBF8F4] rounded"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4 text-[#5A4A42]/70" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              {eligibleStaffToAdd.length === 0 ? (
+                <p className="p-6 text-sm text-[#5A4A42]/60 text-center">
+                  Everyone on your team is already in this chat.
+                </p>
+              ) : (
+                <div className="divide-y divide-[#F7E2BD]">
+                  {eligibleStaffToAdd.map((staff) => (
+                    <button
+                      key={staff.id}
+                      type="button"
+                      onClick={() => addParticipant(staff.id)}
+                      disabled={addingParticipant === staff.id}
+                      className="w-full px-5 py-3 flex items-center justify-between gap-3 hover:bg-[#FBF8F4] transition text-left disabled:opacity-50"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#5A4A42] truncate">
+                          {staff.name || staff.email}
+                        </p>
+                        <p className="text-xs text-[#5A4A42]/60 truncate">
+                          {staff.org_role
+                            ? staff.org_role
+                                .split("_")
+                                .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+                                .join(" ")
+                            : "Staff"}
+                          {staff.email && ` · ${staff.email}`}
+                        </p>
+                      </div>
+                      <span className="text-xs font-medium text-[#D76B1A]">
+                        {addingParticipant === staff.id ? "Adding…" : "Add"}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">

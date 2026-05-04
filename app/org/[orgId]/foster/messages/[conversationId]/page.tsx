@@ -84,6 +84,9 @@ export default function ConversationPage() {
   const [attachments, setAttachments] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [sending, setSending] = useState(false)
+  // Rescue staff in this conversation — primary recipient + any teammates added via picker.
+  // Foster sees them in the header so they know exactly who's reachable.
+  const [rescueParticipants, setRescueParticipants] = useState<any[]>([])
 
   const supabase = createClient()
 
@@ -147,16 +150,39 @@ export default function ConversationPage() {
       const { data: profile } = await supabase.from("profiles").select("*").eq("id", authUser.id).single()
       setUser(profile)
 
-      // Get conversation
+      // Get conversation including the primary rescue contact, so we can show the foster
+      // exactly who's in the chat with them.
       const { data: conv } = await supabase
         .from("conversations")
-        .select("*, dog:dogs(*), organization:organizations(*)")
+        .select(
+          "*, dog:dogs(*), organization:organizations(*), recipient:profiles!conversations_recipient_id_fkey(id, name, email, role, org_role)",
+        )
         .eq("id", conversationId)
         .single()
 
       setConversation(conv)
       setOrganization(conv?.organization)
       setDog(conv?.dog)
+
+      // Load any additional rescue staff added to this conversation
+      try {
+        const partsRes = await fetch(`/api/admin/conversations/${conversationId}/participants`)
+        if (partsRes.ok) {
+          const partsData = await partsRes.json()
+          const list: any[] = []
+          if (conv?.recipient && conv.recipient.role === "rescue") {
+            list.push(conv.recipient)
+          }
+          ;(partsData.participants || []).forEach((p: any) => {
+            if (p?.user?.id && !list.some((x) => x.id === p.user.id)) {
+              list.push(p.user)
+            }
+          })
+          setRescueParticipants(list)
+        }
+      } catch (err) {
+        console.warn("Could not load conversation participants:", err)
+      }
 
       const { data: msgs } = await supabase
         .from("messages")
@@ -343,6 +369,14 @@ export default function ConversationPage() {
                 </Link>
               ) : (
                 <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">General</p>
+              )}
+              {rescueParticipants.length > 0 && (
+                <p className="text-[11px] text-[#5A4A42]/60 mt-1 truncate">
+                  With{" "}
+                  {rescueParticipants
+                    .map((p) => p.name?.split(" ")[0] || p.email?.split("@")[0] || "rescue staff")
+                    .join(", ")}
+                </p>
               )}
             </div>
           </div>

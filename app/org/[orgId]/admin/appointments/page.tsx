@@ -509,41 +509,62 @@ export default function AppointmentsPage() {
 
     try {
       const supabase = createClient()
-      const { error } = await supabase
+      // .select() so we can detect RLS rejections (which return 0 rows but no error)
+      const { data: updated, error } = await supabase
         .from("appointment_requests")
         .update({ status: "declined" })
         .eq("id", request.id)
+        .select("id")
 
       if (error) throw error
+      if (!updated || updated.length === 0) {
+        throw new Error("No request was updated. You may not have permission to decline this request.")
+      }
 
-      // Fetch org name for the email signature
-      const { data: orgData } = await supabase
-        .from("organizations")
-        .select("name")
-        .eq("id", orgId)
-        .maybeSingle()
-      const orgName = orgData?.name || "Your Rescue"
+      // Optimistically drop it from the list — refetch will run after the email
+      // attempt regardless of whether the email succeeds.
+      setPendingRequests((prev) => prev.filter((r) => r.id !== request.id))
 
-      // Fetch the foster's email from their profile
+      // Fire-and-forget the foster notification. A failed email shouldn't
+      // block the UI from showing the request as declined.
       const fosterProfile = request.foster as { name?: string; email?: string } | undefined
       const fosterEmail = fosterProfile?.email ?? ""
       const fosterName = fosterProfile?.name ?? "Foster"
-
       if (fosterEmail) {
-        const appointmentType = request.appointment_type || "Appointment"
-
-        await sendAppointmentDeclinedEmail(
-          fosterEmail,
-          fosterName,
-          appointmentType,
-          "As requested",
-          orgName,
-        )
+        ;(async () => {
+          try {
+            const { data: orgData } = await supabase
+              .from("organizations")
+              .select("name")
+              .eq("id", orgId)
+              .maybeSingle()
+            const orgName = orgData?.name || "Your Rescue"
+            await sendAppointmentDeclinedEmail(
+              fosterEmail,
+              fosterName,
+              request.appointment_type || "Appointment",
+              "As requested",
+              orgName,
+            )
+          } catch (emailErr) {
+            console.warn("Decline email failed:", emailErr)
+          }
+        })()
       }
 
+      toast({
+        title: "Request declined",
+        description: fosterEmail ? "The foster will be notified by email." : "Marked as declined.",
+      })
+
       loadData()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error declining request:", error)
+      toast({
+        title: "Couldn't decline request",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      })
     }
   }
 

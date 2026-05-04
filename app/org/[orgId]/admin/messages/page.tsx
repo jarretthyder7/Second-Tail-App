@@ -571,7 +571,7 @@ export default function OrgMessagesPage() {
                       </div>
 
                       {/* Right side: timestamp + unread badge */}
-                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0 transition-[margin] group-hover:mr-10">
                         <span className={`text-xs ${unread > 0 ? "text-[#D76B1A] font-semibold" : "text-[#2E2E2E]/50"}`}>
                           {timeLabel}
                         </span>

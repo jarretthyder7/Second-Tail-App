@@ -367,7 +367,7 @@ export default function AdminConversationPage() {
                   </span>
                 )}
               </div>
-              {dog ? (
+              {dog && (
                 <Link
                   href={`/org/${orgId}/admin/animals/${dog.id}`}
                   target="_blank"
@@ -378,8 +378,6 @@ export default function AdminConversationPage() {
                   About {dog.name}
                   <ExternalLink className="w-3 h-3 flex-shrink-0" />
                 </Link>
-              ) : (
-                <p className="text-xs sm:text-sm text-[#2E2E2E]/60 truncate">General</p>
               )}
 
               {/* Participant chips — rescue staff in the conversation. Shows the primary

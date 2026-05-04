@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation"
 import { useState, useEffect, useRef } from "react"
-import { Phone, AlertCircle, Package, Calendar, CheckCircle2, Plus, X, GripVertical } from "lucide-react"
+import { Phone, AlertCircle, Package, Calendar, CheckCircle2, Plus, X, GripVertical, DollarSign } from "lucide-react"
 import {
   DAY_KEYS,
   DAY_LABELS,
@@ -431,6 +431,32 @@ export default function HelpRequestSettingsPage() {
                 />
                 <span className="font-medium text-[#5A4A42]">Enable appointment requests</span>
               </label>
+            </div>
+
+            {/* Reimbursements */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-4">
+              <div className="flex items-center gap-3">
+                <DollarSign className="w-6 h-6 text-[#D76B1A]" />
+                <div>
+                  <h2 className="text-2xl font-bold text-[#5A4A42]">Reimbursements</h2>
+                  <p className="text-sm text-[#2E2E2E]/70 mt-0.5">
+                    Let fosters submit out-of-pocket expenses for reimbursement.
+                  </p>
+                </div>
+              </div>
+              <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-[#F7E2BD] cursor-pointer hover:bg-[#F7E2BD]/20">
+                <input
+                  type="checkbox"
+                  checked={settings.reimbursements_enabled !== false}
+                  onChange={(e) => setSettings({ ...settings, reimbursements_enabled: e.target.checked })}
+                  className="w-4 h-4 text-[#D76B1A] rounded focus:ring-[#D76B1A]"
+                />
+                <span className="font-medium text-[#5A4A42]">Enable reimbursements for all fosters</span>
+              </label>
+              <p className="text-xs text-[#2E2E2E]/60">
+                When off, the Reimbursements tab is hidden for every foster in your org. You can still enable it for
+                specific fosters from their profile.
+              </p>
             </div>
 
             {/* Hours of Operation */}

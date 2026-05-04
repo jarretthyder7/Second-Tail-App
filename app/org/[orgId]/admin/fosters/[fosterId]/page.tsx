@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Edit, Save, X, Dog, AlertTriangle } from "lucide-react"
+import { ArrowLeft, Edit, Save, X, Dog, AlertTriangle, DollarSign } from "lucide-react"
 import Link from "next/link"
 import useSWR from "swr"
 import { createClient } from "@/lib/supabase/client"
@@ -32,6 +32,50 @@ function FosterProfileContent() {
   const [showReturnConfirmation, setShowReturnConfirmation] = useState(false)
   const [isReturning, setIsReturning] = useState(false)
   const [returnSuccess, setReturnSuccess] = useState(false)
+  // Org-wide reimbursements default — used to label the "inherit" option below
+  // and to compute what the foster effectively gets when no override is set.
+  const [orgReimbEnabled, setOrgReimbEnabled] = useState<boolean | null>(null)
+  const [savingReimbOverride, setSavingReimbOverride] = useState(false)
+
+  useEffect(() => {
+    if (!orgId) return
+    let cancelled = false
+    fetch(`/api/admin/help-settings?orgId=${orgId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return
+        // null/undefined defaults to enabled (matches DB default)
+        setOrgReimbEnabled(data?.reimbursements_enabled !== false)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [orgId])
+
+  async function handleSetReimbursementOverride(value: "inherit" | "on" | "off") {
+    setSavingReimbOverride(true)
+    try {
+      const payload =
+        value === "inherit"
+          ? { reimbursements_enabled: null }
+          : { reimbursements_enabled: value === "on" }
+      const res = await fetch(`/api/admin/foster/${fosterId}?orgId=${orgId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        throw new Error(errBody.error || "Failed to update")
+      }
+      await mutate()
+    } catch (err: any) {
+      alert(err?.message || "Failed to update reimbursement permission")
+    } finally {
+      setSavingReimbOverride(false)
+    }
+  }
 
   const {
     data: foster,
@@ -346,6 +390,55 @@ function FosterProfileContent() {
                   </div>
                 </div>
               )}
+
+              {(() => {
+                // Per-foster reimbursements override. Three states:
+                // null → inherit org default; true/false → explicit override.
+                const override = foster.reimbursements_enabled
+                const currentValue: "inherit" | "on" | "off" =
+                  override === true ? "on" : override === false ? "off" : "inherit"
+                const orgLabel =
+                  orgReimbEnabled == null ? "loading…" : orgReimbEnabled ? "enabled" : "disabled"
+                return (
+                  <div className="pt-4 border-t border-neutral-cream">
+                    <div className="flex items-center gap-3 mb-3">
+                      <DollarSign className="w-5 h-5 text-primary-orange" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-primary-bark">Reimbursements</h3>
+                        <p className="text-xs text-neutral-charcoal/60">
+                          Org default: {orgLabel}. Override here to enable or disable just for this foster.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          { v: "inherit", label: `Use org default (${orgLabel})` },
+                          { v: "on", label: "Force on" },
+                          { v: "off", label: "Force off" },
+                        ] as const
+                      ).map(({ v, label }) => {
+                        const isActive = currentValue === v
+                        return (
+                          <button
+                            key={v}
+                            type="button"
+                            disabled={savingReimbOverride}
+                            onClick={() => handleSetReimbursementOverride(v)}
+                            className={`text-xs px-3 py-2 rounded-lg border transition disabled:opacity-50 ${
+                              isActive
+                                ? "border-primary-orange bg-primary-orange/10 text-primary-orange font-semibold"
+                                : "border-neutral-cream text-primary-bark hover:bg-neutral-cream"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
           )}
         </div>

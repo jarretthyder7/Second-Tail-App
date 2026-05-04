@@ -38,6 +38,10 @@ export default function OrgFosterLayout({
   const [showInviteFriendsModal, setShowInviteFriendsModal] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [unreadMessageCount, setUnreadMessageCount] = useState(0)
+  // Effective state of the reimbursements feature for this foster: org-wide
+  // setting, optionally overridden per-foster. Default true while loading so
+  // the tab doesn't flicker out for fosters who do have access.
+  const [reimbursementsEnabled, setReimbursementsEnabled] = useState(true)
   const menuRef = useRef<HTMLDivElement>(null)
   const notificationRef = useRef<HTMLDivElement>(null)
 
@@ -53,6 +57,24 @@ export default function OrgFosterLayout({
       if (user) {
         const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
         setProfile(profileData)
+
+        // Compute effective reimbursements visibility: per-foster override wins
+        // over the org default. null/undefined override → inherit org setting.
+        try {
+          const fosterOverride = profileData?.reimbursements_enabled
+          if (fosterOverride === true || fosterOverride === false) {
+            setReimbursementsEnabled(fosterOverride)
+          } else {
+            const { data: settings } = await supabase
+              .from("help_request_settings")
+              .select("reimbursements_enabled")
+              .eq("organization_id", orgId)
+              .maybeSingle()
+            setReimbursementsEnabled(settings?.reimbursements_enabled !== false)
+          }
+        } catch {
+          // Default-true fallback already in initial state.
+        }
 
         // Fetch foster's dogs to find their conversations
         const { data: dogs } = await supabase
@@ -156,7 +178,9 @@ export default function OrgFosterLayout({
     { name: "Messages",       href: `/org/${orgId}/foster/messages`,          path: "/messages",       icon: MessageSquare   },
     { name: "Appointments",   href: `/org/${orgId}/foster/appointments`,      path: "/appointments",   icon: CalendarIcon    },
     { name: "Learn",          href: `/org/${orgId}/foster/learn`,             path: "/learn",          icon: BookOpen        },
-    { name: "Reimbursements", href: `/org/${orgId}/foster/reimbursements`,    path: "/reimbursements", icon: DollarSign      },
+    ...(reimbursementsEnabled
+      ? [{ name: "Reimbursements", href: `/org/${orgId}/foster/reimbursements`, path: "/reimbursements", icon: DollarSign }]
+      : []),
     { name: "My Requests",    href: `/org/${orgId}/foster/request-supplies`,  path: "/request-supplies", icon: Package       },
   ]
 
@@ -283,14 +307,16 @@ export default function OrgFosterLayout({
                         doesn't include it, so keep it in the dropdown on mobile
                         only.
                       */}
-                      <Link
-                        href={`/org/${orgId}/foster/reimbursements`}
-                        className="md:hidden flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
-                        onClick={() => setShowUserMenu(false)}
-                      >
-                        <DollarSign className="w-4 h-4 text-gray-400" />
-                        Reimbursements
-                      </Link>
+                      {reimbursementsEnabled && (
+                        <Link
+                          href={`/org/${orgId}/foster/reimbursements`}
+                          className="md:hidden flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition text-sm font-medium text-gray-700"
+                          onClick={() => setShowUserMenu(false)}
+                        >
+                          <DollarSign className="w-4 h-4 text-gray-400" />
+                          Reimbursements
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           setShowUserMenu(false)

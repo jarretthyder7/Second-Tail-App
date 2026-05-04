@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import {
@@ -40,6 +40,7 @@ const CATEGORIES = [
 
 export default function ReimbursementsPage() {
   const params = useParams()
+  const router = useRouter()
   const orgId = params.orgId as string
   const { toast } = useToast()
 
@@ -67,6 +68,31 @@ export default function ReimbursementsPage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
+
+    // Deep-link safety: if reimbursements are disabled for this foster (per
+    // org default with optional per-foster override), bounce them to the
+    // dashboard instead of letting them submit a request that will never be
+    // reviewed.
+    const { data: profileRow } = await supabase
+      .from("profiles")
+      .select("reimbursements_enabled")
+      .eq("id", user.id)
+      .maybeSingle()
+    let enabled = true
+    if (profileRow?.reimbursements_enabled === true || profileRow?.reimbursements_enabled === false) {
+      enabled = profileRow.reimbursements_enabled
+    } else {
+      const { data: orgSettings } = await supabase
+        .from("help_request_settings")
+        .select("reimbursements_enabled")
+        .eq("organization_id", orgId)
+        .maybeSingle()
+      enabled = orgSettings?.reimbursements_enabled !== false
+    }
+    if (!enabled) {
+      router.replace(`/org/${orgId}/foster/dashboard`)
+      return
+    }
 
     const [dogsRes, reimbRes, orgRes] = await Promise.all([
       supabase.from("dogs").select("id, name").eq("foster_id", user.id).eq("organization_id", orgId),

@@ -106,7 +106,26 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const body = await request.json()
-    const { name, phone, address } = body
+    const { name, phone, address, reimbursements_enabled } = body
+    // Build a partial update so callers can patch a single field (the foster
+    // detail page sends only `reimbursements_enabled` for the override toggle).
+    const updates: Record<string, unknown> = {}
+    if (typeof name !== "undefined") updates.name = name
+    if (typeof phone !== "undefined") updates.phone = phone
+    if (typeof address !== "undefined") updates.address = address
+    if (typeof reimbursements_enabled !== "undefined") {
+      // Accept null (inherit), true (force on), false (force off)
+      if (
+        reimbursements_enabled === null ||
+        reimbursements_enabled === true ||
+        reimbursements_enabled === false
+      ) {
+        updates.reimbursements_enabled = reimbursements_enabled
+      }
+    }
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No updatable fields provided" }, { status: 400 })
+    }
 
     const supabase = await createClient()
     const {
@@ -129,11 +148,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const { data: updatedFoster, error } = await supabase
       .from("profiles")
-      .update({
-        name,
-        phone,
-        address,
-      })
+      .update(updates)
       .eq("id", fosterId)
       .eq("organization_id", orgId)
       .select()

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import {
   MessageCircle, Truck, HeartHandshake, Stethoscope,
@@ -11,6 +11,21 @@ import { SiteFooter } from "@/components/site-footer"
 
 export default function Home() {
   const [activeView, setActiveView] = useState<"foster" | "rescue">("rescue")
+
+  // Supabase invite/recovery emails sometimes redirect to the Site URL with
+  // tokens in the URL hash (e.g. "#access_token=...&type=invite"). If we land
+  // here from one of those flows, forward to the dedicated invite page so the
+  // user lands on the password-setup screen instead of the marketing page.
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const hash = window.location.hash
+    if (!hash || hash.length < 2) return
+    const params = new URLSearchParams(hash.slice(1))
+    const type = params.get("type")
+    if (type === "invite" || type === "recovery") {
+      window.location.replace(`/auth/invite${hash}`)
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-white">

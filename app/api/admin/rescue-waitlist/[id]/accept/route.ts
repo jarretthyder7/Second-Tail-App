@@ -49,7 +49,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://getsecondtail.com")
 
   const { data: invite, error: inviteError } = await admin.auth.admin.inviteUserByEmail(entry.email, {
-    redirectTo: `${siteUrl}/auth/callback`,
+    // The rescue lands on /auth/invite which parses the implicit-flow token
+    // from the URL hash, asks them to set a password, then finalizes their
+    // org + profile via /api/auth/finalize-rescue-invite using the metadata
+    // attached below.
+    redirectTo: `${siteUrl}/auth/invite`,
     data: {
       role: "rescue",
       org_role: "org_admin",

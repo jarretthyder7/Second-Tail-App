@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings, MapPin, Calendar, Pencil } from "lucide-react"
+import { Package, Clock, CheckCircle2, Loader2, AlertCircle, Settings, MapPin, Calendar, Pencil, ChevronDown, ChevronUp } from "lucide-react"
 
 type SupplyRequest = {
   id: string
@@ -39,6 +39,9 @@ export default function AdminSupplyRequestsPage() {
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState("all")
   const [updatingId, setUpdatingId] = useState<string | null>(null)
+  // Fulfilled requests are rolled up by default in the "All" view so the user's eye lands on
+  // active items first. They expand on click.
+  const [showFulfilled, setShowFulfilled] = useState(false)
   // Acknowledge modal state — captures pickup details before sending the foster the email
   const [ackTarget, setAckTarget] = useState<SupplyRequest | null>(null)
   const [ackPickupTime, setAckPickupTime] = useState("")
@@ -342,113 +345,164 @@ export default function AdminSupplyRequestsPage() {
           <h3 className="text-xl font-semibold text-primary-bark mb-2">No supply requests found</h3>
           <p className="text-text-muted">There are no supply requests matching your filter</p>
         </Card>
-      ) : (
-        <div className="space-y-4">
-          {requests.map((req) => (
-            <Card key={req.id} className="p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <h3 className="font-semibold text-primary-bark text-lg">{req.title}</h3>
-                    {getStatusBadge(req.status)}
-                    {getUrgencyBadge(req.priority)}
-                  </div>
-                  {req.description && (
-                    <p className="text-sm text-text-muted mb-2 line-clamp-2">{req.description}</p>
-                  )}
-                  {req.status === "in_progress" && (req.pickup_time || req.pickup_location) && (
-                    <div className="mb-2 p-3 rounded-lg bg-blue-50 border border-blue-100 text-sm">
-                      <p className="font-semibold text-blue-900 mb-1">Pickup details</p>
-                      {req.pickup_time && (
-                        <p className="text-blue-800 flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {new Date(req.pickup_time).toLocaleString(undefined, {
-                            weekday: "short",
-                            month: "short",
-                            day: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      )}
-                      {req.pickup_location && (
-                        <p className="text-blue-800 flex items-start gap-1.5 mt-0.5">
-                          <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
-                          <span className="whitespace-pre-wrap">{req.pickup_location}</span>
-                        </p>
-                      )}
-                      {req.pickup_notes && (
-                        <p className="text-blue-700/80 text-xs mt-1 italic whitespace-pre-wrap">
-                          {req.pickup_notes}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3 text-sm text-text-muted flex-wrap">
-                    <span>{req.profiles?.name || "Unknown Foster"}</span>
-                    {req.dogs?.name && (
-                      <>
-                        <span>•</span>
-                        <span>{req.dogs.name}</span>
-                      </>
-                    )}
-                    <span>•</span>
-                    <span>{new Date(req.created_at).toLocaleDateString()}</span>
-                  </div>
+      ) : (() => {
+        // Render a single request card. Same markup we had before, just lifted into a function
+        // so we can render active + fulfilled groups separately when the filter is "All".
+        const renderCard = (req: SupplyRequest) => (
+          <Card key={req.id} className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h3 className="font-semibold text-primary-bark text-lg">{req.title}</h3>
+                  {getStatusBadge(req.status)}
+                  {getUrgencyBadge(req.priority)}
                 </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2 flex-shrink-0">
-                  {req.status === "open" && (
-                    <button
-                      onClick={() => {
-                        setAckTarget(req)
-                        setAckPickupTime("")
-                        setAckPickupLocation("")
-                        setAckPickupNotes("")
-                        setAckError(null)
-                      }}
-                      disabled={updatingId === req.id}
-                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
-                    >
-                      Acknowledge
-                    </button>
+                {req.description && (
+                  <p className="text-sm text-text-muted mb-2 line-clamp-2">{req.description}</p>
+                )}
+                {req.status === "in_progress" && (req.pickup_time || req.pickup_location) && (
+                  <div className="mb-2 p-3 rounded-lg bg-blue-50 border border-blue-100 text-sm">
+                    <p className="font-semibold text-blue-900 mb-1">Pickup details</p>
+                    {req.pickup_time && (
+                      <p className="text-blue-800 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" />
+                        {new Date(req.pickup_time).toLocaleString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+                    {req.pickup_location && (
+                      <p className="text-blue-800 flex items-start gap-1.5 mt-0.5">
+                        <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
+                        <span className="whitespace-pre-wrap">{req.pickup_location}</span>
+                      </p>
+                    )}
+                    {req.pickup_notes && (
+                      <p className="text-blue-700/80 text-xs mt-1 italic whitespace-pre-wrap">
+                        {req.pickup_notes}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <div className="flex items-center gap-3 text-sm text-text-muted flex-wrap">
+                  <span>{req.profiles?.name || "Unknown Foster"}</span>
+                  {req.dogs?.name && (
+                    <>
+                      <span>•</span>
+                      <span>{req.dogs.name}</span>
+                    </>
                   )}
-                  {req.status === "in_progress" && (
-                    <button
-                      onClick={() => openEditPickup(req)}
-                      disabled={updatingId === req.id}
-                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 transition disabled:opacity-50 inline-flex items-center gap-1.5"
-                      title="Update pickup time or location and re-notify the foster"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                      Edit pickup
-                    </button>
-                  )}
-                  {(req.status === "open" || req.status === "in_progress") && (
-                    <button
-                      onClick={() => updateStatus(req.id, "resolved")}
-                      disabled={updatingId === req.id}
-                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50"
-                    >
-                      {updatingId === req.id ? "..." : "Mark Fulfilled"}
-                    </button>
-                  )}
-                  {req.status === "resolved" && (
-                    <button
-                      onClick={() => updateStatus(req.id, "open")}
-                      disabled={updatingId === req.id}
-                      className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-neutral-200 text-text-muted hover:bg-neutral-cream transition disabled:opacity-50"
-                    >
-                      Reopen
-                    </button>
-                  )}
+                  <span>•</span>
+                  <span>{new Date(req.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
-      )}
+
+              {/* Action buttons */}
+              <div className="flex gap-2 flex-shrink-0">
+                {req.status === "open" && (
+                  <button
+                    onClick={() => {
+                      setAckTarget(req)
+                      setAckPickupTime("")
+                      setAckPickupLocation("")
+                      setAckPickupNotes("")
+                      setAckError(null)
+                    }}
+                    disabled={updatingId === req.id}
+                    className="px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+                  >
+                    Acknowledge
+                  </button>
+                )}
+                {req.status === "in_progress" && (
+                  <button
+                    onClick={() => openEditPickup(req)}
+                    disabled={updatingId === req.id}
+                    className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-blue-300 text-blue-700 hover:bg-blue-50 transition disabled:opacity-50 inline-flex items-center gap-1.5"
+                    title="Update pickup time or location and re-notify the foster"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    Edit pickup
+                  </button>
+                )}
+                {(req.status === "open" || req.status === "in_progress") && (
+                  <button
+                    onClick={() => updateStatus(req.id, "resolved")}
+                    disabled={updatingId === req.id}
+                    className="px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition disabled:opacity-50"
+                  >
+                    {updatingId === req.id ? "..." : "Mark Fulfilled"}
+                  </button>
+                )}
+                {req.status === "resolved" && (
+                  <button
+                    onClick={() => updateStatus(req.id, "open")}
+                    disabled={updatingId === req.id}
+                    className="px-3 py-1.5 text-sm font-medium rounded-lg bg-white border border-neutral-200 text-text-muted hover:bg-neutral-cream transition disabled:opacity-50"
+                  >
+                    Reopen
+                  </button>
+                )}
+              </div>
+            </div>
+          </Card>
+        )
+
+        const activeRequests = requests.filter((r) => r.status !== "resolved")
+        const fulfilledRequests = requests.filter((r) => r.status === "resolved")
+        // Only roll up when the user is viewing "All" — if they explicitly filtered to
+        // "Fulfilled", honor that and show everything flat.
+        const shouldRollUp = filterStatus === "all" && fulfilledRequests.length > 0
+
+        if (!shouldRollUp) {
+          return <div className="space-y-4">{requests.map(renderCard)}</div>
+        }
+
+        return (
+          <div className="space-y-4">
+            {activeRequests.length > 0 ? (
+              activeRequests.map(renderCard)
+            ) : (
+              <Card className="p-8 text-center">
+                <CheckCircle2 className="w-10 h-10 mx-auto text-green-600 mb-2" />
+                <p className="text-sm font-medium text-primary-bark">No active requests</p>
+                <p className="text-xs text-text-muted mt-1">
+                  All caught up. {fulfilledRequests.length} fulfilled request
+                  {fulfilledRequests.length === 1 ? "" : "s"} below.
+                </p>
+              </Card>
+            )}
+
+            <div className="border border-neutral-200 rounded-xl overflow-hidden bg-white">
+              <button
+                type="button"
+                onClick={() => setShowFulfilled((v) => !v)}
+                className="w-full px-5 py-3 flex items-center justify-between hover:bg-neutral-cream transition"
+              >
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-medium text-primary-bark">
+                    {fulfilledRequests.length} fulfilled request{fulfilledRequests.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <span className="flex items-center gap-1 text-xs text-text-muted">
+                  {showFulfilled ? "Hide" : "Show"}
+                  {showFulfilled ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </span>
+              </button>
+              {showFulfilled && (
+                <div className="border-t border-neutral-200 bg-neutral-cream/40 p-4 space-y-4">
+                  {fulfilledRequests.map(renderCard)}
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Acknowledge → set pickup details modal. Closes on success / cancel.
           Foster gets a pickup-confirmation email automatically when this submits. */}

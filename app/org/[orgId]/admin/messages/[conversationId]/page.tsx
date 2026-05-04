@@ -361,6 +361,14 @@ export default function AdminConversationPage() {
                 <h1 className="font-bold text-base sm:text-lg text-[#5A4A42]">
                   {foster?.name || foster?.email || "Foster"}
                 </h1>
+                {conversation?.team && (
+                  <span
+                    className="bg-[#F7E2BD] text-[#5A4A42] text-xs px-2 py-0.5 rounded-full font-medium"
+                    title="Team responsible for answering"
+                  >
+                    {conversation.team}
+                  </span>
+                )}
               </div>
               {dog && (
                 <Link

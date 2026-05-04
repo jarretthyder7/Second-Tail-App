@@ -195,11 +195,13 @@ export default function AppointmentsPage() {
         if (pendingRequestSource) {
           const supabase = createClient()
 
-          // 1. Mark the appointment_requests row as confirmed
-          await supabase
-            .from("appointment_requests")
-            .update({ status: "confirmed" })
-            .eq("id", pendingRequestSource.id)
+          // 1. Mark the appointment_requests row as confirmed (server route
+          // because RLS doesn't allow direct rescue writes).
+          await fetch(`/api/admin/appointment-requests/${pendingRequestSource.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: "confirmed" }),
+          })
 
           // 2. Fetch the org name for the email signature
           const { data: orgData } = await supabase
@@ -420,14 +422,18 @@ export default function AppointmentsPage() {
         throw new Error(insertError.message || "Failed to create appointment")
       }
 
-      // 2. Mark the foster's pending request as scheduled
+      // 2. Mark the foster's pending request as scheduled (server-side route
+      // because RLS on appointment_requests doesn't allow direct rescue writes).
       if (pendingRequestSource) {
-        const { error: updateError } = await supabase
-          .from("appointment_requests")
-          .update({ status: "scheduled" })
-          .eq("id", pendingRequestSource.id)
-
-        if (updateError) throw updateError
+        const updateRes = await fetch(`/api/admin/appointment-requests/${pendingRequestSource.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "scheduled" }),
+        })
+        if (!updateRes.ok) {
+          const errBody = await updateRes.json().catch(() => ({}))
+          throw new Error(errBody.error || "Failed to mark request as scheduled")
+        }
 
         // 3. Send confirmation email to foster
         const fosterProfile = pendingRequestSource.foster as { name?: string; email?: string } | undefined
@@ -508,19 +514,17 @@ export default function AppointmentsPage() {
     if (!confirm("Decline this appointment request? The foster will be notified by email.")) return
 
     try {
-      const supabase = createClient()
-      // .select() so we can detect RLS rejections (which return 0 rows but no error)
-      const { data: updated, error } = await supabase
-        .from("appointment_requests")
-        .update({ status: "declined" })
-        .eq("id", request.id)
-        .select("id")
-
-      if (error) throw error
-      if (!updated || updated.length === 0) {
-        throw new Error("No request was updated. You may not have permission to decline this request.")
+      const res = await fetch(`/api/admin/appointment-requests/${request.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "declined" }),
+      })
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        throw new Error(errBody.error || "Failed to decline request")
       }
 
+      const supabase = createClient()
       // Optimistically drop it from the list — refetch will run after the email
       // attempt regardless of whether the email succeeds.
       setPendingRequests((prev) => prev.filter((r) => r.id !== request.id))

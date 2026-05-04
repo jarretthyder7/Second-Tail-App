@@ -5,7 +5,7 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
-import { HelpCircle, X, CheckCircle2, ArrowRight, LogOut, Calendar, Upload, BookOpen, AlertCircle, Pause, Trash2, Bell, Package } from "lucide-react"
+import { HelpCircle, X, CheckCircle2, ArrowRight, LogOut, Calendar, Upload, BookOpen, AlertCircle, Pause, Trash2, Bell, Package, DollarSign } from "lucide-react"
 
 // Inline SVG icon
 const SaveIcon = ({ className }: { className?: string }) => (
@@ -546,6 +546,19 @@ function OrgSettingsContent() {
               <div className="text-left">
                 <div className="font-semibold">Appointment Request Types</div>
                 <div className="text-xs text-[#2E2E2E]/70">Add or remove appointment types fosters can request</div>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-[#D76B1A] group-hover:translate-x-1 transition-transform" />
+          </button>
+          <button
+            onClick={() => router.push(`/org/${orgId}/admin/settings/help-requests#reimbursements`)}
+            className="flex items-center justify-between w-full px-4 py-3 rounded-xl text-sm font-medium text-[#5A4A42] hover:bg-[#FBF8F4] border-2 border-[#F7E2BD] transition group"
+          >
+            <div className="flex items-center gap-3">
+              <DollarSign className="w-5 h-5 text-[#D76B1A]" />
+              <div className="text-left">
+                <div className="font-semibold">Reimbursements</div>
+                <div className="text-xs text-[#2E2E2E]/70">Turn fosters' reimbursement submissions on or off</div>
               </div>
             </div>
             <ArrowRight className="w-5 h-5 text-[#D76B1A] group-hover:translate-x-1 transition-transform" />

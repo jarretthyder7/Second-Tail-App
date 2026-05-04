@@ -37,6 +37,19 @@ export default function HelpRequestSettingsPage() {
     fetchSetupStatus()
   }, [orgId])
 
+  // The page shows a loading state until settings come back, so a hash like
+  // #reimbursements set in the URL at nav-time won't scroll because the target
+  // element doesn't exist yet. Re-scroll once the real content has rendered.
+  useEffect(() => {
+    if (isLoading || typeof window === "undefined") return
+    const hash = window.location.hash
+    if (!hash || hash.length < 2) return
+    const id = hash.slice(1)
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }, [isLoading])
+
   const fetchSetupStatus = async () => {
     try {
       const res = await fetch(`/api/admin/setup-status?orgId=${orgId}`)
@@ -434,7 +447,7 @@ export default function HelpRequestSettingsPage() {
             </div>
 
             {/* Reimbursements */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-4">
+            <div id="reimbursements" className="bg-white rounded-2xl shadow-sm p-6 md:p-8 space-y-4 scroll-mt-24">
               <div className="flex items-center gap-3">
                 <DollarSign className="w-6 h-6 text-[#D76B1A]" />
                 <div>

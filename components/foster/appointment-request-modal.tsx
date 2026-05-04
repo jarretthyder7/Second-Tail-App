@@ -2,11 +2,19 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { X, Loader2, Calendar } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import {
+  DAY_KEYS,
+  DAY_LABELS,
+  DEFAULT_HOURS_OF_OPERATION,
+  formatTime12h,
+  normalizeHours,
+  type HoursOfOperation,
+} from "@/lib/hours-of-operation"
 
 interface AppointmentRequestModalProps {
   dog: any
@@ -22,6 +30,7 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
   const [loading, setLoading] = useState(false)
   const [appointmentTypes, setAppointmentTypes] = useState<string[]>([])
   const [loadingTypes, setLoadingTypes] = useState(true)
+  const [hours, setHours] = useState<HoursOfOperation>(DEFAULT_HOURS_OF_OPERATION)
   const [formData, setFormData] = useState({
     appointmentType: "",
     preferredDate: "",
@@ -31,7 +40,7 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
   })
 
   useEffect(() => {
-    async function fetchAppointmentTypes() {
+    async function fetchOrgSettings() {
       try {
         const response = await fetch(`/api/admin/help-settings?orgId=${orgId}`)
         if (response.ok) {
@@ -41,6 +50,7 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
           } else {
             setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
           }
+          setHours(normalizeHours(data.hours_of_operation))
         } else {
           setAppointmentTypes(DEFAULT_APPOINTMENT_TYPES)
         }
@@ -50,8 +60,46 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
         setLoadingTypes(false)
       }
     }
-    fetchAppointmentTypes()
+    fetchOrgSettings()
   }, [orgId])
+
+  // Compute available 15-minute slots for the foster's selected date based on the
+  // rescue's hours_of_operation. If the rescue is closed that day, returns [].
+  const dayHoursForSelectedDate = useMemo(() => {
+    if (!formData.preferredDate) return null
+    // Use noon to dodge timezone boundary issues when computing day-of-week.
+    const d = new Date(formData.preferredDate + "T12:00:00")
+    const dayKey = DAY_KEYS[(d.getDay() + 6) % 7] // JS getDay: Sun=0..Sat=6 → our keys: monday=0
+    return { dayKey, hours: hours[dayKey] }
+  }, [formData.preferredDate, hours])
+
+  const timeSlots = useMemo(() => {
+    const dh = dayHoursForSelectedDate
+    if (!dh || dh.hours.closed || !dh.hours.open || !dh.hours.close) return []
+    const [openH, openM] = dh.hours.open.split(":").map((n) => parseInt(n, 10))
+    const [closeH, closeM] = dh.hours.close.split(":").map((n) => parseInt(n, 10))
+    if ([openH, openM, closeH, closeM].some((n) => Number.isNaN(n))) return []
+    const startMin = openH * 60 + openM
+    const endMin = closeH * 60 + closeM
+    const slots: { value: string; label: string }[] = []
+    for (let m = startMin; m < endMin; m += 15) {
+      const h = Math.floor(m / 60)
+      const min = m % 60
+      const hh = String(h).padStart(2, "0")
+      const mm = String(min).padStart(2, "0")
+      const value = `${hh}:${mm}`
+      slots.push({ value, label: formatTime12h(value) })
+    }
+    return slots
+  }, [dayHoursForSelectedDate])
+
+  // Clear stale time when date changes or selected slot is no longer in range.
+  useEffect(() => {
+    if (!formData.preferredTime) return
+    if (!timeSlots.some((s) => s.value === formData.preferredTime)) {
+      setFormData((prev) => ({ ...prev, preferredTime: "" }))
+    }
+  }, [timeSlots, formData.preferredTime])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -111,6 +159,7 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
             body: JSON.stringify({
               type: "appointment-request",
               orgEmail: orgAdmin.email,
+              orgId,
               orgName: org.name,
               fosterName: currentUser.name,
               dogName: dog.name,
@@ -191,6 +240,7 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
               <input
                 type="date"
                 value={formData.preferredDate}
+                min={new Date().toISOString().slice(0, 10)}
                 onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 required
@@ -198,15 +248,35 @@ export function AppointmentRequestModal({ dog, orgId, onClose }: AppointmentRequ
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">Preferred Time *</label>
-              <input
-                type="time"
+              <select
                 value={formData.preferredTime}
                 onChange={(e) => setFormData({ ...formData, preferredTime: e.target.value })}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={!formData.preferredDate || timeSlots.length === 0}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
                 required
-              />
+              >
+                <option value="">
+                  {!formData.preferredDate
+                    ? "Pick a date first"
+                    : timeSlots.length === 0
+                      ? "Closed this day"
+                      : "Select a time..."}
+                </option>
+                {timeSlots.map((slot) => (
+                  <option key={slot.value} value={slot.value}>
+                    {slot.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
+          {formData.preferredDate && dayHoursForSelectedDate && (
+            <p className="-mt-2 text-xs text-muted-foreground">
+              {dayHoursForSelectedDate.hours.closed || timeSlots.length === 0
+                ? `${DAY_LABELS[dayHoursForSelectedDate.dayKey]}: closed. Pick another day.`
+                : `${DAY_LABELS[dayHoursForSelectedDate.dayKey]} hours: ${formatTime12h(dayHoursForSelectedDate.hours.open)} – ${formatTime12h(dayHoursForSelectedDate.hours.close)}`}
+            </p>
+          )}
 
           {/* Reason */}
           <div className="space-y-2">

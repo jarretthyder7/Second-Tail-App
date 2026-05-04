@@ -145,21 +145,35 @@ export const emailTemplates = {
     `,
   }),
 
-  // Notification to rescue org when foster requests an appointment
-  appointmentRequest: (orgName: string, fosterName: string, dogName: string, appointmentType: string, preferredDate: string) => ({
-    subject: `${fosterName} requested a ${appointmentType} appointment`,
-    html: `
+  // Notification to rescue org when foster requests an appointment.
+  // `orgId` is optional so legacy callers don't break, but pass it whenever
+  // possible — without it the CTA falls back to the generic login page.
+  appointmentRequest: (
+    orgName: string,
+    fosterName: string,
+    dogName: string,
+    appointmentType: string,
+    preferredDate: string,
+    orgId?: string,
+  ) => {
+    const ctaHref = orgId
+      ? `https://getsecondtail.com/org/${orgId}/admin/appointments?view=requests`
+      : "https://getsecondtail.com/login"
+    return {
+      subject: `${fosterName} requested a ${appointmentType} appointment`,
+      html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #92400e;">Appointment Request</h1>
         <p>Hi ${orgName},</p>
         <p><strong>${fosterName}</strong> has requested a <strong>${appointmentType}</strong> for <strong>${dogName}</strong> on <strong>${preferredDate}</strong>.</p>
         <p>Log in to review and schedule it.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Request</a>
+          <a href="${ctaHref}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Request</a>
         </div>
       </div>
     `,
-  }),
+    }
+  },
 
   medicalUpdate: (fosterName: string, animalName: string, updateType: string) => ({
     subject: `Important update for ${animalName}: ${updateType}`,

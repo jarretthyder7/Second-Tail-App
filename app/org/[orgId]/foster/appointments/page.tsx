@@ -39,6 +39,7 @@ export default function FosterAppointmentsPage() {
   const [showRequestModal, setShowRequestModal] = useState(false)
   const [dog, setDog] = useState<{ id: string; name: string; breed: string; image_url: string } | null>(null)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
+  const [cancelingRequestId, setCancelingRequestId] = useState<string | null>(null)
 
   useEffect(() => {
     loadData()
@@ -118,6 +119,22 @@ export default function FosterAppointmentsPage() {
     other: "Other",
   }
 
+  async function handleCancelRequest(requestId: string) {
+    if (!confirm("Cancel this appointment request? The rescue will be notified.")) return
+    setCancelingRequestId(requestId)
+    const supabase = createClient()
+    const { error } = await supabase
+      .from("appointment_requests")
+      .update({ status: "cancelled" })
+      .eq("id", requestId)
+    setCancelingRequestId(null)
+    if (error) {
+      alert("Failed to cancel request. Please try again.")
+      return
+    }
+    setPendingRequests((prev) => prev.filter((r) => r.id !== requestId))
+  }
+
   const upcomingAppointments = appointments.filter(
     (appt) => new Date(appt.start_time) > new Date() && appt.status === "scheduled",
   )
@@ -181,7 +198,7 @@ export default function FosterAppointmentsPage() {
                           className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
                         />
                       )}
-                      <div className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0 pr-8">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="font-semibold text-[#2E2E2E] capitalize">
                             {req.appointment_type?.replace(/-/g, " ")}
@@ -218,6 +235,15 @@ export default function FosterAppointmentsPage() {
                           <p className="mt-1 text-xs text-[#5A4A42]/60 italic truncate">{req.reason}</p>
                         )}
                       </div>
+                      <button
+                        onClick={() => handleCancelRequest(req.id)}
+                        disabled={cancelingRequestId === req.id}
+                        className="flex-shrink-0 p-1.5 rounded-full text-[#5A4A42]/60 hover:bg-amber-100 hover:text-[#5A4A42] disabled:opacity-50 transition"
+                        aria-label="Cancel request"
+                        title="Cancel request"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   </CardContent>
                 </Card>

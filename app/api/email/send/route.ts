@@ -97,7 +97,8 @@ export async function POST(request: NextRequest) {
           data.fosterName,
           data.dogName,
           data.appointmentType,
-          data.preferredDate
+          data.preferredDate,
+          data.orgId,
         )
         break
       case "medical-update":

@@ -103,9 +103,17 @@ export async function sendAppointmentRequestEmail(
   fosterName: string,
   dogName: string,
   appointmentType: string,
-  preferredDate: string
+  preferredDate: string,
+  orgId?: string,
 ) {
-  const template = emailTemplates.appointmentRequest(orgName, fosterName, dogName, appointmentType, preferredDate)
+  const template = emailTemplates.appointmentRequest(
+    orgName,
+    fosterName,
+    dogName,
+    appointmentType,
+    preferredDate,
+    orgId,
+  )
   return sendEmail({ to: orgEmail, ...template })
 }
 

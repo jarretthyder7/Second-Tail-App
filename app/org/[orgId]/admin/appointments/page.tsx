@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { CalendarIcon, Clock, Plus, DogIcon, User, Users, MapPin, X, Settings } from "lucide-react"
@@ -49,6 +49,7 @@ type Dog = {
 
 export default function AppointmentsPage() {
   const params = useParams()
+  const searchParams = useSearchParams()
   const orgId = params.orgId as string
   const { toast } = useToast()
 
@@ -60,7 +61,10 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true)
   const [showNewForm, setShowNewForm] = useState(false)
   const [showScheduleModal, setShowScheduleModal] = useState(false)
-  const [selectedView, setSelectedView] = useState<"calendar" | "list" | "requests">("calendar")
+  const [selectedView, setSelectedView] = useState<"calendar" | "list" | "requests">(() => {
+    const v = searchParams?.get("view")
+    return v === "requests" || v === "list" || v === "calendar" ? v : "calendar"
+  })
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [saving, setSaving] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null)
@@ -131,17 +135,19 @@ export default function AppointmentsPage() {
       const { data: teamsData } = await supabase.from("teams").select("*").eq("organization_id", orgId)
       setTeams(teamsData || [])
 
-      // Load pending appointment requests from help_requests where category = "appointment"
+      // Load pending appointment requests submitted by fosters via the modal.
+      // (The legacy help_requests/category=appointment path is no longer used.)
       const { data: requestsData, error: requestsError } = await supabase
-        .from("help_requests")
-        .select("*, dog:dogs(name), foster:profiles!help_requests_foster_id_fkey(name, email)")
+        .from("appointment_requests")
+        .select("*, dog:dogs!dog_id(id, name), foster:profiles!foster_id(id, name, email)")
         .eq("organization_id", orgId)
-        .eq("category", "appointment")
-        .eq("status", "open")
+        .eq("status", "pending")
         .order("created_at", { ascending: false })
 
       if (!requestsError) {
         setPendingRequests(requestsData || [])
+      } else {
+        console.error("Error loading pending requests:", requestsError)
       }
     } catch (error) {
       console.error("Error loading data:", error)
@@ -300,22 +306,40 @@ export default function AppointmentsPage() {
   }
 
   async function handleScheduleRequest(request: any) {
-    // Extract appointment type from title (format: "Appointment Request: [type]")
-    const appointmentType = request.title?.replace("Appointment Request: ", "") || "other"
-    
-    // Pre-fill the form with the request data - admin will set the date/time
+    // appointment_requests stores structured fields directly
+    const requestType = request.appointment_type || "other"
+    const fosterName = request.foster?.name || "foster"
+    const dogName = request.dog?.name ? ` for ${request.dog.name}` : ""
+
+    // Build a default start_time from the foster's preferred_date + preferred_time so
+    // the admin only has to confirm or tweak rather than re-enter from scratch.
+    let prefilledStart = ""
+    let prefilledEnd = ""
+    if (request.preferred_date && request.preferred_time) {
+      // preferred_time may be "HH:MM" or "HH:MM:SS" — normalize to HH:MM
+      const t = String(request.preferred_time).slice(0, 5)
+      prefilledStart = `${request.preferred_date}T${t}`
+      // Default to a 30-minute appointment
+      const startMs = new Date(prefilledStart).getTime()
+      if (!Number.isNaN(startMs)) {
+        const end = new Date(startMs + 30 * 60_000)
+        const pad = (n: number) => String(n).padStart(2, "0")
+        prefilledEnd = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}T${pad(end.getHours())}:${pad(end.getMinutes())}`
+      }
+    }
+
     setFormData({
-      title: request.title || "Appointment",
-      description: request.description || "",
-      appointment_type: appointmentType,
-      start_time: "",
-      end_time: "",
+      title: `${requestType} — ${fosterName}${dogName}`.trim(),
+      description: request.reason || "",
+      appointment_type: requestType,
+      start_time: prefilledStart,
+      end_time: prefilledEnd,
       dog_id: request.dog_id || "",
       foster_id: request.foster_id || "",
       team_id: "",
       location: "",
       items_needed: "",
-      notes: "",
+      notes: request.notes || "",
     })
     
     // Store the original request so we can update it and send email after saving
@@ -396,10 +420,10 @@ export default function AppointmentsPage() {
         throw new Error(insertError.message || "Failed to create appointment")
       }
 
-      // 2. Update the help_requests status to "scheduled"
+      // 2. Mark the foster's pending request as scheduled
       if (pendingRequestSource) {
         const { error: updateError } = await supabase
-          .from("help_requests")
+          .from("appointment_requests")
           .update({ status: "scheduled" })
           .eq("id", pendingRequestSource.id)
 
@@ -431,9 +455,8 @@ export default function AppointmentsPage() {
             minute: "2-digit",
           })
 
-          // Extract appointment type from title
-          const appointmentType = pendingRequestSource.title?.replace("Appointment Request: ", "") || "Appointment"
-          
+          const appointmentType = pendingRequestSource.appointment_type || "Appointment"
+
           await sendAppointmentConfirmedEmail(
             fosterEmail,
             fosterName,
@@ -487,7 +510,7 @@ export default function AppointmentsPage() {
     try {
       const supabase = createClient()
       const { error } = await supabase
-        .from("help_requests")
+        .from("appointment_requests")
         .update({ status: "declined" })
         .eq("id", request.id)
 
@@ -507,8 +530,7 @@ export default function AppointmentsPage() {
       const fosterName = fosterProfile?.name ?? "Foster"
 
       if (fosterEmail) {
-        // Extract appointment type from title
-        const appointmentType = request.title?.replace("Appointment Request: ", "") || "Appointment"
+        const appointmentType = request.appointment_type || "Appointment"
 
         await sendAppointmentDeclinedEmail(
           fosterEmail,
@@ -834,20 +856,42 @@ export default function AppointmentsPage() {
                 </CardContent>
               </Card>
             ) : (
-              pendingRequests.map((request) => (
+              pendingRequests.map((request) => {
+                const prettyDate = request.preferred_date
+                  ? new Date(request.preferred_date + "T00:00:00").toLocaleDateString(undefined, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : null
+                const prettyTime = request.preferred_time
+                  ? (() => {
+                      const [hStr, mStr] = String(request.preferred_time).split(":")
+                      const h = parseInt(hStr, 10)
+                      const m = parseInt(mStr, 10)
+                      if (Number.isNaN(h) || Number.isNaN(m)) return request.preferred_time
+                      const period = h >= 12 ? "PM" : "AM"
+                      const hour12 = h % 12 || 12
+                      return `${hour12}:${String(m).padStart(2, "0")} ${period}`
+                    })()
+                  : null
+                return (
                 <Card key={request.id} className="overflow-hidden">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-2">
-                        <div className="flex items-center gap-3">
-                          <h3 className="font-semibold text-[#5A4A42]">{request.title}</h3>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h3 className="font-semibold text-[#5A4A42] capitalize">
+                            {request.appointment_type || "Appointment"}
+                          </h3>
                           <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Pending</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm text-[#5A4A42]">
+                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm text-[#5A4A42]">
                           {request.foster && (
                             <div className="flex items-center gap-2">
                               <User className="w-4 h-4" />
-                              <span>{request.foster.name}</span>
+                              <span>{request.foster.name || request.foster.email}</span>
                             </div>
                           )}
                           {request.dog && (
@@ -856,8 +900,27 @@ export default function AppointmentsPage() {
                               <span>{request.dog.name}</span>
                             </div>
                           )}
+                          {prettyDate && (
+                            <div className="flex items-center gap-2">
+                              <CalendarIcon className="w-4 h-4" />
+                              <span>{prettyDate}</span>
+                            </div>
+                          )}
+                          {prettyTime && (
+                            <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              <span>{prettyTime}</span>
+                            </div>
+                          )}
                         </div>
-                        {request.description && <p className="text-sm text-[#5A4A42]/70 mt-2 whitespace-pre-wrap">{request.description}</p>}
+                        {request.reason && (
+                          <p className="text-sm text-[#5A4A42] mt-2">
+                            <span className="font-medium">Reason:</span> {request.reason}
+                          </p>
+                        )}
+                        {request.notes && (
+                          <p className="text-sm text-[#5A4A42]/70 mt-1 whitespace-pre-wrap">{request.notes}</p>
+                        )}
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -877,7 +940,8 @@ export default function AppointmentsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))
+                )
+              })
             )}
           </div>
         )}

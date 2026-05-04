@@ -5,7 +5,7 @@ import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import TimelineTab from "@/components/admin/timeline-tab"
 import { DocumentUploadSection } from "@/components/admin/document-upload-section"
-import { Plus, Save, X, MessageSquare, User, FileText, Download, Trash2 } from "lucide-react"
+import { Plus, Save, X, MessageSquare, User, FileText, Download, Trash2, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface AdminDogTabsProps {
@@ -117,6 +117,36 @@ export function AdminDogTabs({
     } catch (err: any) {
       toast({
         title: "Couldn't delete",
+        description: err.message || "Try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Flip visible_to_foster on a single uploaded document. Optimistic update for snappy feel —
+  // rolls back if the DB rejects (RLS, etc.).
+  const handleToggleDocumentVisibility = async (documentId: string, nextVisible: boolean) => {
+    setDocuments((prev) => prev.map((d) => (d.id === documentId ? { ...d, visible_to_foster: nextVisible } : d)))
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from("timeline_events")
+        .update({ visible_to_foster: nextVisible })
+        .eq("id", documentId)
+      if (error) throw error
+      toast({
+        title: nextVisible ? "Shared with foster" : "Hidden from foster",
+        description: nextVisible
+          ? "Foster will now see this document on their animal page."
+          : "Document is admin-only again.",
+      })
+    } catch (err: any) {
+      // Roll back local change
+      setDocuments((prev) =>
+        prev.map((d) => (d.id === documentId ? { ...d, visible_to_foster: !nextVisible } : d)),
+      )
+      toast({
+        title: "Couldn't change visibility",
         description: err.message || "Try again.",
         variant: "destructive",
       })
@@ -765,6 +795,7 @@ export function AdminDogTabs({
                                 ? "Intake form"
                                 : "Document"
 
+                    const isShared = !!doc.visible_to_foster
                     return (
                       <div
                         key={doc.id}
@@ -775,9 +806,35 @@ export function AdminDogTabs({
                             <FileText className="w-5 h-5 text-[#D76B1A]" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-[#5A4A42] truncate" title={fileName}>
-                              {fileName}
-                            </p>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-medium text-[#5A4A42] truncate" title={fileName}>
+                                {fileName}
+                              </p>
+                              <span
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                  isShared
+                                    ? "bg-green-100 text-green-700"
+                                    : "bg-[#5A4A42]/10 text-[#5A4A42]/70"
+                                }`}
+                                title={
+                                  isShared
+                                    ? "Foster can see this document"
+                                    : "Admin/staff only — not shared with foster"
+                                }
+                              >
+                                {isShared ? (
+                                  <>
+                                    <Eye className="w-2.5 h-2.5" />
+                                    Shared
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="w-2.5 h-2.5" />
+                                    Admin only
+                                  </>
+                                )}
+                              </span>
+                            </div>
                             <p className="text-xs text-[#5A4A42]/60">
                               {typeLabel}
                               {uploadedAt && ` · ${uploadedAt}`}
@@ -786,6 +843,18 @@ export function AdminDogTabs({
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleDocumentVisibility(doc.id, !isShared)}
+                            className={`p-2 rounded-lg transition ${
+                              isShared
+                                ? "text-green-600 hover:bg-green-50"
+                                : "text-[#5A4A42]/70 hover:bg-[#F7E2BD]/30 hover:text-[#D76B1A]"
+                            }`}
+                            title={isShared ? "Stop sharing with foster" : "Share with foster"}
+                          >
+                            {isShared ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          </button>
                           {fileUrl && (
                             <a
                               href={fileUrl}

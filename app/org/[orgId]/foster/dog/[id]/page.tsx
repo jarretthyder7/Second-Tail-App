@@ -19,6 +19,7 @@ import {
   FileText,
   User,
   Building2,
+  Download,
 } from "lucide-react"
 
 function FosterDogProfilePage() {
@@ -338,7 +339,9 @@ function FosterDogProfilePage() {
               {activeTab === "journey" && <JourneyTab dog={dog} timelineEvents={timelineEvents} />}
 
               {/* MEDICAL TAB */}
-              {activeTab === "medical" && <MedicalTab dog={dog} carePlan={carePlan} />}
+              {activeTab === "medical" && (
+                <MedicalTab dog={dog} carePlan={carePlan} timelineEvents={timelineEvents} />
+              )}
 
               {/* BEHAVIOR TAB */}
               {activeTab === "behavior" && <BehaviorTab dog={dog} />}
@@ -675,9 +678,20 @@ function JourneyTab({ dog, timelineEvents }: { dog: any; timelineEvents: any[] }
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Icon className="w-5 h-5 text-primary" />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-foreground">{event.title}</h4>
                     {event.description && <p className="text-sm text-muted-foreground mt-1">{event.description}</p>}
+                    {event.type === "file_uploaded" && event.metadata?.file_url && (
+                      <a
+                        href={event.metadata.file_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-primary hover:bg-primary/5 transition"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        {event.metadata.file_name || "Download document"}
+                      </a>
+                    )}
                     <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                       <span>
                         {new Date(event.event_date).toLocaleDateString("en-US", {
@@ -700,13 +714,84 @@ function JourneyTab({ dog, timelineEvents }: { dog: any; timelineEvents: any[] }
   )
 }
 
-function MedicalTab({ dog, carePlan }: { dog: any; carePlan: any }) {
+function MedicalTab({
+  dog,
+  carePlan,
+  timelineEvents = [],
+}: {
+  dog: any
+  carePlan: any
+  timelineEvents?: any[]
+}) {
+  // Pull file-uploaded events the rescue marked visible_to_foster=true. Filter is just on
+  // type because timelineEvents was already fetched with .eq("visible_to_foster", true).
+  const sharedDocuments = timelineEvents.filter(
+    (e) => e.type === "file_uploaded" && e.metadata?.file_url,
+  )
+
   return (
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold text-foreground">Medical Information</h3>
         <p className="text-sm text-muted-foreground mt-1">Health details shared by the rescue team</p>
       </div>
+
+      {/* Shared documents — prescriptions, vet records, care guides the rescue chose to share */}
+      {sharedDocuments.length > 0 && (
+        <div className="p-4 bg-secondary rounded-xl">
+          <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
+            <FileText className="w-4 h-4 text-primary" />
+            Documents from the rescue
+          </h4>
+          <div className="space-y-2">
+            {sharedDocuments.map((doc) => {
+              const meta = doc.metadata || {}
+              const fileName = meta.file_name || doc.title || "Document"
+              const docType = meta.document_type
+              const typeLabel =
+                docType === "medical"
+                  ? "Medical record"
+                  : docType === "vaccination"
+                    ? "Vaccination"
+                    : docType === "adoption"
+                      ? "Adoption paper"
+                      : docType === "behavior"
+                        ? "Behavior assessment"
+                        : docType === "intake"
+                          ? "Intake form"
+                          : "Document"
+              const uploadedAt = doc.event_date
+                ? new Date(doc.event_date).toLocaleDateString(undefined, {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })
+                : ""
+              return (
+                <a
+                  key={doc.id}
+                  href={meta.file_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 bg-background border border-border rounded-lg hover:border-primary/40 hover:shadow-sm transition group"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{fileName}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {typeLabel}
+                      {uploadedAt && ` · ${uploadedAt}`}
+                    </p>
+                  </div>
+                  <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition flex-shrink-0" />
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Medical Notes */}
       {dog.medical_notes ? (

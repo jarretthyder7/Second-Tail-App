@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
-import { Upload, FileText } from "lucide-react"
+import { Upload, FileText, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
 interface DocumentUploadSectionProps {
@@ -14,6 +14,9 @@ interface DocumentUploadSectionProps {
 export function DocumentUploadSection({ dogId, onUploadComplete }: DocumentUploadSectionProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [documentType, setDocumentType] = useState("medical")
+  // Default off — most uploads are admin-only paperwork (vet records, intake). Admin
+  // checks the box for things the foster genuinely needs to see (prescriptions, care guides).
+  const [visibleToFoster, setVisibleToFoster] = useState(false)
   const { toast } = useToast()
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,6 +29,7 @@ export function DocumentUploadSection({ dogId, onUploadComplete }: DocumentUploa
       formData.append("file", file)
       formData.append("dogId", dogId)
       formData.append("documentType", documentType)
+      formData.append("visibleToFoster", visibleToFoster ? "true" : "false")
 
       const response = await fetch("/api/upload/document", {
         method: "POST",
@@ -79,6 +83,33 @@ export function DocumentUploadSection({ dogId, onUploadComplete }: DocumentUploa
             <option value="intake">Intake Forms</option>
             <option value="general">General Document</option>
           </select>
+        </div>
+
+        <div>
+          <label className="flex items-start gap-3 p-3 rounded-lg border border-[#E5DED4] cursor-pointer hover:bg-[#FDF8F3] transition">
+            <input
+              type="checkbox"
+              checked={visibleToFoster}
+              onChange={(e) => setVisibleToFoster(e.target.checked)}
+              disabled={isUploading}
+              className="w-4 h-4 mt-0.5 rounded border-[#E5DED4] text-[#D76B1A] focus:ring-[#D76B1A] cursor-pointer flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                {visibleToFoster ? (
+                  <Eye className="w-3.5 h-3.5 text-[#D76B1A]" />
+                ) : (
+                  <EyeOff className="w-3.5 h-3.5 text-[#5A4A42]/50" />
+                )}
+                <p className="text-sm font-medium text-[#5A4A42]">Share with foster</p>
+              </div>
+              <p className="text-xs text-[#5A4A42]/60 mt-0.5">
+                {visibleToFoster
+                  ? "Foster will see this document on their animal page."
+                  : "Admin/staff only. Foster won't see this document."}
+              </p>
+            </div>
+          </label>
         </div>
 
         <div>

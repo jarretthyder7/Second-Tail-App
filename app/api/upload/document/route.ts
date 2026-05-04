@@ -9,6 +9,11 @@ export async function POST(request: NextRequest) {
     const file = formData.get("file") as File
     const dogId = formData.get("dogId") as string
     const documentType = (formData.get("documentType") as string) || "general"
+    // Admin opts-in to sharing with the foster on a per-document basis. Default off
+    // (medical paperwork is admin-only by default; staff explicitly checks the box to share).
+    const visibleToFosterRaw = formData.get("visibleToFoster")
+    const visibleToFoster =
+      visibleToFosterRaw === "true" || visibleToFosterRaw === "1" || visibleToFosterRaw === "on"
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 })
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
       description: `${documentType} document uploaded`,
       event_date: new Date().toISOString(),
       created_by: profile.name || user.email || "User",
-      visible_to_foster: false,
+      visible_to_foster: visibleToFoster,
       metadata: {
         file_url: blob.url,
         file_name: file.name,

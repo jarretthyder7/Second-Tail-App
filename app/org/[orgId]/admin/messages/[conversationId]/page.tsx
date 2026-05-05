@@ -7,7 +7,7 @@ import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { put } from "@vercel/blob"
-import { ArrowLeft, Send, Paperclip, ImageIcon, X, ExternalLink, Plus, Users } from "lucide-react"
+import { ArrowLeft, Send, Paperclip, ImageIcon, X, ExternalLink, Plus, Users, Trash2 } from "lucide-react"
 
 export default function AdminConversationPage() {
   const params = useParams()
@@ -73,6 +73,17 @@ export default function AdminConversationPage() {
         (payload) => {
           const updated: any = payload.new
           setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)))
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        (payload) => {
+          // DELETE payloads only carry the primary key (id) — that's all
+          // we need to drop the row from local state.
+          const oldId: any = (payload.old as any)?.id
+          if (!oldId) return
+          setMessages((prev) => prev.filter((m) => m.id !== oldId))
         }
       )
       .subscribe()
@@ -283,6 +294,22 @@ export default function AdminConversationPage() {
       setUploading(false)
       alert("Failed to send message. Please try again.")
     }
+  }
+
+  // Hard-delete a message for both sides. RLS allows either party in the
+  // conversation; the realtime DELETE event removes it from the other
+  // user's UI automatically.
+  async function handleDelete(messageId: string) {
+    if (!window.confirm("Delete this message? This will remove it for both sides.")) return
+    const { error } = await supabase.from("messages").delete().eq("id", messageId)
+    if (error) {
+      console.error("Delete failed:", error)
+      alert("Couldn't delete the message. Please try again.")
+      return
+    }
+    // Snappy feedback — the realtime DELETE event would also remove it,
+    // but no need to wait.
+    setMessages((prev) => prev.filter((m) => m.id !== messageId))
   }
 
   async function markMessagesAsRead() {
@@ -508,6 +535,14 @@ export default function AdminConversationPage() {
                       {new Date(message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </span>
                     {isFromAdmin && message.read_at && <span className="text-xs text-[#D76B1A] font-medium">Seen</span>}
+                    <button
+                      onClick={() => handleDelete(message.id)}
+                      className="text-[#2E2E2E]/30 hover:text-red-500 transition"
+                      aria-label="Delete message"
+                      title="Delete message"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
               </div>

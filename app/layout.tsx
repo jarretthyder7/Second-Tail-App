@@ -16,8 +16,12 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://getsecondtail.com'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  // Short default so iOS uses just "Second Tail" for the home-screen icon
+  // label. Other pages compose via the template ("Dashboard | Second Tail").
+  // Long-form descriptive title lives in openGraph + description for SEO and
+  // social cards.
   title: {
-    default: 'Second Tail — Fostering and rescue, made easier.',
+    default: 'Second Tail',
     template: '%s | Second Tail',
   },
   description:

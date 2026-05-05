@@ -31,7 +31,10 @@ export type PushPayload = {
 }
 
 export async function sendPush(userId: string, payload: PushPayload): Promise<void> {
-  if (!ensureVapid()) return
+  if (!ensureVapid()) {
+    console.warn(`[push] skipping send for user ${userId} — VAPID not configured`)
+    return
+  }
 
   const admin = createServiceRoleClient()
   const { data: subs, error } = await admin
@@ -43,17 +46,27 @@ export async function sendPush(userId: string, payload: PushPayload): Promise<vo
     console.warn("[push] failed to load subscriptions:", error)
     return
   }
-  if (!subs?.length) return
+  if (!subs?.length) {
+    console.log(`[push] no subscriptions for user ${userId}`)
+    return
+  }
+
+  console.log(`[push] sending to user ${userId}: ${subs.length} subscription(s)`)
 
   const body = JSON.stringify(payload)
 
   await Promise.all(
     subs.map(async (sub) => {
+      const host = safeHost(sub.endpoint)
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
           body,
+          // 24h TTL — if push isn't delivered within a day (device offline,
+          // etc.) it's stale anyway. Defaults vary across services.
+          { TTL: 60 * 60 * 24 },
         )
+        console.log(`[push] ok → ${host} (user ${userId})`)
       } catch (err: any) {
         const status = err?.statusCode
         // 404 / 410 mean the push service has dropped the subscription — they
@@ -61,10 +74,22 @@ export async function sendPush(userId: string, payload: PushPayload): Promise<vo
         // we don't keep retrying dead endpoints.
         if (status === 404 || status === 410) {
           await admin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint)
+          console.log(`[push] pruned dead subscription → ${host} (status ${status})`)
         } else {
-          console.warn(`[push] send failed for ${sub.endpoint} (${status}):`, err?.body || err?.message || err)
+          console.warn(
+            `[push] send failed → ${host} (status ${status ?? "unknown"}):`,
+            err?.body || err?.message || err,
+          )
         }
       }
     }),
   )
+}
+
+function safeHost(endpoint: string): string {
+  try {
+    return new URL(endpoint).host
+  } catch {
+    return "unknown"
+  }
 }

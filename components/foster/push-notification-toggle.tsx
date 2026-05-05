@@ -115,18 +115,65 @@ export function PushNotificationToggle() {
   }
 
   return (
-    <Row
-      label="Push notifications"
-      helper={
-        subscribed
-          ? "You'll get a push when your rescue messages you or updates your foster dog's profile."
-          : "Get an instant push notification — no email needed."
+    <div className="space-y-2">
+      <Row
+        label="Push notifications"
+        helper={
+          subscribed
+            ? "You'll get a push when your rescue messages you or updates your foster dog's profile."
+            : "Get an instant push notification — no email needed."
+        }
+        checked={subscribed}
+        disabled={busy}
+        onToggle={handleToggle}
+        error={error}
+      />
+      {subscribed && <TestPushButton />}
+    </div>
+  )
+}
+
+// Diagnostic: fires a push directly to the authed user, bypassing the
+// message pipeline. If this works but a real message doesn't, the bug is in
+// /api/notify or upstream. If this doesn't work, the bug is in
+// subscribe / web-push / SW.
+function TestPushButton() {
+  const [busy, setBusy] = useState(false)
+  const [feedback, setFeedback] = useState<string | null>(null)
+
+  const handleTest = async () => {
+    setBusy(true)
+    setFeedback(null)
+    try {
+      const res = await fetch("/api/push/test", { method: "POST" })
+      const data = await res.json()
+      if (data.ok) {
+        setFeedback(
+          `Sent to ${data.subscriptionCount} device${data.subscriptionCount === 1 ? "" : "s"}. Close this tab to see the banner — banners often don't show while the page is in the foreground.`,
+        )
+      } else if (data.stage === "no-subscriptions") {
+        setFeedback("No subscription saved. Toggle push off and back on, then try again.")
+      } else {
+        setFeedback(`Failed at "${data.stage}": ${data.error || data.message || "unknown"}`)
       }
-      checked={subscribed}
-      disabled={busy}
-      onToggle={handleToggle}
-      error={error}
-    />
+    } catch (err: any) {
+      setFeedback(`Network error: ${err?.message || err}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="px-1">
+      <button
+        onClick={handleTest}
+        disabled={busy}
+        className="text-xs text-[#D76B1A] font-medium hover:underline disabled:opacity-60"
+      >
+        {busy ? "Sending…" : "Send test push"}
+      </button>
+      {feedback && <p className="text-xs text-[#2E2E2E]/70 mt-1">{feedback}</p>}
+    </div>
   )
 }
 

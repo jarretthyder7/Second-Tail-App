@@ -7,6 +7,24 @@ import { ArrowLeft, Bell, User, LogOut, Save, HelpCircle, X, CheckCircle2 } from
 import Link from "next/link"
 import { PushNotificationToggle } from "@/components/foster/push-notification-toggle"
 
+// One-line email-channel toggle row used inside Notification Preferences.
+function FosterEmailToggle({ label, helper, checked, onChange }: { label: string; helper: string; checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
+      <div className="pr-3">
+        <div className="font-medium text-[#5A4A42]">{label}</div>
+        <div className="text-xs text-[#2E2E2E]/70 mt-0.5">{helper}</div>
+      </div>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40 flex-shrink-0"
+      />
+    </label>
+  )
+}
+
 export default function FosterSettingsPage() {
   const router = useRouter()
   const [profile, setProfile] = useState<any>(null)
@@ -14,10 +32,15 @@ export default function FosterSettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Per-user email-channel toggles. Each key gates one category of email
+  // notification; push always fires regardless of these settings. Default
+  // true so a user who's never opened settings still gets every email.
   const [notificationPrefs, setNotificationPrefs] = useState({
-    email_updates: true,
-    email_messages: true,
-    email_reminders: true,
+    messages: true,
+    dog_updates: true,
+    appointments: true,
+    supplies: true,
+    reimbursements: true,
   })
   const [showSupportModal, setShowSupportModal] = useState(false)
   const [submittingTicket, setSubmittingTicket] = useState(false)
@@ -49,12 +72,17 @@ export default function FosterSettingsPage() {
 
       setProfile(profileData)
 
-      // Load notification preferences if they exist
+      // Load notification preferences. Falls back to legacy keys if the new
+      // schema isn't set yet, so users who already toggled email_messages
+      // off don't get re-opted-in just because we renamed the key.
       if (profileData.notification_preferences) {
+        const p = profileData.notification_preferences
         setNotificationPrefs({
-          email_updates: profileData.notification_preferences.email_updates ?? true,
-          email_messages: profileData.notification_preferences.email_messages ?? true,
-          email_reminders: profileData.notification_preferences.email_reminders ?? true,
+          messages: p.messages ?? p.email_messages ?? true,
+          dog_updates: p.dog_updates ?? p.email_updates ?? true,
+          appointments: p.appointments ?? true,
+          supplies: p.supplies ?? true,
+          reimbursements: p.reimbursements ?? true,
         })
       }
 
@@ -199,53 +227,54 @@ export default function FosterSettingsPage() {
             <Bell className="w-5 h-5 text-[#D76B1A]" />
             <h2 className="text-lg font-semibold text-[#5A4A42]">Notification Preferences</h2>
           </div>
-          <p className="text-sm text-[#2E2E2E]/70 mb-6">
-            Control which email notifications you receive.
+          <p className="text-sm text-[#2E2E2E]/70 mb-4">
+            Choose which emails you want from us. Push notifications are sent for every category and managed via the toggle below.
           </p>
 
-          <div className="space-y-4">
-            {/* Push toggle saves itself on change — independent of the
-                email Save button below. */}
+          {/* Push lives on its own — saves immediately, no Save button needed. */}
+          <div className="mb-6">
             <PushNotificationToggle />
+          </div>
 
-            <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
-              <div>
-                <div className="font-medium text-[#5A4A42]">Email updates from rescues</div>
-                <div className="text-xs text-[#2E2E2E]/70">Receive general updates and announcements</div>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationPrefs.email_updates}
-                onChange={(e) => setNotificationPrefs({ ...notificationPrefs, email_updates: e.target.checked })}
-                className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
-              />
-            </label>
+          <h3 className="text-sm font-semibold text-[#5A4A42] mb-3">Email notifications</h3>
+          <div className="space-y-3">
+            <FosterEmailToggle
+              label="Messages from your rescue"
+              helper="When a rescue admin sends you a message"
+              checked={notificationPrefs.messages}
+              onChange={(v) => setNotificationPrefs({ ...notificationPrefs, messages: v })}
+            />
+            <FosterEmailToggle
+              label="Dog profile updates"
+              helper="Status, medical notes, behavior notes, name changes"
+              checked={notificationPrefs.dog_updates}
+              onChange={(v) => setNotificationPrefs({ ...notificationPrefs, dog_updates: v })}
+            />
+            <FosterEmailToggle
+              label="Appointments"
+              helper="When your rescue confirms, declines, or cancels an appointment"
+              checked={notificationPrefs.appointments}
+              onChange={(v) => setNotificationPrefs({ ...notificationPrefs, appointments: v })}
+            />
+            <FosterEmailToggle
+              label="Supplies"
+              helper="When your supply request is acknowledged with pickup details"
+              checked={notificationPrefs.supplies}
+              onChange={(v) => setNotificationPrefs({ ...notificationPrefs, supplies: v })}
+            />
+            <FosterEmailToggle
+              label="Reimbursements"
+              helper="When a reimbursement is approved, rejected, or paid"
+              checked={notificationPrefs.reimbursements}
+              onChange={(v) => setNotificationPrefs({ ...notificationPrefs, reimbursements: v })}
+            />
+          </div>
 
-            <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
-              <div>
-                <div className="font-medium text-[#5A4A42]">Email alerts for new messages</div>
-                <div className="text-xs text-[#2E2E2E]/70">Get notified when you receive a new message</div>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationPrefs.email_messages}
-                onChange={(e) => setNotificationPrefs({ ...notificationPrefs, email_messages: e.target.checked })}
-                className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
-              />
-            </label>
-
-            <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
-              <div>
-                <div className="font-medium text-[#5A4A42]">Email reminders for appointments</div>
-                <div className="text-xs text-[#2E2E2E]/70">Receive reminders before upcoming appointments</div>
-              </div>
-              <input
-                type="checkbox"
-                checked={notificationPrefs.email_reminders}
-                onChange={(e) => setNotificationPrefs({ ...notificationPrefs, email_reminders: e.target.checked })}
-                className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
-              />
-            </label>
+          <div className="mt-6 p-4 rounded-xl bg-[#FBF8F4] border border-[#F7E2BD]/50">
+            <h4 className="text-sm font-semibold text-[#5A4A42] mb-2">Always sent</h4>
+            <p className="text-xs text-[#2E2E2E]/70 leading-relaxed">
+              Account-level emails — welcome on signup, password resets, foster invitations, dog assignments, and important rescue-wide announcements (paused / closed) — always come through. These can't be turned off.
+            </p>
           </div>
 
           <button

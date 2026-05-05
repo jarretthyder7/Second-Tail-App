@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { after } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { sendSupplyRequestEmail } from "@/lib/email/send"
+import { notify } from "@/lib/notify"
+
+export const runtime = "nodejs"
 
 // uses rpc to bypass PostgREST schema cache
 export async function POST(request: NextRequest) {
@@ -45,34 +48,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message, code: error.code }, { status: 500 })
     }
 
-    // Send email notification to rescue org
-    try {
-      const { data: org } = await supabase
-        .from("organizations")
-        .select("name, email")
-        .eq("id", orgId)
-        .single()
-
-      // Look up dog name if dogId is provided
-      let dogName: string | undefined
-      if (dogId) {
-        const { data: dog } = await supabase.from("dogs").select("name").eq("id", dogId).single()
-        dogName = dog?.name
+    // Notify org admins via central notify() (email + push, per-user prefs).
+    // Wrapped in after() so the response isn't delayed and the work survives
+    // the serverless function returning.
+    after(async () => {
+      try {
+        await notify(supabase, {
+          type: "admin.supply_request",
+          orgId,
+          fosterId: user.id,
+          dogId: dogId || undefined,
+          supplies: itemName,
+        })
+      } catch (err) {
+        console.warn("Failed to notify supply request:", err)
       }
-
-      if (org?.email && profile?.name) {
-        await sendSupplyRequestEmail(
-          org.email,
-          org.name,
-          profile.name,
-          itemName,
-          dogName,
-          orgId
-        )
-      }
-    } catch (emailError) {
-      console.warn("Failed to send supply request email:", emailError)
-    }
+    })
 
     return NextResponse.json({ success: true, id: newId })
   } catch (err: any) {

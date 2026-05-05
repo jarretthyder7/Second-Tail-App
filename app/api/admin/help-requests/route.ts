@@ -1,7 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isRescueInOrg } from "@/lib/api/auth-helpers"
-import { sendSupplyAcknowledgedEmail } from "@/lib/email/send"
+import { after } from "next/server"
+import { notify } from "@/lib/notify"
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -104,32 +105,36 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update help request" }, { status: 500 })
     }
 
-    // Notify the foster on Acknowledge — best-effort, never fails the request
-    if (isAcknowledging && data?.foster?.email) {
-      try {
-        const formattedPickup = data.pickup_time
-          ? new Date(data.pickup_time).toLocaleString(undefined, {
-              weekday: "long",
-              month: "short",
-              day: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-            })
-          : "(time not set)"
-        await sendSupplyAcknowledgedEmail(
-          data.foster.email,
-          data.foster.name?.split(" ")[0] || data.foster.name || "there",
-          data.organization?.name || "Your rescue",
-          data.title || "Supply request",
-          formattedPickup,
-          data.pickup_location || "(location pending)",
-          data.pickup_notes || null,
-          orgId,
-          isUpdateOfPickup,
-        )
-      } catch (emailErr) {
-        console.warn("Acknowledged email failed to send:", emailErr)
-      }
+    // Notify the foster on Acknowledge — fire-and-forget via after() so the
+    // response returns immediately. notify() applies prefs + push.
+    if (isAcknowledging && data?.foster?.id) {
+      const fosterId = data.foster.id
+      const formattedPickup = data.pickup_time
+        ? new Date(data.pickup_time).toLocaleString(undefined, {
+            weekday: "long",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })
+        : "(time not set)"
+      after(async () => {
+        try {
+          await notify(supabase, {
+            type: "foster.supply_acknowledged",
+            fosterId,
+            orgId,
+            rescueName: data.organization?.name || "Your rescue",
+            requestTitle: data.title || "Supply request",
+            pickupTime: formattedPickup,
+            pickupLocation: data.pickup_location || "(location pending)",
+            pickupNotes: data.pickup_notes || null,
+            isUpdate: isUpdateOfPickup,
+          })
+        } catch (err) {
+          console.warn("Failed to notify supply acknowledged:", err)
+        }
+      })
     }
 
     return NextResponse.json({ success: true, request: data })

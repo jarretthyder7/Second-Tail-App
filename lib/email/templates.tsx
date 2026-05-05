@@ -726,4 +726,47 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  // Sent to org admins when a foster submits a Daily Update on a dog.
+  // Mood + category + notes go in the body; deep link opens the dog's page.
+  fosterLogSubmitted: (
+    fosterName: string,
+    dogName: string,
+    category: "general" | "behavior" | "health",
+    mood: "rough" | "ok" | "great",
+    notes: string,
+    link: string,
+  ) => {
+    const moodLabel = mood === "great" ? "Doing great" : mood === "ok" ? "Doing OK" : "Rough day"
+    const moodColor = mood === "great" ? "#16a34a" : mood === "ok" ? "#ca8a04" : "#dc2626"
+    const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1)
+    const isHealth = category === "health"
+    const headline = isHealth ? `Health update for ${dogName}` : `${fosterName} posted an update on ${dogName}`
+    return {
+      subject: isHealth ? `Health update — ${dogName}` : `Update from ${fosterName} on ${dogName}`,
+      html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #d97706;">${headline}</h1>
+        <p>Hi team,</p>
+        <p><strong>${fosterName}</strong> just shared an update on <strong>${dogName}</strong>.</p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr>
+            <td style="padding: 6px 0; color: #6b7280; font-size: 13px; width: 35%;">Category</td>
+            <td style="padding: 6px 0; color: #111827; font-size: 14px;">${categoryLabel}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #6b7280; font-size: 13px;">Mood</td>
+            <td style="padding: 6px 0; color: ${moodColor}; font-size: 14px; font-weight: bold;">${moodLabel}</td>
+          </tr>
+        </table>
+        <div style="background-color: #f9fafb; padding: 14px 16px; border-radius: 8px; border-left: 3px solid #d97706;">
+          <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">${notes.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+        </div>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${link}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View ${dogName}</a>
+        </div>
+      </div>
+    `,
+    }
+  },
 }

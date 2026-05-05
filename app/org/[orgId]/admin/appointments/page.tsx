@@ -8,7 +8,6 @@ import { CalendarIcon, Clock, Plus, DogIcon, User, Users, MapPin, X, Settings } 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { sendAppointmentConfirmedEmail, sendAppointmentDeclinedEmail } from "@/lib/email/send"
 
 type Appointment = {
   id: string
@@ -211,12 +210,12 @@ export default function AppointmentsPage() {
             .maybeSingle()
           const orgName = orgData?.name || "Your Rescue"
 
-          // 3. Fetch the foster's email address from their profile
-          const fosterProfile = pendingRequestSource.foster as { name?: string; email?: string } | undefined
-          const fosterEmail = fosterProfile?.email ?? ""
-          const fosterName = fosterProfile?.name ?? "Foster"
+          // Notify the foster via email + push, gated by their appointments pref.
+          const fosterId =
+            (pendingRequestSource.foster as { id?: string } | undefined)?.id ||
+            (pendingRequestSource as any).foster_id
 
-          if (fosterEmail) {
+          if (fosterId) {
             const confirmedDate = new Date(formData.start_time).toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -228,15 +227,22 @@ export default function AppointmentsPage() {
               minute: "2-digit",
             })
 
-            await sendAppointmentConfirmedEmail(
-              fosterEmail,
-              fosterName,
-              pendingRequestSource.appointment_type,
-              confirmedDate,
-              confirmedTime,
-              formData.notes || "",
-              orgName,
-            )
+            fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                event: {
+                  type: "foster.appointment_confirmed",
+                  fosterId,
+                  orgId,
+                  appointmentType: pendingRequestSource.appointment_type,
+                  confirmedDate,
+                  confirmedTime,
+                  notes: formData.notes || "",
+                  orgName,
+                },
+              }),
+            }).catch((err) => console.warn("Failed to notify foster:", err))
           }
         }
 
@@ -435,13 +441,12 @@ export default function AppointmentsPage() {
           throw new Error(errBody.error || "Failed to mark request as scheduled")
         }
 
-        // 3. Send confirmation email to foster
-        const fosterProfile = pendingRequestSource.foster as { name?: string; email?: string } | undefined
-        const fosterEmail = fosterProfile?.email ?? ""
-        const fosterName = fosterProfile?.name ?? "Foster"
+        // 3. Notify foster (email + push) via central notify().
+        const fosterId =
+          (pendingRequestSource.foster as { id?: string } | undefined)?.id ||
+          (pendingRequestSource as any).foster_id
 
-        if (fosterEmail) {
-          // Fetch org name for email signature
+        if (fosterId) {
           const { data: orgData } = await supabase
             .from("organizations")
             .select("name")
@@ -449,7 +454,6 @@ export default function AppointmentsPage() {
             .maybeSingle()
           const orgName = orgData?.name || "Your Rescue"
 
-          // Format the confirmed date and time
           const confirmedDate = new Date(formData.start_time).toLocaleDateString("en-US", {
             weekday: "long",
             year: "numeric",
@@ -461,17 +465,22 @@ export default function AppointmentsPage() {
             minute: "2-digit",
           })
 
-          const appointmentType = pendingRequestSource.appointment_type || "Appointment"
-
-          await sendAppointmentConfirmedEmail(
-            fosterEmail,
-            fosterName,
-            appointmentType,
-            confirmedDate,
-            confirmedTime,
-            formData.notes || "",
-            orgName,
-          )
+          fetch("/api/notify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: {
+                type: "foster.appointment_confirmed",
+                fosterId,
+                orgId,
+                appointmentType: pendingRequestSource.appointment_type || "Appointment",
+                confirmedDate,
+                confirmedTime,
+                notes: formData.notes || "",
+                orgName,
+              },
+            }),
+          }).catch((err) => console.warn("Failed to notify foster:", err))
         }
       }
 
@@ -530,12 +539,9 @@ export default function AppointmentsPage() {
       // attempt regardless of whether the email succeeds.
       setPendingRequests((prev) => prev.filter((r) => r.id !== request.id))
 
-      // Fire-and-forget the foster notification. A failed email shouldn't
-      // block the UI from showing the request as declined.
-      const fosterProfile = request.foster as { name?: string; email?: string } | undefined
-      const fosterEmail = fosterProfile?.email ?? ""
-      const fosterName = fosterProfile?.name ?? "Foster"
-      if (fosterEmail) {
+      // Fire-and-forget the foster notification via /api/notify (email + push).
+      const fosterId = (request.foster as { id?: string } | undefined)?.id || request.foster_id
+      if (fosterId) {
         ;(async () => {
           try {
             const { data: orgData } = await supabase
@@ -544,15 +550,22 @@ export default function AppointmentsPage() {
               .eq("id", orgId)
               .maybeSingle()
             const orgName = orgData?.name || "Your Rescue"
-            await sendAppointmentDeclinedEmail(
-              fosterEmail,
-              fosterName,
-              request.appointment_type || "Appointment",
-              "As requested",
-              orgName,
-            )
+            await fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                event: {
+                  type: "foster.appointment_declined",
+                  fosterId,
+                  orgId,
+                  appointmentType: request.appointment_type || "Appointment",
+                  requestedDate: "As requested",
+                  orgName,
+                },
+              }),
+            })
           } catch (emailErr) {
-            console.warn("Decline email failed:", emailErr)
+            console.warn("Decline notification failed:", emailErr)
           }
         })()
       }

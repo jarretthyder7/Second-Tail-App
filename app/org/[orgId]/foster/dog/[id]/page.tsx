@@ -446,33 +446,26 @@ function OverviewTab({
         medical_notes: category === "health" ? notes : null,
       })
 
-      // Send medical update email if health notes were added
-      if (category === "health") {
-        try {
-          const { data: org } = await supabase
-            .from("organizations")
-            .select("id, name, email")
-            .eq("id", dog.organization_id)
-            .single()
-
-          if (org) {
-            const origin = window.location.origin
-            await fetch(`${origin}/api/email/send`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: "medical-update",
-                fosterEmail: user?.email,
-                fosterName: user?.user_metadata?.name || "Foster",
-                dogName: dog.name,
-                updateType: "health",
-                notes: notes,
-              }),
-            })
-          }
-        } catch (emailError) {
-          console.warn("Failed to send medical update email:", emailError)
-        }
+      // Notify org admins (every category — they want visibility on all
+      // foster updates, with health flagged in the email subject). The
+      // pre-existing flow only emailed for category=health and bizarrely
+      // sent the email back to the foster instead of the admin.
+      if (user?.id && dog.organization_id) {
+        fetch("/api/notify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: {
+              type: "admin.foster_log_submitted",
+              orgId: dog.organization_id,
+              fosterId: user.id,
+              dogId: dog.id,
+              category,
+              mood,
+              notes,
+            },
+          }),
+        }).catch((err) => console.warn("Failed to notify org admins:", err))
       }
 
       setShowSuccess(true)

@@ -65,15 +65,17 @@ export default function AdminReimbursementsPage() {
     setLoading(false)
   }
 
+  // Fire a reimbursement notification through the central /api/notify
+  // pipeline. Server resolves recipient + applies prefs + sends push too.
   const sendReimbursementEmail = async (type: string, params: Record<string, string | undefined>) => {
     try {
-      await fetch("/api/email/reimbursement", {
+      await fetch("/api/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, ...params }),
+        body: JSON.stringify({ event: { type, ...params } }),
       })
     } catch (err) {
-      console.error("Failed to send reimbursement email:", err)
+      console.error("Failed to send reimbursement notification:", err)
     }
   }
 
@@ -101,13 +103,10 @@ export default function AdminReimbursementsPage() {
 
       if (error) throw error
 
-      // Notify foster by email
-      const fosterEmail = selectedReimbursement.profiles?.email
-      const fosterName = selectedReimbursement.profiles?.name || "Foster"
-      if (fosterEmail) {
-        await sendReimbursementEmail("approved", {
-          fosterEmail,
-          fosterName: fosterName.split(" ")[0],
+      const fosterId = selectedReimbursement.foster_id
+      if (fosterId) {
+        await sendReimbursementEmail("foster.reimbursement_approved", {
+          fosterId,
           amount: selectedReimbursement.amount.toFixed(2),
           category: getCategoryLabel(selectedReimbursement.category),
           notes: reviewNotes || undefined,
@@ -149,13 +148,10 @@ export default function AdminReimbursementsPage() {
 
       if (error) throw error
 
-      // Notify foster by email
-      const fosterEmail = selectedReimbursement.profiles?.email
-      const fosterName = selectedReimbursement.profiles?.name || "Foster"
-      if (fosterEmail) {
-        await sendReimbursementEmail("rejected", {
-          fosterEmail,
-          fosterName: fosterName.split(" ")[0],
+      const fosterId = selectedReimbursement.foster_id
+      if (fosterId) {
+        await sendReimbursementEmail("foster.reimbursement_rejected", {
+          fosterId,
           amount: selectedReimbursement.amount.toFixed(2),
           category: getCategoryLabel(selectedReimbursement.category),
           notes: reviewNotes || undefined,
@@ -191,13 +187,10 @@ export default function AdminReimbursementsPage() {
 
       if (error) throw error
 
-      // Notify foster by email
-      const fosterEmail = selectedReimbursement.profiles?.email
-      const fosterName = selectedReimbursement.profiles?.name || "Foster"
-      if (fosterEmail) {
-        await sendReimbursementEmail("paid", {
-          fosterEmail,
-          fosterName: fosterName.split(" ")[0],
+      const fosterId = selectedReimbursement.foster_id
+      if (fosterId) {
+        await sendReimbursementEmail("foster.reimbursement_paid", {
+          fosterId,
           amount: selectedReimbursement.amount.toFixed(2),
           category: getCategoryLabel(selectedReimbursement.category),
           paymentDate: new Date(paymentDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),

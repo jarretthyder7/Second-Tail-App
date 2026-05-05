@@ -159,25 +159,23 @@ export default function ReimbursementsPage() {
 
       if (error) throw error
 
-      // Notify rescue org by email (best effort — won't block success if it fails)
-      if (orgInfo?.email) {
-        const { data: fosterProfile } = await supabase.from("profiles").select("name").eq("id", user.id).maybeSingle()
-        const fosterName = fosterProfile?.name || user.email || "A foster"
-        const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label || category
-        fetch("/api/email/reimbursement", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "submitted",
-            orgEmail: orgInfo.email,
-            orgName: orgInfo.name,
-            fosterName,
+      // Notify org admins via central /api/notify (server applies their per-user
+      // prefs and fans out push too).
+      const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label || category
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: {
+            type: "admin.reimbursement_submitted",
+            orgId,
+            fosterId: user.id,
             amount: parseFloat(amount).toFixed(2),
             category: categoryLabel,
             description,
-          }),
-        }).catch(() => {}) // silent fail — email is non-critical
-      }
+          },
+        }),
+      }).catch(() => {}) // silent fail — notification is non-critical
 
       resetForm()
       setShowForm(false)

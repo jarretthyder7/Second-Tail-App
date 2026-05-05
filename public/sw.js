@@ -32,7 +32,26 @@ self.addEventListener("push", (event) => {
     data: { url: payload.url || "/" },
   }
 
-  event.waitUntil(self.registration.showNotification(title, options))
+  event.waitUntil(
+    (async () => {
+      // Suppress the OS banner if any window/tab of the PWA is currently
+      // visible — the user is already in the app and will see the update
+      // through realtime / unread badges. This violates the userVisibleOnly
+      // contract on Chromium-based browsers, which may eventually surface
+      // a generic "site updated in background" notification after many
+      // consecutive silent pushes; the tradeoff is worth it for the
+      // primary iOS PWA use case where users find foreground banners
+      // redundant.
+      const clientList = await self.clients.matchAll({
+        type: "window",
+        includeUncontrolled: true,
+      })
+      const visible = clientList.some((c) => c.visibilityState === "visible")
+      if (visible) return
+
+      await self.registration.showNotification(title, options)
+    })(),
+  )
 })
 
 self.addEventListener("notificationclick", (event) => {

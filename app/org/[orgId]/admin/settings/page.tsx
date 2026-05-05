@@ -20,24 +20,54 @@ const SaveIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-// One-line email-channel toggle row used inside Notification Preferences.
-// Saves immediately on toggle (no Save button — saves are debounced via
-// the disabled flag while in flight).
-function AdminEmailToggle({ label, helper, checked, disabled, onChange }: { label: string; helper: string; checked: boolean; disabled?: boolean; onChange: (v: boolean) => void }) {
+// Two-column (email | push) toggle row used inside admin Notification
+// Preferences. Saves immediately on toggle.
+function AdminPrefRow({
+  label,
+  helper,
+  email,
+  push,
+  disabled,
+  onChange,
+}: {
+  label: string
+  helper: string
+  email: boolean
+  push: boolean
+  disabled?: boolean
+  onChange: (channel: "email" | "push", value: boolean) => void
+}) {
   return (
-    <label className={`flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] transition ${disabled ? "opacity-70 cursor-not-allowed" : "hover:bg-[#FBF8F4] cursor-pointer"}`}>
-      <div className="pr-3">
-        <div className="font-medium text-[#5A4A42]">{label}</div>
-        <div className="text-xs text-[#2E2E2E]/70 mt-0.5">{helper}</div>
+    <div className={`p-4 rounded-xl border-2 border-[#F7E2BD] transition ${disabled ? "opacity-70" : "hover:bg-[#FBF8F4]"}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="pr-3 flex-1 min-w-0">
+          <div className="font-medium text-[#5A4A42]">{label}</div>
+          <div className="text-xs text-[#2E2E2E]/70 mt-0.5">{helper}</div>
+        </div>
+        <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0 pt-0.5">
+          <label className="flex flex-col items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={email}
+              disabled={disabled}
+              onChange={(e) => onChange("email", e.target.checked)}
+              className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
+            />
+            <span className="text-[10px] text-[#2E2E2E]/60">Email</span>
+          </label>
+          <label className="flex flex-col items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={push}
+              disabled={disabled}
+              onChange={(e) => onChange("push", e.target.checked)}
+              className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
+            />
+            <span className="text-[10px] text-[#2E2E2E]/60">Push</span>
+          </label>
+        </div>
       </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.checked)}
-        className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40 flex-shrink-0"
-      />
-    </label>
+    </div>
   )
 }
 
@@ -87,15 +117,22 @@ function OrgSettingsContent() {
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const [showPauseModal, setShowPauseModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
-  // Per-user email-channel toggles. Each rescue staff member has their
-  // own prefs on profiles.notification_preferences; push always fires
-  // regardless of these settings.
-  const [notificationPrefs, setNotificationPrefs] = useState({
-    messages: true,
-    appointment_requests: true,
-    supply_requests: true,
-    reimbursement_requests: true,
-    foster_log_updates: true,
+  // Per-user prefs with separate email + push toggles. Each rescue staff
+  // member controls their own; push subscription on the device must also
+  // be enabled (see PushNotificationToggle row above).
+  type ChannelPrefs = { email: boolean; push: boolean }
+  const [notificationPrefs, setNotificationPrefs] = useState<{
+    messages: ChannelPrefs
+    appointment_requests: ChannelPrefs
+    supply_requests: ChannelPrefs
+    reimbursement_requests: ChannelPrefs
+    foster_log_updates: ChannelPrefs
+  }>({
+    messages: { email: true, push: true },
+    appointment_requests: { email: true, push: true },
+    supply_requests: { email: true, push: true },
+    reimbursement_requests: { email: true, push: true },
+    foster_log_updates: { email: true, push: true },
   })
   const [savingPrefs, setSavingPrefs] = useState(false)
   const [prefsSavedAt, setPrefsSavedAt] = useState<number | null>(null)
@@ -113,9 +150,11 @@ function OrgSettingsContent() {
 
       setOrg(data)
 
-      // Load this user's per-user prefs from their profile, with fallback to
-      // the legacy org-wide prefs (so an admin who'd toggled an option off
-      // before per-user prefs existed doesn't get re-opted-in).
+      // Load this user's per-user prefs from their profile. Two stored
+      // shapes are supported on read so we can transition smoothly:
+      //   - boolean (legacy single-toggle for email): treat as { email: v, push: true }
+      //   - { email, push } (current): use as-is
+      // Falls back to the legacy org-wide prefs if no per-user value is set.
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -127,12 +166,25 @@ function OrgSettingsContent() {
           .maybeSingle()
         const personal = profileRow?.notification_preferences || {}
         const orgPrefs = data.notification_preferences || {}
+        const lift = (
+          personalKey: keyof typeof personal,
+          orgKey: string,
+        ): ChannelPrefs => {
+          const v = personal[personalKey]
+          if (typeof v === "object" && v !== null) {
+            return { email: v.email !== false, push: v.push !== false }
+          }
+          if (typeof v === "boolean") return { email: v, push: true }
+          // Org-wide legacy fallback only gates email; push defaults on.
+          if (orgKey in orgPrefs) return { email: orgPrefs[orgKey] !== false, push: true }
+          return { email: true, push: true }
+        }
         setNotificationPrefs({
-          messages: personal.messages ?? orgPrefs.new_message_from_foster ?? true,
-          appointment_requests: personal.appointment_requests ?? orgPrefs.foster_appointment_request ?? true,
-          supply_requests: personal.supply_requests ?? orgPrefs.foster_supply_request ?? true,
-          reimbursement_requests: personal.reimbursement_requests ?? orgPrefs.foster_reimbursement_request ?? true,
-          foster_log_updates: personal.foster_log_updates ?? true,
+          messages: lift("messages", "new_message_from_foster"),
+          appointment_requests: lift("appointment_requests", "foster_appointment_request"),
+          supply_requests: lift("supply_requests", "foster_supply_request"),
+          reimbursement_requests: lift("reimbursement_requests", "foster_reimbursement_request"),
+          foster_log_updates: lift("foster_log_updates", ""),
         })
       }
     }
@@ -670,43 +722,35 @@ function OrgSettingsContent() {
           <PushNotificationToggle audience="admin" />
         </div>
 
-        <h3 className="text-sm font-semibold text-[#5A4A42] mb-3">Email notifications</h3>
+        <h3 className="text-sm font-semibold text-[#5A4A42] mb-3">Email & push by event</h3>
+        <p className="text-xs text-[#2E2E2E]/60 mb-3">
+          Each row has its own email and push toggle. Push only delivers if you've also enabled it on this device above.
+        </p>
         <div className="space-y-3">
-          <AdminEmailToggle
-            label="Messages from fosters"
-            helper="When a foster sends you a message"
-            checked={notificationPrefs.messages}
-            disabled={savingPrefs}
-            onChange={(v) => saveNotificationPrefs({ ...notificationPrefs, messages: v })}
-          />
-          <AdminEmailToggle
-            label="Foster log updates"
-            helper="When a foster posts a Daily Update on their dog"
-            checked={notificationPrefs.foster_log_updates}
-            disabled={savingPrefs}
-            onChange={(v) => saveNotificationPrefs({ ...notificationPrefs, foster_log_updates: v })}
-          />
-          <AdminEmailToggle
-            label="Appointment requests"
-            helper="When a foster requests an appointment"
-            checked={notificationPrefs.appointment_requests}
-            disabled={savingPrefs}
-            onChange={(v) => saveNotificationPrefs({ ...notificationPrefs, appointment_requests: v })}
-          />
-          <AdminEmailToggle
-            label="Supply requests"
-            helper="When a foster requests supplies"
-            checked={notificationPrefs.supply_requests}
-            disabled={savingPrefs}
-            onChange={(v) => saveNotificationPrefs({ ...notificationPrefs, supply_requests: v })}
-          />
-          <AdminEmailToggle
-            label="Reimbursement requests"
-            helper="When a foster submits a reimbursement"
-            checked={notificationPrefs.reimbursement_requests}
-            disabled={savingPrefs}
-            onChange={(v) => saveNotificationPrefs({ ...notificationPrefs, reimbursement_requests: v })}
-          />
+          {(
+            [
+              { key: "messages", label: "Messages from fosters", helper: "When a foster sends you a message" },
+              { key: "foster_log_updates", label: "Foster log updates", helper: "When a foster posts a Daily Update on their dog" },
+              { key: "appointment_requests", label: "Appointment requests", helper: "When a foster requests an appointment" },
+              { key: "supply_requests", label: "Supply requests", helper: "When a foster requests supplies" },
+              { key: "reimbursement_requests", label: "Reimbursement requests", helper: "When a foster submits a reimbursement" },
+            ] as const
+          ).map((row) => (
+            <AdminPrefRow
+              key={row.key}
+              label={row.label}
+              helper={row.helper}
+              email={notificationPrefs[row.key].email}
+              push={notificationPrefs[row.key].push}
+              disabled={savingPrefs}
+              onChange={(channel, v) =>
+                saveNotificationPrefs({
+                  ...notificationPrefs,
+                  [row.key]: { ...notificationPrefs[row.key], [channel]: v },
+                })
+              }
+            />
+          ))}
         </div>
 
         <div className="mt-6 p-4 rounded-xl bg-[#FBF8F4] border border-[#F7E2BD]/50">

@@ -215,19 +215,21 @@ async function buildMessageDispatches(
     if (admin.id === senderId) continue
     if (!(await shouldSendEmailNotification(supabase, conversationId, admin.id))) continue
 
-    const dispatch: Dispatch = {
-      recipientId: admin.id,
-      push: {
+    const dispatch: Dispatch = { recipientId: admin.id }
+    if (prefAllows(admin, "messages", "push")) {
+      dispatch.push = {
         title: `New message from ${fosterName}`,
         body: `Re: ${dogName}`,
         url: link,
         tag: `conversation:${conversationId}`,
-      },
+      }
     }
-    if (admin.email && prefAllows(admin, "messages")) {
+    if (admin.email && prefAllows(admin, "messages", "email")) {
       const tpl = emailTemplates.newMessageToOrg(orgName, fosterName, dogName, link)
       dispatch.email = { to: admin.email, subject: tpl.subject, html: tpl.html }
     }
+    // If both channels are off, skip the dispatch entirely.
+    if (!dispatch.push && !dispatch.email) continue
     dispatches.push(dispatch)
   }
   return dispatches
@@ -599,19 +601,20 @@ async function loadOrgAdmins(supabase: SupabaseClient, orgId: string): Promise<P
   return (data as ProfileRow[]) || []
 }
 
-// Fan an admin event out to all org admins, applying the per-user pref check
-// for the email channel only. Push always fires.
+// Fan an admin event out to all org admins, applying per-user prefs for
+// BOTH email and push channels (admin prefs use the object shape so each
+// channel can be silenced independently).
 function adminFanout(
   admins: ProfileRow[],
   prefKey: NotificationPrefKey,
   payload: { push: PushPayload; emailTemplate: () => { subject: string; html: string } },
 ): Dispatch[] {
   return admins.map((admin) => {
-    const dispatch: Dispatch = {
-      recipientId: admin.id,
-      push: payload.push,
+    const dispatch: Dispatch = { recipientId: admin.id }
+    if (prefAllows(admin, prefKey, "push")) {
+      dispatch.push = payload.push
     }
-    if (admin.email && prefAllows(admin, prefKey)) {
+    if (admin.email && prefAllows(admin, prefKey, "email")) {
       const tpl = payload.emailTemplate()
       dispatch.email = { to: admin.email, subject: tpl.subject, html: tpl.html }
     }
@@ -619,10 +622,20 @@ function adminFanout(
   })
 }
 
-// Default-on read: a user who's never opened settings still gets every email.
-// Setting a key to false silences only the email channel — push fires always.
-function prefAllows(profile: ProfileRow, key: NotificationPrefKey): boolean {
+// Default-on read with two stored shapes:
+//   - boolean → applies to email only; push is unconstrained (foster prefs)
+//   - { email, push } → both channels gated independently (admin prefs)
+// A user who's never opened settings still gets every email and every push.
+function prefAllows(profile: ProfileRow, key: NotificationPrefKey, channel: "email" | "push" = "email"): boolean {
   const prefs = profile?.notification_preferences
   if (!prefs || typeof prefs !== "object") return true
-  return prefs[key] !== false
+  const value = prefs[key]
+  if (typeof value === "boolean") {
+    // Legacy / foster shape — applies only to email; push is unconstrained.
+    return channel === "push" ? true : value
+  }
+  if (typeof value === "object" && value !== null) {
+    return value[channel] !== false
+  }
+  return true
 }

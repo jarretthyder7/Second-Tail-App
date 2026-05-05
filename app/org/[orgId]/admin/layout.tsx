@@ -51,6 +51,12 @@ type Organization = {
   city: string | null
   state: string | null
   zip: string | null
+  branding?: {
+    logo_url?: string | null
+    primary_color?: string | null
+    accent_color?: string | null
+    background_color?: string | null
+  } | null
 }
 
 export default function OrgAdminLayout({
@@ -337,9 +343,20 @@ export default function OrgAdminLayout({
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-accent-beige px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary-orange flex items-center justify-center">
-            <Building2 className="w-4 h-4 text-white" />
-          </div>
+          {org?.branding?.logo_url ? (
+            <img
+              src={org.branding.logo_url}
+              alt={`${org.name} logo`}
+              className="w-8 h-8 rounded-lg object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = "none"
+              }}
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-primary-orange flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-white" />
+            </div>
+          )}
           <div>
             <h2 className="text-sm font-semibold text-primary-bark">{org?.name || "Loading..."}</h2>
             <p className="text-xs text-[#2E2E2E]/60">{isOrgAdmin ? "Admin" : "Staff"}</p>
@@ -372,9 +389,20 @@ export default function OrgAdminLayout({
           {/* Org Header */}
           <div className="p-6 border-b border-accent-beige flex-shrink-0 mt-16 md:mt-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary-orange flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-white" />
-              </div>
+              {org?.branding?.logo_url ? (
+                <img
+                  src={org.branding.logo_url}
+                  alt={`${org.name} logo`}
+                  className="w-10 h-10 rounded-xl object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none"
+                  }}
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-primary-orange flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-white" />
+                </div>
+              )}
               <div>
                 <h2 className="text-sm font-semibold text-primary-bark">{org?.name || "Loading..."}</h2>
                 <p className="text-xs text-[#2E2E2E]/60">{isOrgAdmin ? "Admin Portal" : "Staff Portal"}</p>

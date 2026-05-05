@@ -31,6 +31,7 @@ import {
   Mail,
 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { PushSubscriptionPrompt } from "@/components/foster/push-subscription-prompt"
 
 type Profile = {
   id: string
@@ -696,6 +697,9 @@ export default function OrgAdminLayout({
         </div>
       )}
 
+      {/* Web Push permission prompt (admin variant). Bails silently on
+          unsupported / denied / dismissed / already-subscribed. */}
+      <PushSubscriptionPrompt audience="admin" />
 
     </div>
   )

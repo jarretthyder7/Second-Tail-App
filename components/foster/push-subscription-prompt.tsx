@@ -19,7 +19,7 @@
 //
 // All push plumbing (capability detection, subscribe, dismissal storage)
 // lives in lib/push/client.ts so the settings toggle can share it.
-import { useEffect, useState } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { Bell, Share, Plus, X } from "lucide-react"
 import {
   detectCapability,
@@ -31,14 +31,51 @@ import {
   wasRecentlyDismissed,
 } from "@/lib/push/client"
 
+export type PushPromptAudience = "foster" | "admin"
+
 type Props = {
   // Used in the prompt copy ("Get notified when {orgName} messages you...").
+  // For admin audiences this is shown as the actor name where applicable.
   orgName?: string
+  // Tunes copy for the audience. Defaults to foster.
+  audience?: PushPromptAudience
 }
 
 type Mode = "hidden" | "push" | "install"
 
-export function PushSubscriptionPrompt({ orgName }: Props) {
+const COPY = {
+  foster: {
+    pushTitle: "Turn on notifications",
+    pushBody: (orgName?: string) => (
+      <>
+        Get notified when {orgName ? <strong>{orgName}</strong> : "your rescue"} messages you or updates your foster dog's profile.
+      </>
+    ),
+    installTitle: "Get notifications on iPhone",
+    installBody: (orgName?: string) => (
+      <>
+        To get notified when {orgName ? <strong>{orgName}</strong> : "your rescue"} messages you,
+        add Second Tail to your Home Screen.
+      </>
+    ),
+  },
+  admin: {
+    pushTitle: "Turn on notifications",
+    pushBody: () => (
+      <>
+        Get notified when fosters message you, request appointments, or submit reimbursements.
+      </>
+    ),
+    installTitle: "Get notifications on iPhone",
+    installBody: () => (
+      <>
+        To get notified about foster activity, add Second Tail to your Home Screen.
+      </>
+    ),
+  },
+} as const
+
+export function PushSubscriptionPrompt({ orgName, audience = "foster" }: Props) {
   const [mode, setMode] = useState<Mode>("hidden")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -86,10 +123,13 @@ export function PushSubscriptionPrompt({ orgName }: Props) {
 
   if (mode === "hidden") return null
 
+  const copy = COPY[audience]
+
   if (mode === "install") {
     return (
       <InstallPrompt
-        orgName={orgName}
+        title={copy.installTitle}
+        body={copy.installBody(orgName)}
         onDismiss={() => {
           rememberDismissal("install")
           setMode("hidden")
@@ -142,9 +182,9 @@ export function PushSubscriptionPrompt({ orgName }: Props) {
             <Bell className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-sm">Turn on notifications</h3>
+            <h3 className="font-semibold text-gray-900 text-sm">{copy.pushTitle}</h3>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              Get notified when {orgName ? <strong>{orgName}</strong> : "your rescue"} messages you or updates your foster dog's profile.
+              {copy.pushBody(orgName)}
             </p>
             {error && <p className="text-xs text-red-600 mt-2">{error}</p>}
             <div className="flex gap-2 mt-3">
@@ -184,7 +224,7 @@ export function PushSubscriptionPrompt({ orgName }: Props) {
 // so we coach them through it instead of asking for a permission they can't
 // grant. Once installed, the PWA opens standalone and the normal push flow
 // takes over.
-function InstallPrompt({ orgName, onDismiss }: { orgName?: string; onDismiss: () => void }) {
+function InstallPrompt({ title, body, onDismiss }: { title: string; body: ReactNode; onDismiss: () => void }) {
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-6 md:max-w-sm z-[70]">
       <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-4">
@@ -196,10 +236,9 @@ function InstallPrompt({ orgName, onDismiss }: { orgName?: string; onDismiss: ()
             <Bell className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900 text-sm">Get notifications on iPhone</h3>
+            <h3 className="font-semibold text-gray-900 text-sm">{title}</h3>
             <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              To get notified when {orgName ? <strong>{orgName}</strong> : "your rescue"} messages you,
-              add Second Tail to your Home Screen.
+              {body}
             </p>
             <ol className="mt-3 space-y-2 text-xs text-gray-700">
               <li className="flex items-start gap-2">

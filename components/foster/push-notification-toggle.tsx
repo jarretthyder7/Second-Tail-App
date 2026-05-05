@@ -21,7 +21,19 @@ type State =
   | { phase: "loading" }
   | { phase: "ready"; capability: Capability; subscribed: boolean }
 
-export function PushNotificationToggle() {
+type Audience = "foster" | "admin"
+
+const SUBSCRIBED_HELPER: Record<Audience, string> = {
+  foster: "You'll get a push when your rescue messages you or updates your foster dog's profile.",
+  admin: "You'll get a push when a foster messages you, requests an appointment, or submits a reimbursement.",
+}
+
+const UNSUBSCRIBED_HELPER: Record<Audience, string> = {
+  foster: "Get an instant push notification — no email needed.",
+  admin: "Get an instant push when fosters reach out — no email needed.",
+}
+
+export function PushNotificationToggle({ audience = "foster" }: { audience?: Audience } = {}) {
   const [state, setState] = useState<State>({ phase: "loading" })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -118,11 +130,7 @@ export function PushNotificationToggle() {
     <div className="space-y-2">
       <Row
         label="Push notifications"
-        helper={
-          subscribed
-            ? "You'll get a push when your rescue messages you or updates your foster dog's profile."
-            : "Get an instant push notification — no email needed."
-        }
+        helper={subscribed ? SUBSCRIBED_HELPER[audience] : UNSUBSCRIBED_HELPER[audience]}
         checked={subscribed}
         disabled={busy}
         onToggle={handleToggle}

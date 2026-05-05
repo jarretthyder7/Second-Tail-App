@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/lib/protected-route"
 import { createClient } from "@/lib/supabase/client"
 import { HelpCircle, X, CheckCircle2, ArrowRight, LogOut, Calendar, Upload, BookOpen, AlertCircle, Pause, Trash2, Bell, Package, DollarSign } from "lucide-react"
+import { PushNotificationToggle } from "@/components/foster/push-notification-toggle"
 
 // Inline SVG icon
 const SaveIcon = ({ className }: { className?: string }) => (
@@ -595,6 +596,11 @@ function OrgSettingsContent() {
         </p>
 
         <div className="space-y-4">
+          {/* Push toggle saves itself on change — independent of the Save
+              Notification Preferences button below (which persists the
+              email checkboxes). */}
+          <PushNotificationToggle audience="admin" />
+
           <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
             <div>
               <div className="font-medium text-[#5A4A42]">New message from foster</div>

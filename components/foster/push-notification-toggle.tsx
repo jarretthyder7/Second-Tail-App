@@ -33,7 +33,10 @@ const UNSUBSCRIBED_HELPER: Record<Audience, string> = {
   admin: "Get an instant push when fosters reach out — no email needed.",
 }
 
-export function PushNotificationToggle({ audience = "foster" }: { audience?: Audience } = {}) {
+export function PushNotificationToggle({
+  audience = "foster",
+  onSubscriptionChange,
+}: { audience?: Audience; onSubscriptionChange?: (subscribed: boolean) => void } = {}) {
   const [state, setState] = useState<State>({ phase: "loading" })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +56,13 @@ export function PushNotificationToggle({ audience = "foster" }: { audience?: Aud
       cancelled = true
     }
   }, [])
+
+  // Notify the parent whenever the live subscription state changes — used
+  // by the admin settings page to grey out per-event push toggles when
+  // the master subscription is off.
+  useEffect(() => {
+    if (state.phase === "ready") onSubscriptionChange?.(state.subscribed)
+  }, [state, onSubscriptionChange])
 
   if (state.phase === "loading") {
     return <Row label="Push notifications" helper="Checking…" disabled checked={false} onToggle={() => {}} />

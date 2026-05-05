@@ -21,12 +21,16 @@ const SaveIcon = ({ className }: { className?: string }) => (
 )
 
 // Two-column (email | push) toggle row used inside admin Notification
-// Preferences. Saves immediately on toggle.
+// Preferences. Saves immediately on toggle. When pushAvailable=false (no
+// device subscription), the Push column is forced to display as off and
+// disabled — the user's stored pref isn't touched, so it'll come back if
+// they re-enable push on this device.
 function AdminPrefRow({
   label,
   helper,
   email,
   push,
+  pushAvailable,
   disabled,
   onChange,
 }: {
@@ -34,9 +38,12 @@ function AdminPrefRow({
   helper: string
   email: boolean
   push: boolean
+  pushAvailable: boolean
   disabled?: boolean
   onChange: (channel: "email" | "push", value: boolean) => void
 }) {
+  const pushDisplayed = pushAvailable && push
+  const pushLocked = !pushAvailable
   return (
     <div className={`p-4 rounded-xl border-2 border-[#F7E2BD] transition ${disabled ? "opacity-70" : "hover:bg-[#FBF8F4]"}`}>
       <div className="flex items-start justify-between gap-3">
@@ -55,11 +62,14 @@ function AdminPrefRow({
             />
             <span className="text-[10px] text-[#2E2E2E]/60">Email</span>
           </label>
-          <label className="flex flex-col items-center gap-1 cursor-pointer">
+          <label
+            className={`flex flex-col items-center gap-1 ${pushLocked ? "cursor-not-allowed opacity-40" : "cursor-pointer"}`}
+            title={pushLocked ? "Turn on push notifications above to enable" : undefined}
+          >
             <input
               type="checkbox"
-              checked={push}
-              disabled={disabled}
+              checked={pushDisplayed}
+              disabled={disabled || pushLocked}
               onChange={(e) => onChange("push", e.target.checked)}
               className="w-5 h-5 rounded border-[#F7E2BD] text-[#D76B1A] focus:ring-[#D76B1A]/40"
             />
@@ -136,6 +146,10 @@ function OrgSettingsContent() {
   })
   const [savingPrefs, setSavingPrefs] = useState(false)
   const [prefsSavedAt, setPrefsSavedAt] = useState<number | null>(null)
+  // Reflects whether push is currently subscribed on THIS device. Drives
+  // the per-event Push checkbox availability so we don't show "Push: ✓"
+  // for a device that won't actually receive push.
+  const [pushSubscribed, setPushSubscribed] = useState(false)
 
   useEffect(() => {
     async function loadOrg() {
@@ -719,7 +733,7 @@ function OrgSettingsContent() {
         </p>
 
         <div className="mb-6">
-          <PushNotificationToggle audience="admin" />
+          <PushNotificationToggle audience="admin" onSubscriptionChange={setPushSubscribed} />
         </div>
 
         <h3 className="text-sm font-semibold text-[#5A4A42] mb-3">Email & push by event</h3>
@@ -742,6 +756,7 @@ function OrgSettingsContent() {
               helper={row.helper}
               email={notificationPrefs[row.key].email}
               push={notificationPrefs[row.key].push}
+              pushAvailable={pushSubscribed}
               disabled={savingPrefs}
               onChange={(channel, v) =>
                 saveNotificationPrefs({

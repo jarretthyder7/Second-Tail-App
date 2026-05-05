@@ -327,7 +327,10 @@ export default function AdminConversationPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#FBF8F4]">
+    // h-dvh (dynamic viewport height) accounts for mobile browser chrome
+    // (URL bar etc.) so the input bar stays inside the visible area instead
+    // of being pushed below the bottom of the screen.
+    <div className="h-dvh flex flex-col bg-[#FBF8F4] overflow-hidden">
       {/* Header */}
       <div className="bg-white border-b border-[#F7E2BD]/20 px-3 sm:px-4 py-3 sm:py-4 flex-shrink-0">
         <div className="max-w-3xl mx-auto">

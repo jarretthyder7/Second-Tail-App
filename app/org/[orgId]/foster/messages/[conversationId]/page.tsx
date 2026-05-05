@@ -316,7 +316,12 @@ export default function ConversationPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-[#FBF8F4]">
+    // Constrain to the visible space the foster layout actually gives us:
+    // mobile has a sticky top header (~60px) AND a fixed bottom nav (~64px),
+    // desktop has a taller sticky header with tab row (~110px) and no bottom
+    // nav. Using h-dvh (not h-screen) so the iOS URL bar doesn't push the
+    // input below the visible area.
+    <div className="h-[calc(100dvh-8rem)] md:h-[calc(100dvh-7rem)] flex flex-col bg-[#FBF8F4] overflow-hidden">
       {/* Header */}
       <div className="bg-white border-b border-[#F7E2BD]/20 px-3 sm:px-4 py-3 sm:py-4 flex-shrink-0">
         <div className="max-w-3xl mx-auto">

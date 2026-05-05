@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { ArrowLeft, Bell, User, LogOut, Save, HelpCircle, X, CheckCircle2 } from "lucide-react"
 import Link from "next/link"
+import { PushNotificationToggle } from "@/components/foster/push-notification-toggle"
 
 export default function FosterSettingsPage() {
   const router = useRouter()
@@ -203,6 +204,10 @@ export default function FosterSettingsPage() {
           </p>
 
           <div className="space-y-4">
+            {/* Push toggle saves itself on change — independent of the
+                email Save button below. */}
+            <PushNotificationToggle />
+
             <label className="flex items-center justify-between p-4 rounded-xl border-2 border-[#F7E2BD] hover:bg-[#FBF8F4] cursor-pointer transition">
               <div>
                 <div className="font-medium text-[#5A4A42]">Email updates from rescues</div>

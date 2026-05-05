@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { after } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { canAccessDog } from "@/lib/api/auth-helpers"
+import { notify } from "@/lib/notify"
 
 const PATCHABLE_DOG_FIELDS = [
   "name",
@@ -176,6 +178,25 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         updatedDog.organization = organization
       }
     }
+
+    // Notify the assigned foster of meaningful profile changes. notify()
+    // diffs before/after, checks foster prefs, and dispatches email + push.
+    // Run via after() so the response isn't delayed and the work still
+    // completes on serverless (raw fire-and-forget would be killed when the
+    // function returns).
+    after(async () => {
+      try {
+        await notify(supabase, {
+          type: "dog.profile_updated",
+          dogId: dogId,
+          before: dog,
+          after: updatedDog,
+          actorId: user.id,
+        })
+      } catch (err) {
+        console.warn("[dogs PATCH] notify failed:", err)
+      }
+    })
 
     return NextResponse.json(updatedDog)
   } catch (error) {

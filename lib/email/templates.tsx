@@ -113,33 +113,62 @@ export const emailTemplates = {
     `,
   }),
 
-  // Notification to foster when rescue org sends them a message
-  messageNotificationToFoster: (fosterName: string, orgName: string) => ({
+  // Notification to foster when rescue org sends them a message.
+  // `link` deep-links to the conversation; falls back to /login for legacy
+  // callers that don't pass it.
+  messageNotificationToFoster: (fosterName: string, orgName: string, link?: string) => ({
     subject: `New message from ${orgName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #d97706;">New Message</h1>
         <p>Hi ${fosterName},</p>
         <p><strong>${orgName}</strong> sent you a message.</p>
-        <p>Log in to your dashboard to read and reply.</p>
+        <p>Tap below to read and reply.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+          <a href="${link || "https://getsecondtail.com/login"}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
         </div>
       </div>
     `,
   }),
 
-  // Notification to rescue org when foster sends them a message
-  newMessageToOrg: (orgName: string, fosterName: string, dogName: string) => ({
+  // Notification to rescue org when foster sends them a message.
+  newMessageToOrg: (orgName: string, fosterName: string, dogName: string, link?: string) => ({
     subject: `New message from ${fosterName} re: ${dogName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <h1 style="color: #92400e;">New Message from Foster</h1>
         <p>Hi ${orgName},</p>
         <p><strong>${fosterName}</strong> sent you a new message about <strong>${dogName}</strong>.</p>
-        <p>Log in to Second Tail to reply.</p>
+        <p>Tap below to reply.</p>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="https://getsecondtail.com/login" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+          <a href="${link || "https://getsecondtail.com/login"}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View Message</a>
+        </div>
+      </div>
+    `,
+  }),
+
+  // Sent to the assigned foster when a rescue admin updates the dog's profile
+  // (status, name, medical/behavior notes — see lib/notify/dog-diff.ts).
+  dogProfileUpdated: (args: {
+    fosterName: string
+    dogName: string
+    orgName: string
+    changeSummaryHtml: string
+    changeListPlain: string
+    link: string
+  }) => ({
+    subject: `${args.dogName}'s profile was updated (${args.changeListPlain})`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #d97706;">Profile updated</h1>
+        <p>Hi ${args.fosterName},</p>
+        <p><strong>${args.orgName}</strong> updated <strong>${args.dogName}</strong>'s profile.</p>
+        <p style="margin-bottom: 8px;"><strong>What changed:</strong></p>
+        <ul style="background-color: #f9fafb; padding: 16px 16px 16px 32px; border-radius: 8px; margin-top: 0;">
+          ${args.changeSummaryHtml}
+        </ul>
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${args.link}" style="display: inline-block; background-color: #d97706; color: white; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; text-decoration: none;">View ${args.dogName}'s profile</a>
         </div>
       </div>
     `,

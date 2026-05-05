@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { shouldSendEmailNotification } from "@/lib/messaging/should-notify"
 
 import { useEffect, useState, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -275,41 +274,14 @@ export default function ConversationPage() {
       // Update conversation timestamp
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
-      // Notify ALL org admins via email — with 10-min debounce per admin.
-      // A rescue with 3 admins used to only notify 1 (the .limit(1) bug).
-      try {
-        if (organization) {
-          const { data: admins } = await supabase
-            .from("profiles")
-            .select("id, email, name")
-            .eq("organization_id", orgId)
-            .eq("role", "rescue")
-            .eq("org_role", "org_admin")
-
-          for (const admin of admins || []) {
-            if (!admin.email) continue
-            const shouldNotify = await shouldSendEmailNotification(
-              supabase,
-              conversationId,
-              admin.id
-            )
-            if (!shouldNotify) continue
-            await fetch("/api/email/send", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: "message-to-org",
-                orgEmail: admin.email,
-                orgName: organization.name,
-                fosterName: user.name,
-                dogName: dog?.name || "their foster",
-              }),
-            })
-          }
-        }
-      } catch (emailError) {
-        console.warn("Failed to send message notification email:", emailError)
-      }
+      // Hand off to the central notification service. The server resolves
+      // recipients (org admins), checks debounce + preferences, and dispatches
+      // email (and later push). Don't await — UI shouldn't block on it.
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: { type: "message.new", conversationId } }),
+      }).catch((err) => console.warn("Failed to trigger notification:", err))
 
       setMessages([...messages, message])
       setNewMessage("")

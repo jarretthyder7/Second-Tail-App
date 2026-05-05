@@ -24,6 +24,7 @@ import {
 } from "lucide-react"
 import { useOrgBranding } from "@/lib/branding/use-org-branding"
 import { InviteFriendsModal } from "@/components/foster/invite-friends-modal"
+import { PushSubscriptionPrompt } from "@/components/foster/push-subscription-prompt"
 
 export default function OrgFosterLayout({
   children,
@@ -425,6 +426,10 @@ export default function OrgFosterLayout({
         fosterName={profile?.full_name || profile?.name || ""}
         referralCode=""
       />
+
+      {/* Web Push permission prompt — silently bails if unsupported, denied,
+          recently dismissed, or already subscribed. */}
+      <PushSubscriptionPrompt />
     </ProtectedRoute>
   )
 }

@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { put } from "@vercel/blob"
 import { ArrowLeft, Send, Paperclip, ImageIcon, X, ExternalLink, Plus, Users } from "lucide-react"
-import { shouldSendEmailNotification } from "@/lib/messaging/should-notify"
 
 export default function AdminConversationPage() {
   const params = useParams()
@@ -261,32 +260,14 @@ export default function AdminConversationPage() {
       // Update conversation timestamp
       await supabase.from("conversations").update({ updated_at: new Date().toISOString() }).eq("id", conversationId)
 
-      // Notify foster via email — but only if they aren't actively reading
-      // the conversation (debounced 10 min window).
-      try {
-        if (foster?.email && foster?.id) {
-          const shouldNotify = await shouldSendEmailNotification(
-            supabase,
-            conversationId,
-            foster.id
-          )
-          if (shouldNotify) {
-            const { data: org } = await supabase.from("organizations").select("name").eq("id", orgId).single()
-            await fetch("/api/email/send", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                type: "message-to-foster",
-                fosterEmail: foster.email,
-                fosterName: foster.name,
-                orgName: org?.name || "Your rescue organization",
-              }),
-            })
-          }
-        }
-      } catch (emailError) {
-        console.warn("Failed to send message notification email:", emailError)
-      }
+      // Hand off to the central notification service. The server resolves
+      // the foster recipient, checks the 10-min read-debounce + foster prefs,
+      // and dispatches email (and later push). Fire-and-forget.
+      fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: { type: "message.new", conversationId } }),
+      }).catch((err) => console.warn("Failed to trigger notification:", err))
 
       setMessages([...messages, message])
       setNewMessage("")

@@ -86,7 +86,10 @@ async function buildMessageDispatches(
   const { data: conversation } = await supabase
     .from("conversations")
     .select(
-      "id, organization_id, recipient_id, dog:dogs(id, name), organization:organizations(id, name, notification_preferences)",
+      // dog.foster_id is the FOSTER user. conversations.recipient_id is the
+      // primary RESCUE staff member on this thread (legacy naming from when
+      // a conversation had a single rescue contact). Don't confuse the two.
+      "id, organization_id, recipient_id, dog:dogs(id, name, foster_id), organization:organizations(id, name, notification_preferences)",
     )
     .eq("id", conversationId)
     .maybeSingle()
@@ -103,17 +106,18 @@ async function buildMessageDispatches(
 
   const orgId = conversation.organization_id as string
   const orgName = (conversation.organization as any)?.name || "your rescue"
-  const dogName = (conversation.dog as any)?.name || "their foster"
+  const dog = conversation.dog as any
+  const dogName = dog?.name || "their foster"
+  const fosterUserId = dog?.foster_id as string | null | undefined
 
   if (sender.role === "rescue") {
-    // Admin → foster. The foster is the conversation recipient.
-    const recipientId = conversation.recipient_id as string | null
-    if (!recipientId) return []
+    // Admin → foster. The foster is the user assigned to the conversation's dog.
+    if (!fosterUserId) return []
 
     const { data: foster } = await supabase
       .from("profiles")
       .select("id, name, email, notification_preferences")
-      .eq("id", recipientId)
+      .eq("id", fosterUserId)
       .maybeSingle()
 
     if (!foster) return []
